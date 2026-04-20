@@ -13,703 +13,604 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#0a0a0a;
-  --bg2:#111;
-  --bg3:#1a1a1a;
-  --border:#2a2a2a;
-  --text:#f0f0f0;
-  --muted:#666;
-  --accent:#e8ff47;
-  --accent2:#ff6b35;
-  --success:#4ade80;
-  --danger:#f87171;
-  --radius:14px;
-  --font-display:'Bebas Neue',sans-serif;
-  --font-body:'DM Sans',sans-serif;
+  --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;
+  --text:#f0f0f0;--muted:#666;--accent:#e8ff47;
+  --success:#4ade80;--danger:#f87171;--warn:#fbbf24;
+  --radius:14px;--fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden}
-#app{height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
-
-/* NAV */
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow:hidden}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
 .nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);padding:8px 4px;padding-bottom:max(8px,env(safe-area-inset-bottom));flex-shrink:0;z-index:10}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:none;color:var(--muted);font-family:var(--font-body);font-size:10px;font-weight:500;cursor:pointer;border-radius:10px;transition:all .2s}
-.nav-btn.active{color:var(--accent)}
-.nav-btn svg{width:22px;height:22px;stroke-width:1.8}
-.nav-icon{font-size:20px;line-height:1}
-
-/* PAGES */
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:none;background:none;color:var(--muted);font-family:var(--fb);font-size:10px;font-weight:500;cursor:pointer;border-radius:10px;transition:all .2s}
+.nb.active{color:var(--accent)}
+.nb svg{width:22px;height:22px;stroke-width:1.8}
 .pages{flex:1;overflow:hidden;position:relative}
-.page{position:absolute;inset:0;overflow-y:auto;padding:20px 16px;padding-bottom:16px;display:none;-webkit-overflow-scrolling:touch}
+.page{position:absolute;inset:0;overflow-y:auto;padding:20px 16px 28px;display:none;-webkit-overflow-scrolling:touch}
 .page.active{display:block}
-
-/* TYPOGRAPHY */
-.page-title{font-family:var(--font-display);font-size:42px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:4px}
-.page-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
-
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
-.card-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;font-weight:600}
-
-/* INPUTS */
-input,select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-size:15px;padding:12px 14px;border-radius:10px;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.pt{font-family:var(--fd);font-size:40px;letter-spacing:1px;line-height:1;margin-bottom:4px}
+.ps{font-size:13px;color:var(--muted);margin-bottom:18px}
+input,select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:15px;padding:11px 13px;border-radius:10px;outline:none;-webkit-appearance:none;transition:border-color .2s}
 input:focus,select:focus{border-color:var(--accent)}
 input::placeholder{color:var(--muted)}
 select option{background:var(--bg3)}
-.input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.input-row.three{grid-template-columns:1fr 1fr 1fr}
-.input-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
-
-/* BUTTONS */
-.btn{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font-body);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.02em}
-.btn-primary{background:var(--accent);color:#0a0a0a}
-.btn-primary:active{transform:scale(.97)}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-sm{padding:8px 14px;font-size:13px;width:auto;border-radius:8px}
-.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
-
-/* EXERCISE CARDS */
-.ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
-.ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
-.ex-name{font-family:var(--font-display);font-size:24px;letter-spacing:.5px;color:var(--text);line-height:1.1}
-.ex-weight{font-size:32px;font-weight:600;color:var(--accent);margin:6px 0 2px}
-.ex-sets{font-size:13px;color:var(--muted)}
-.ex-alt{font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-.ex-alt b{color:var(--text);font-weight:500}
-.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
-.badge-up{background:rgba(74,222,128,.15);color:var(--success)}
-.badge-same{background:rgba(102,102,102,.2);color:var(--muted)}
-.badge-new{background:rgba(232,255,71,.15);color:var(--accent)}
-
-/* WEEK SELECTOR */
-.week-nav{display:flex;align-items:center;gap:12px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
-.week-nav button{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
-.week-nav button:disabled{color:var(--border)}
-.week-info{flex:1;text-align:center}
-.week-num{font-family:var(--font-display);font-size:26px;color:var(--accent);line-height:1}
-.week-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-
-/* DAY TABS */
-.day-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
-.day-tab{padding:10px 4px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:500;color:var(--muted)}
-.day-tab.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a;font-weight:600}
-
-/* STATS ROW */
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
-.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
-.stat-val{font-family:var(--font-display);font-size:28px;color:var(--accent);line-height:1}
-.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
-
+.lbl{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--fb);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
+.bp{background:var(--accent);color:#0a0a0a}.bp:active{transform:scale(.97)}
+.bo{background:transparent;border:1px solid var(--border);color:var(--text)}
+/* SETUP */
+.gh{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:2px}
+.gt{font-family:var(--fd);font-size:22px;color:var(--accent)}
+.gb{display:none;padding:4px 0}.gb.open{display:block}
+.ec{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:6px}
+.en{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
+.esch{font-size:12px;color:var(--accent);margin-bottom:10px;font-weight:500}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+/* PROGRAM */
+.wn{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
+.wn button{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
+.wn button:disabled{color:var(--border)}
+.wi{flex:1;text-align:center}
+.wnum{font-family:var(--fd);font-size:28px;color:var(--accent);line-height:1}
+.wlbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.dtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.dtab{padding:10px 4px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
+.dtab.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a;font-weight:700}
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.sb{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
+.sv{font-family:var(--fd);font-size:26px;color:var(--accent);line-height:1}
+.sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.pbw{margin-bottom:14px}
+.pbh{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px}
+.pt2{background:var(--bg3);border-radius:99px;height:5px}
+.pf{height:100%;background:var(--accent);border-radius:99px;transition:width .5s}
+.xc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:10px;position:relative;overflow:hidden;transition:opacity .3s}
+.xc.done{opacity:.4}
+.xc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.xc.done::before{background:var(--success)}
+.xname{font-family:var(--fd);font-size:22px;letter-spacing:.5px;line-height:1.1;margin-bottom:4px}
+.xw{font-size:28px;font-weight:600;color:var(--accent);margin:4px 0 2px}
+.xsch{font-size:13px;color:var(--muted)}
+.xalt{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
+.bup{background:rgba(74,222,128,.15);color:var(--success)}
+.bsame{background:rgba(102,102,102,.2);color:var(--muted)}
+.bnew{background:rgba(232,255,71,.12);color:var(--accent)}
+.bmax{background:rgba(251,191,36,.15);color:var(--warn)}
+.done-banner{background:linear-gradient(135deg,rgba(74,222,128,.1),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.25);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px}
+/* TIMER */
+.tw{display:flex;flex-direction:column;align-items:center;padding:6px 0}
+.pr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:26px}
+.pb{padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:var(--fb);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
+.pb.ap{background:var(--accent);border-color:var(--accent);color:#0a0a0a}
+.trw{position:relative;width:210px;height:210px;margin-bottom:26px}
+.trw svg{position:absolute;top:0;left:0}
+.tc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.td{font-family:var(--fd);font-size:68px;color:var(--text);line-height:1;letter-spacing:2px}
+.ts{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.ta{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
 /* PROGRESS */
-.week-progress{margin-bottom:20px}
-.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.progress-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.progress-pct{font-size:12px;color:var(--accent);font-weight:600}
-.progress-track{background:var(--bg3);border-radius:99px;height:6px;overflow:hidden}
-.progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
-
-/* TIMER PAGE */
-.timer-container{display:flex;flex-direction:column;align-items:center;padding:10px 0}
-.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:32px}
-.preset-btn{padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
-.preset-btn.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a}
-.timer-ring-wrap{position:relative;width:220px;height:220px;margin-bottom:32px}
-.timer-ring-wrap svg{position:absolute;top:0;left:0}
-.timer-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.timer-display{font-family:var(--font-display);font-size:72px;color:var(--text);line-height:1;letter-spacing:2px}
-.timer-status{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
-.timer-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
-
-/* SETUP PAGE */
-.setup-group{margin-bottom:8px}
-.setup-group-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:2px}
-.setup-group-title{font-family:var(--font-display);font-size:20px;color:var(--accent);letter-spacing:.5px}
-.setup-group-sub{font-size:12px;color:var(--muted);margin-left:auto}
-.setup-group-body{display:none;padding:4px 0 4px}
-.setup-group-body.open{display:block}
-.setup-ex{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:6px}
-.setup-ex-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:10px}
-.setup-ex-alts{font-size:11px;color:var(--muted);margin-bottom:10px}
-.setup-note{font-size:11px;color:var(--muted);text-align:center;margin:8px 0 16px;line-height:1.5}
-
-/* WEEK COMPLETE */
-.week-complete-card{background:linear-gradient(135deg,rgba(232,255,71,.08),rgba(232,255,71,.02));border:1px solid rgba(232,255,71,.3);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px}
-.wc-title{font-family:var(--font-display);font-size:32px;color:var(--accent);margin-bottom:6px}
-.wc-sub{font-size:13px;color:var(--muted);line-height:1.5}
-
-/* CONFIRM MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px}
-.modal-title{font-family:var(--font-display);font-size:28px;color:var(--text);margin-bottom:8px}
-.modal-sub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
-.modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* COMPLETION ANIMATION */
-@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
-.checkmark{display:inline-block;animation:pop .4s cubic-bezier(.4,0,.2,1) forwards}
-
-/* SCROLLBAR */
+.pec{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.pen{font-size:14px;font-weight:600;margin-bottom:10px}
+.wscroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px}
+.wscroll::-webkit-scrollbar{height:3px}
+.wscroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.wkcell{flex-shrink:0;width:42px;text-align:center}
+.wkbox{padding:6px 2px;border-radius:8px;border:1px solid var(--border)}
+.wkkg{font-size:11px;font-weight:700}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.mo.open{display:flex}
+.ms{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px}
+.mt{font-family:var(--fd);font-size:28px;margin-bottom:8px}
+.msub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ONBOARD */
+.ob{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.obl{font-family:var(--fd);font-size:60px;color:var(--accent);letter-spacing:4px;margin-bottom:8px}
+.obs{font-size:15px;color:var(--muted);margin-bottom:36px;line-height:1.6}
+.obst{width:100%;max-width:360px}
+.ost{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);text-align:left}
+.ost:last-child{border:none}
+.osn{font-family:var(--fd);font-size:30px;color:var(--accent);width:28px;flex-shrink:0}
+.ostx{font-size:13px;color:var(--muted);line-height:1.4}
+.ostx b{color:var(--text);font-weight:500}
 ::-webkit-scrollbar{width:0}
-
-/* ONBOARDING */
-.onboard{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
-.onboard-logo{font-family:var(--font-display);font-size:64px;color:var(--accent);letter-spacing:4px;margin-bottom:8px}
-.onboard-sub{font-size:16px;color:var(--muted);margin-bottom:48px;line-height:1.5}
-.onboard-steps{width:100%;max-width:360px}
-.step{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-align:left}
-.step:last-child{border:none}
-.step-num{font-family:var(--font-display);font-size:32px;color:var(--accent);width:32px;flex-shrink:0;line-height:1}
-.step-txt{font-size:14px;color:var(--muted);line-height:1.4}
-.step-txt b{color:var(--text);font-weight:500}
 </style>
 </head>
 <body>
 
-<!-- ONBOARDING -->
-<div class="onboard" id="onboard">
-  <div class="onboard-logo">FITTRACK</div>
-  <div class="onboard-sub">12 haftalık progresif<br/>yüklenme programın</div>
-  <div class="onboard-steps">
-    <div class="step"><div class="step-num">1</div><div class="step-txt"><b>Ağırlıklarını gir</b> — her hareket için mevcut max kg ve tekrar</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-txt"><b>Antrenman yap</b> — hedef tekrarları tamamla ve onayla</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-txt"><b>Ağırlık otomatik artar</b> — tamamlarsan hafta geçer, tamamlamazsan aynı kalır</div></div>
+<div class="ob" id="ob">
+  <div class="obl">FITTRACK</div>
+  <div class="obs">12 haftalık progresif yüklenme<br/>antrenman takipçisi</div>
+  <div class="obst">
+    <div class="ost"><div class="osn">1</div><div class="ostx"><b>Ağırlık, artış miktarı ve alternatif seç</b> — her hareket için</div></div>
+    <div class="ost"><div class="osn">2</div><div class="ostx"><b>Antrenman yap</b> — tamamladıktan sonra onayla</div></div>
+    <div class="ost"><div class="osn">3</div><div class="ostx"><b>Tamamlarsan ağırlık artar</b> — tamamlamazsan aynı kalır</div></div>
   </div>
-  <div style="margin-top:48px;width:100%;max-width:360px">
-    <button class="btn btn-primary" onclick="hideOnboard()">Başla →</button>
+  <div style="margin-top:36px;width:100%;max-width:360px">
+    <button class="btn bp" onclick="hideOb()">Başla →</button>
   </div>
 </div>
 
 <div id="app">
   <div class="pages">
-    <!-- SETUP PAGE -->
+
+    <!-- SETUP -->
     <div class="page active" id="page-setup">
-      <div class="page-title">KURULUM</div>
-      <div class="page-sub">Her hareket için mevcut max ağırlık ve tekrar sayını gir</div>
-      <div class="setup-note">Ağırlık yoksa (karın, plank vb.) kg alanını 0 bırak</div>
+      <div class="pt">KURULUM</div>
+      <div class="ps">Her hareket için başlangıç kg, haftalık artış ve alternatif seç</div>
       <div id="setup-groups"></div>
-      <button class="btn btn-primary" onclick="saveAndStart()" style="margin-top:8px">Programı Oluştur →</button>
-      <div style="height:20px"></div>
+      <button class="btn bp" onclick="saveAndStart()" style="margin-top:4px">Programı Oluştur →</button>
+      <div style="height:24px"></div>
     </div>
 
-    <!-- PROGRAM PAGE -->
+    <!-- PROGRAM -->
     <div class="page" id="page-program">
-      <div class="page-title">PROGRAM</div>
-
-      <div class="week-nav">
+      <div class="pt">PROGRAM</div>
+      <div class="wn">
         <button onclick="changeWeek(-1)" id="btn-prev">‹</button>
-        <div class="week-info">
-          <div class="week-num" id="week-display">H1</div>
-          <div class="week-label">HAFTA</div>
-        </div>
+        <div class="wi"><div class="wnum" id="week-disp">H1</div><div class="wlbl">HAFTA</div></div>
         <button onclick="changeWeek(1)" id="btn-next">›</button>
       </div>
-
-      <div class="week-progress">
-        <div class="progress-header">
-          <div class="progress-title">12 HAFTALIK İLERLEME</div>
-          <div class="progress-pct" id="prog-pct">8%</div>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:8%"></div></div>
+      <div class="pbw">
+        <div class="pbh"><span>12 HAFTALIK İLERLEME</span><span id="prog-pct">8%</span></div>
+        <div class="pt2"><div class="pf" id="prog-fill" style="width:8%"></div></div>
       </div>
-
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-val" id="s-ex">0</div><div class="stat-lbl">Egzersiz</div></div>
-        <div class="stat-box"><div class="stat-val" id="s-sets">0</div><div class="stat-lbl">Set</div></div>
-        <div class="stat-box"><div class="stat-val" id="s-vol">0</div><div class="stat-lbl">~Ton</div></div>
+      <div class="sr">
+        <div class="sb"><div class="sv" id="s-ex">0</div><div class="sl">Egzersiz</div></div>
+        <div class="sb"><div class="sv" id="s-sets">0</div><div class="sl">Set</div></div>
+        <div class="sb"><div class="sv" id="s-vol">0</div><div class="sl">~Ton</div></div>
       </div>
-
-      <div class="day-tabs" id="day-tabs">
-        <div class="day-tab active" onclick="changeDay(0,this)">GÜN 1</div>
-        <div class="day-tab" onclick="changeDay(1,this)">GÜN 2</div>
-        <div class="day-tab" onclick="changeDay(2,this)">GÜN 3</div>
+      <div class="dtabs">
+        <div class="dtab active" onclick="changeDay(0,this)">GÜN 1</div>
+        <div class="dtab" onclick="changeDay(1,this)">GÜN 2</div>
+        <div class="dtab" onclick="changeDay(2,this)">GÜN 3</div>
       </div>
-
       <div id="ex-list"></div>
       <div style="height:16px"></div>
     </div>
 
-    <!-- TIMER PAGE -->
+    <!-- TIMER -->
     <div class="page" id="page-timer">
-      <div class="page-title">TİMER</div>
-      <div class="page-sub">Set arası dinlenme</div>
-      <div class="timer-container">
-        <div class="preset-row">
-          <button class="preset-btn" onclick="setPreset(60,this)">1:00</button>
-          <button class="preset-btn active" onclick="setPreset(90,this)">1:30</button>
-          <button class="preset-btn" onclick="setPreset(120,this)">2:00</button>
+      <div class="pt">TİMER</div>
+      <div class="ps">Set arası dinlenme</div>
+      <div class="tw">
+        <div class="pr">
+          <button class="pb" onclick="setPreset(60,this)">1:00</button>
+          <button class="pb ap" onclick="setPreset(90,this)">1:30</button>
+          <button class="pb" onclick="setPreset(120,this)">2:00</button>
         </div>
-        <div class="timer-ring-wrap">
-          <svg width="220" height="220" viewBox="0 0 220 220">
-            <circle cx="110" cy="110" r="96" fill="none" stroke="#1a1a1a" stroke-width="10"/>
-            <circle id="t-ring" cx="110" cy="110" r="96" fill="none" stroke="#e8ff47" stroke-width="10"
-              stroke-dasharray="603" stroke-dashoffset="0" stroke-linecap="round"
-              style="transform-origin:110px 110px;transform:rotate(-90deg);transition:stroke-dashoffset .05s,stroke .3s"/>
+        <div class="trw">
+          <svg width="210" height="210" viewBox="0 0 210 210">
+            <circle cx="105" cy="105" r="92" fill="none" stroke="#1a1a1a" stroke-width="10"/>
+            <circle id="t-ring" cx="105" cy="105" r="92" fill="none" stroke="#e8ff47" stroke-width="10"
+              stroke-dasharray="578" stroke-dashoffset="0" stroke-linecap="round"
+              style="transform-origin:105px 105px;transform:rotate(-90deg);transition:stroke-dashoffset .05s,stroke .3s"/>
           </svg>
-          <div class="timer-center">
-            <div class="timer-display" id="t-display">1:30</div>
-            <div class="timer-status" id="t-status">HAZlR</div>
+          <div class="tc">
+            <div class="td" id="t-disp">1:30</div>
+            <div class="ts" id="t-status">HAZIR</div>
           </div>
         </div>
-        <div class="timer-actions">
-          <button class="btn btn-primary" id="t-btn" onclick="toggleTimer()">BAŞLAT</button>
-          <button class="btn btn-outline" onclick="resetTimer()">SIFIRLA</button>
+        <div class="ta">
+          <button class="btn bp" id="t-btn" onclick="toggleTimer()">BAŞLAT</button>
+          <button class="btn bo" onclick="resetTimer()">SIFIRLA</button>
         </div>
       </div>
     </div>
 
-    <!-- PROGRESS PAGE -->
+    <!-- PROGRESS -->
     <div class="page" id="page-progress">
-      <div class="page-title">İLERLEME</div>
-      <div class="page-sub">Haftalık ağırlık artışın</div>
+      <div class="pt">İLERLEME</div>
+      <div class="ps">Haftalık ağırlık artışın</div>
       <div id="progress-content"></div>
       <div style="height:16px"></div>
     </div>
+
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="nav">
-    <button class="nav-btn active" onclick="showPage('setup',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a6 6 0 0112 0v2"/><path d="M3 10h2M19 10h2M12 3V1M12 15v2"/></svg>
+    <button class="nb active" onclick="showPage('setup',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       <span>Kurulum</span>
     </button>
-    <button class="nav-btn" onclick="showPage('program',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+    <button class="nb" onclick="showPage('program',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
       <span>Program</span>
     </button>
-    <button class="nav-btn" onclick="showPage('timer',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 3"/><path d="M9 2h6M12 2v3"/></svg>
+    <button class="nb" onclick="showPage('timer',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 3M9 2h6M12 2v3"/></svg>
       <span>Timer</span>
     </button>
-    <button class="nav-btn" onclick="showPage('progress',this)">
+    <button class="nb" onclick="showPage('progress',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
       <span>İlerleme</span>
     </button>
   </nav>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal">
-  <div class="modal-sheet">
-    <div class="modal-title" id="modal-title">Haftayı Tamamla</div>
-    <div class="modal-sub" id="modal-sub">Bu haftaki hedef tekrarları tamamladın mı?</div>
-    <div class="modal-btns">
-      <button class="btn btn-outline" onclick="closeModal()">İptal</button>
-      <button class="btn btn-primary" id="modal-confirm">Evet →</button>
+<div class="mo" id="modal">
+  <div class="ms">
+    <div class="mt" id="modal-title">Tamamlandı mı?</div>
+    <div class="msub" id="modal-sub"></div>
+    <div class="mbtns">
+      <button class="btn bo" onclick="closeModal()">İptal</button>
+      <button class="btn bp" id="modal-ok">Evet ✓</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===================== DATA =====================
+// ============================================================
+// DATA
+// ============================================================
 const GROUPS = {
-  G1: {
-    label: "G1 — Push + Legs",
-    exercises: [
-      {id:"g1_cp",   name:"Chest Press Machine",     alt:"Dumbbell Press, Push-Up, Cable Fly",            sets:4, reps:10, bodyweight:false},
-      {id:"g1_lp",   name:"Leg Press",               alt:"Hack Squat, Goblet Squat, Leg Extension",       sets:4, reps:12, bodyweight:false},
-      {id:"g1_sp",   name:"Smith Machine Shoulder",  alt:"Dumbbell OHP, Arnold Press, Landmine Press",    sets:3, reps:10, bodyweight:false},
-    ]
-  },
-  G2: {
-    label: "G2 — Full Body",
-    exercises: [
-      {id:"g2_spm",  name:"Shoulder Press Machine",  alt:"Dumbbell OHP, Arnold Press, Cable Lateral",     sets:3, reps:10, bodyweight:false},
-      {id:"g2_rdl",  name:"Romanian DL",             alt:"Stiff-Leg DL, Cable Pull-Through, Hyperext.",   sets:4, reps:10, bodyweight:false},
-      {id:"g2_cp",   name:"Chest Press Machine",     alt:"Incline Press, Dumbbell Press, Push-Up",        sets:3, reps:10, bodyweight:false},
-      {id:"g2_br",   name:"Barbell Row 45",          alt:"Dumbbell Row, Cable Row, T-Bar Row",            sets:4, reps:8,  bodyweight:false},
-      {id:"g2_lp",   name:"Leg Press",               alt:"Squat, Hack Squat, Bulgarian Split",            sets:3, reps:12, bodyweight:false},
-      {id:"g2_pu",   name:"Pull Ups",                alt:"Lat Pulldown, Assisted Pull-Up, Band Pull",     sets:3, reps:6,  bodyweight:true},
-    ]
-  },
-  G3: {
-    label: "G3 — Isolation",
-    exercises: [
-      {id:"g3_lr",   name:"Lateral Raises",          alt:"Cable Lateral, Upright Row, Face Pull",         sets:4, reps:15, bodyweight:false},
-      {id:"g3_lpd",  name:"Lat Pulldown Machine",    alt:"Cable Pulldown, Pull-Up, Straight-Arm Pushdown",sets:4, reps:10, bodyweight:false},
-      {id:"g3_cf",   name:"Chest Fly Machine",       alt:"Cable Fly, Dumbbell Fly, Pec Deck",             sets:3, reps:12, bodyweight:false},
-      {id:"g3_le",   name:"Leg Extension",           alt:"Terminal Knee Ext., Step-Up, Wall Sit",         sets:3, reps:15, bodyweight:false},
-    ]
-  },
-  G4: {
-    label: "G4 — Arms & Core",
-    exercises: [
-      {id:"g4_cpd",  name:"Cable Pushdown",          alt:"Dumbbell Kickback, Overhead Ext., Dips",        sets:3, reps:12, bodyweight:false},
-      {id:"g4_idc",  name:"Incline DB Curl",         alt:"Barbell Curl, Cable Curl, Hammer Curl",         sets:3, reps:10, bodyweight:false},
-      {id:"g4_cr",   name:"Crunch",                  alt:"Ab Wheel, Cable Crunch, Decline Crunch",        sets:3, reps:20, bodyweight:true},
-      {id:"g4_lr",   name:"Leg Raises",              alt:"Hanging Knee Raise, Reverse Crunch, Flutter",   sets:3, reps:15, bodyweight:true},
-      {id:"g4_pl",   name:"Plank",                   alt:"RKC Plank, Dead Bug, Pallof Press",             sets:3, reps:45, bodyweight:true},
-    ]
-  }
+  G1:{label:"Push + Legs",exercises:[
+    {id:"g1_cp",name:"Chest Press Machine",  scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
+     alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
+    {id:"g1_lp",name:"Leg Press",            scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
+     alts:["Hack Squat","Smith Machine Squat","Goblet Squat"]},
+    {id:"g1_sp",name:"Smith Machine Shoulder",scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
+     alts:["Dumbbell OHP","Arnold Press","Landmine Press"]},
+  ]},
+  G2:{label:"Full Body",exercises:[
+    {id:"g2_spm",name:"Shoulder Press Machine",scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
+     alts:["Dumbbell OHP","Machine Lateral Raise","Cable Upright Row"]},
+    {id:"g2_rdl",name:"Romanian DL",           scheme:"3×8", sets:3,reps:8, repType:"fixed",hasWeight:true,
+     alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"]},
+    {id:"g2_cp", name:"Chest Press Machine",   scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
+     alts:["Incline Dumbbell Press","Smith Machine Bench","Cable Fly"]},
+    {id:"g2_br", name:"Barbell Row 45",        scheme:"4×10",sets:4,reps:10,repType:"fixed",hasWeight:true,
+     alts:["Dumbbell Row","Cable Seated Row","T-Bar Row"]},
+    {id:"g2_lp", name:"Leg Press",             scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
+     alts:["Hack Squat","Bulgarian Split Squat","Smith Machine Squat"]},
+    {id:"g2_pu", name:"Pull Ups",              scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
+     alts:["Lat Pulldown","Assisted Pull-Up","Cable Straight-Arm Pushdown"]},
+  ]},
+  G3:{label:"İzolasyon",exercises:[
+    {id:"g3_lr", name:"Lateral Raises",       scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
+     alts:["Cable Lateral Raise","Upright Row","Machine Lateral Raise"]},
+    {id:"g3_lpd",name:"Lat Pulldown Machine", scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
+     alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"]},
+    {id:"g3_cf", name:"Chest Fly Machine",    scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
+     alts:["Cable Fly","Dumbbell Fly","Pec Deck"]},
+    {id:"g3_le", name:"Leg Extension",        scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
+     alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"]},
+  ]},
+  G4:{label:"Kol + Core",exercises:[
+    {id:"g4_cpd",name:"Cable Pushdown",       scheme:"3×8-12",sets:3,reps:8,repType:"range",hasWeight:true,
+     alts:["Overhead Triceps Extension","Dumbbell Kickback","Bench Dips"]},
+    {id:"g4_idc",name:"Incline Dumbbell Curl",scheme:"3×8-12",sets:3,reps:8,repType:"range",hasWeight:true,
+     alts:["Barbell Curl","Hammer Curl","Cable Curl"]},
+    {id:"g4_cr", name:"Crunch",               scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
+     alts:["Ab Wheel","Cable Crunch","Decline Crunch"]},
+    {id:"g4_lr", name:"Leg Raises",           scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
+     alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"]},
+    {id:"g4_pl", name:"Plank",                scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
+     alts:["RKC Plank","Dead Bug","Pallof Press"]},
+  ]},
 };
 
-// Day rotation: each day is array of [groupId, count] pairs
-// Gün 1: 1×G1, 2×G2, 2×G3, 1×G4 → pick from groups in order
-// Gün 2: 1×G1, 2×G2, 1×G3, 2×G4
-// Gün 3: same as Gün 2
-const DAY_CONFIGS = [
-  // [groupId, exercise_indices to include]
-  { label:"GÜN 1", groups:["G1","G2","G2","G3","G3","G4"] },
-  { label:"GÜN 2", groups:["G1","G2","G2","G3","G4","G4"] },
-  { label:"GÜN 3", groups:["G1","G2","G2","G3","G4","G4"] },
+// Day definitions: each day picks N exercises from each group in order
+const DAY_DEFS = [
+  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:2},{g:"G4",n:1}], // Gün 1
+  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:1},{g:"G4",n:2}], // Gün 2
+  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:1},{g:"G4",n:2}], // Gün 3
 ];
 
-// For each day, which exercise from each group appears (cycling)
-// We'll just show all exercises from selected groups but spread
-function getDayExercises(dayIdx) {
-  const cfg = DAY_CONFIGS[dayIdx];
-  const used = {};
-  const result = [];
-  const groupExIdx = {};
-  GROUPS && Object.keys(GROUPS).forEach(g => groupExIdx[g] = 0);
-
-  cfg.groups.forEach(gid => {
-    const g = GROUPS[gid];
-    const idx = groupExIdx[gid] % g.exercises.length;
-    groupExIdx[gid]++;
-    result.push({...g.exercises[idx], groupId: gid});
+function getDayExs(dayIdx) {
+  const def = DAY_DEFS[dayIdx];
+  const idx = {}; Object.keys(GROUPS).forEach(g => idx[g]=0);
+  const out = [];
+  def.forEach(({g,n}) => {
+    for(let i=0;i<n;i++){
+      const arr = GROUPS[g].exercises;
+      out.push({...arr[idx[g]%arr.length], gid:g});
+      idx[g]++;
+    }
   });
-  return result;
+  return out;
 }
 
-// ===================== STATE =====================
-let state = {
-  maxes: {},      // {exId: {kg, reps}}
-  weekProgress: {},  // {weekIdx: {dayIdx: {exId: completed}}}
-  currentWeek: 0,
-  currentDay: 0,
-  setupDone: false
-};
+// ============================================================
+// STATE
+// ============================================================
+let S = { maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false };
 
-const WEEK_MULTIPLIERS = [
-  1.00, 1.025, 1.05, 1.075, 1.10,
-  1.125, 1.15, 1.175, 1.20, 1.225,
-  1.25, 1.275
-];
+function saveS(){ localStorage.setItem('ft_v4', JSON.stringify(S)); }
+function loadS(){ try{ const d=localStorage.getItem('ft_v4'); if(d){S=JSON.parse(d);return true;} }catch(e){} return false; }
 
-function saveState() {
-  localStorage.setItem('fittrack_v2', JSON.stringify(state));
+function r2(v){ return Math.round(v*2)/2; }
+
+// Get actual kg for an exercise at a given week
+// = base + inc * number_of_weeks_completed_before_this_week
+function getKgAt(exId, weekIdx) {
+  const m = S.maxes[exId];
+  if(!m) return 0;
+  let kg = m.kg;
+  for(let w=0; w<weekIdx; w++){
+    if(exCompletedInWeek(exId, w)) kg = r2(kg + (m.inc||0));
+  }
+  return r2(kg);
 }
 
-function loadState() {
-  try {
-    const s = localStorage.getItem('fittrack_v2');
-    if (s) { state = JSON.parse(s); return true; }
-  } catch(e) {}
-  return false;
+// Check if an exercise was completed in ALL days that include it during a week
+function exCompletedInWeek(exId, weekIdx) {
+  const wk = 'w'+weekIdx;
+  for(let d=0;d<3;d++){
+    const exs = getDayExs(d);
+    if(exs.find(e=>e.id===exId)){
+      if(!S.weekData[wk]?.['d'+d]?.[exId]) return false;
+    }
+  }
+  return true;
 }
 
-function r2(v) { return Math.round(v * 2) / 2; }
-
-// ===================== SETUP PAGE =====================
-function buildSetupPage() {
+// ============================================================
+// SETUP
+// ============================================================
+function buildSetup(){
   const el = document.getElementById('setup-groups');
-  el.innerHTML = Object.entries(GROUPS).map(([gid, g]) => `
-    <div class="setup-group">
-      <div class="setup-group-header" onclick="toggleGroup('grp-${gid}')">
-        <div class="setup-group-title">${gid}</div>
-        <div style="font-size:13px;color:var(--muted);flex:1;margin-left:8px">${g.label.split('—')[1].trim()}</div>
-        <div class="setup-group-sub" id="grp-${gid}-chevron">▸</div>
+  el.innerHTML = Object.entries(GROUPS).map(([gid,g]) => `
+    <div style="margin-bottom:8px">
+      <div class="gh" onclick="toggleG('g-${gid}')">
+        <div class="gt">${gid}</div>
+        <div style="font-size:13px;color:var(--muted);flex:1;margin-left:8px">${g.label}</div>
+        <span id="g-${gid}-ch">▸</span>
       </div>
-      <div class="setup-group-body" id="grp-${gid}">
-        ${g.exercises.map(ex => `
-          <div class="setup-ex">
-            <div class="setup-ex-name">${ex.name}</div>
-            <div class="setup-ex-alts">Alternatif: ${ex.alt}</div>
-            ${ex.bodyweight ? `
-              <div class="input-label">Tekrar / Süre (sn)</div>
-              <input type="number" id="in_${ex.id}_rep" placeholder="${ex.reps}" min="1" max="999" step="1"
-                value="${state.maxes[ex.id]?.reps || ''}" style="margin-bottom:4px"/>
-              <input type="hidden" id="in_${ex.id}_kg" value="0"/>
-            ` : `
-              <div class="input-row">
-                <div>
-                  <div class="input-label">Max kg</div>
-                  <input type="number" id="in_${ex.id}_kg" placeholder="ör. 60" min="0" step="0.5"
-                    value="${state.maxes[ex.id]?.kg || ''}"/>
-                </div>
-                <div>
-                  <div class="input-label">Tekrar</div>
-                  <input type="number" id="in_${ex.id}_rep" placeholder="${ex.reps}" min="1" max="30" step="1"
-                    value="${state.maxes[ex.id]?.reps || ''}"/>
-                </div>
-              </div>
-            `}
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
-}
-
-function toggleGroup(id) {
-  const el = document.getElementById(id);
-  const ch = document.getElementById(id+'-chevron');
-  el.classList.toggle('open');
-  ch.textContent = el.classList.contains('open') ? '▾' : '▸';
-}
-
-function saveAndStart() {
-  let missing = false;
-  Object.values(GROUPS).forEach(g => {
-    g.exercises.forEach(ex => {
-      const kg = parseFloat(document.getElementById('in_'+ex.id+'_kg')?.value) || 0;
-      const reps = parseInt(document.getElementById('in_'+ex.id+'_rep')?.value) || ex.reps;
-      if (!ex.bodyweight && kg <= 0) missing = true;
-      state.maxes[ex.id] = { kg: ex.bodyweight ? 0 : kg, reps };
-    });
-  });
-  if (missing) { alert('Lütfen tüm ağırlıkları gir!'); return; }
-  state.setupDone = true;
-  saveState();
-  renderProgram();
-  showPage('program', document.querySelectorAll('.nav-btn')[1]);
-}
-
-// ===================== PROGRAM PAGE =====================
-function renderProgram() {
-  const w = state.currentWeek;
-  const d = state.currentDay;
-  const mult = WEEK_MULTIPLIERS[Math.min(w, 11)];
-  const exercises = getDayExercises(d);
-
-  document.getElementById('week-display').textContent = 'H' + (w + 1);
-  document.getElementById('btn-prev').disabled = w <= 0;
-  document.getElementById('btn-next').disabled = w >= 11;
-
-  const pct = Math.round(((w + 1) / 12) * 100);
-  document.getElementById('prog-pct').textContent = pct + '%';
-  document.getElementById('prog-fill').style.width = pct + '%';
-
-  // stats
-  let totalSets = 0, totalVol = 0;
-  exercises.forEach(ex => {
-    const base = state.maxes[ex.id];
-    if (!base) return;
-    const kg = r2(base.kg * mult);
-    totalSets += ex.sets;
-    if (!ex.bodyweight) totalVol += kg * ex.sets * base.reps;
-  });
-  document.getElementById('s-ex').textContent = exercises.length;
-  document.getElementById('s-sets').textContent = totalSets;
-  document.getElementById('s-vol').textContent = (totalVol / 1000).toFixed(1);
-
-  // week complete check
-  const weekKey = 'w' + w;
-  const dayKey = 'd' + d;
-  const completedExs = (state.weekProgress[weekKey]?.[dayKey]) || {};
-  const allDone = exercises.every(ex => completedExs[ex.id]);
-
-  let html = '';
-  exercises.forEach(ex => {
-    const base = state.maxes[ex.id];
-    if (!base) return;
-    const kg = r2(base.kg * mult);
-    const isBase = w === 0;
-    const isDone = !!completedExs[ex.id];
-    const badgeTxt = isBase ? 'BAŞLANGIÇ' : `+${Math.round((mult - 1) * 100)}%`;
-    const badgeCls = isBase ? 'badge-new' : 'badge-up';
-    const weightDisplay = ex.bodyweight
-      ? `${base.reps} tekrar`
-      : `${kg} kg × ${base.reps} tekrar`;
-    html += `
-      <div class="ex-card" id="card-${ex.id}" style="${isDone ? 'opacity:.5;' : ''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-          <div class="ex-name">${ex.name}</div>
-          <span class="badge ${badgeCls}">${badgeTxt}</span>
-        </div>
-        <div class="ex-weight">${weightDisplay}</div>
-        <div class="ex-sets">${ex.sets} set</div>
-        <div class="ex-alt"><b>Alt:</b> ${ex.alt}</div>
-        ${!isDone ? `<button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%" onclick="markDone('${ex.id}')">✓ Tamamlandı</button>` : `<div style="margin-top:12px;font-size:13px;color:var(--success)">✓ Tamamlandı</div>`}
-      </div>`;
-  });
-
-  if (allDone && exercises.length > 0) {
-    html = `<div class="week-complete-card"><div class="wc-title">🏆 GÜN TAMAM!</div><div class="wc-sub">Harika antrenman. Bir sonraki gün için hazırsın.</div></div>` + html;
-  }
-
-  document.getElementById('ex-list').innerHTML = html || '<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Önce kurulum sayfasından ağırlıklarını gir.</div>';
-}
-
-function markDone(exId) {
-  const w = state.currentWeek;
-  const d = state.currentDay;
-  const weekKey = 'w' + w;
-  const dayKey = 'd' + d;
-  if (!state.weekProgress[weekKey]) state.weekProgress[weekKey] = {};
-  if (!state.weekProgress[weekKey][dayKey]) state.weekProgress[weekKey][dayKey] = {};
-  state.weekProgress[weekKey][dayKey][exId] = true;
-  saveState();
-
-  // Check if all done in all 3 days of this week
-  const allDays = [0,1,2].every(di => {
-    const exs = getDayExercises(di);
-    const done = state.weekProgress[weekKey]?.['d'+di] || {};
-    return exs.every(ex => done[ex.id]);
-  });
-
-  if (allDays && w < 11) {
-    showWeekCompleteModal(w);
-  }
-
-  renderProgram();
-}
-
-function showWeekCompleteModal(w) {
-  document.getElementById('modal-title').textContent = 'Hafta ' + (w+1) + ' Tamam! 🎉';
-  document.getElementById('modal-sub').textContent = 'Harika! Bir sonraki haftaya geçelim mi? Ağırlıklar otomatik olarak artacak.';
-  document.getElementById('modal-confirm').textContent = 'Hafta ' + (w+2) + "'e Geç →";
-  document.getElementById('modal-confirm').onclick = () => { state.currentWeek = w+1; saveState(); closeModal(); renderProgram(); };
-  document.getElementById('modal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-function changeWeek(d) {
-  state.currentWeek = Math.max(0, Math.min(11, state.currentWeek + d));
-  saveState();
-  renderProgram();
-}
-
-function changeDay(d, el) {
-  state.currentDay = d;
-  saveState();
-  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderProgram();
-}
-
-// ===================== TIMER =====================
-let timerTotal = 90, timerRemain = 90, timerInt = null, timerRunning = false;
-const CIRC = 603;
-
-function setPreset(s, btn) {
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  timerTotal = s; timerRemain = s; timerRunning = false;
-  clearInterval(timerInt);
-  document.getElementById('t-btn').textContent = 'BAŞLAT';
-  updateTimerUI();
-}
-
-function updateTimerUI() {
-  const m = Math.floor(timerRemain / 60), s = timerRemain % 60;
-  document.getElementById('t-display').textContent = m + ':' + (s < 10 ? '0' : '') + s;
-  const pct = timerRemain / timerTotal;
-  document.getElementById('t-ring').setAttribute('stroke-dashoffset', CIRC * (1 - pct));
-  document.getElementById('t-ring').style.stroke = timerRemain <= 10 ? '#f87171' : '#e8ff47';
-  document.getElementById('t-status').textContent = timerRunning ? (timerRemain <= 10 ? 'HAZIR OL!' : 'DİNLENİYORSUN') : 'HAZIR';
-}
-
-function toggleTimer() {
-  if (timerRunning) {
-    clearInterval(timerInt); timerRunning = false;
-    document.getElementById('t-btn').textContent = 'DEVAM';
-  } else {
-    if (timerRemain <= 0) timerRemain = timerTotal;
-    timerRunning = true;
-    document.getElementById('t-btn').textContent = 'DURAKLAT';
-    timerInt = setInterval(() => {
-      timerRemain--;
-      updateTimerUI();
-      if (timerRemain <= 0) {
-        clearInterval(timerInt); timerRunning = false;
-        document.getElementById('t-btn').textContent = 'BAŞLAT';
-        document.getElementById('t-status').textContent = 'HAZIR!';
-        // vibrate
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      }
-    }, 1000);
-  }
-  updateTimerUI();
-}
-
-function resetTimer() {
-  clearInterval(timerInt); timerRunning = false;
-  timerRemain = timerTotal;
-  document.getElementById('t-btn').textContent = 'BAŞLAT';
-  updateTimerUI();
-}
-
-// ===================== PROGRESS PAGE =====================
-function renderProgress() {
-  const el = document.getElementById('progress-content');
-  if (!state.setupDone || !Object.keys(state.maxes).length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Önce kurulum yap.</div>';
-    return;
-  }
-
-  // Show per-exercise progress across weeks
-  const allExs = [];
-  Object.values(GROUPS).forEach(g => g.exercises.forEach(ex => allExs.push(ex)));
-
-  let html = '';
-  allExs.forEach(ex => {
-    const base = state.maxes[ex.id];
-    if (!base || ex.bodyweight) return;
-    html += `<div class="card" style="margin-bottom:10px">
-      <div class="card-title">${ex.name}</div>
-      <div style="display:flex;gap:0;overflow-x:auto;padding-bottom:4px">
-        ${WEEK_MULTIPLIERS.map((m, i) => {
-          const kg = r2(base.kg * m);
-          const weekKey = 'w' + i;
-          const isCompleted = [0,1,2].every(di => {
-            const exs = getDayExercises(di);
-            const hasEx = exs.find(e => e.id === ex.id);
-            if (!hasEx) return true;
-            return state.weekProgress[weekKey]?.['d'+di]?.[ex.id];
-          });
-          const isCurrent = i === state.currentWeek;
-          return `<div style="flex-shrink:0;width:44px;margin-right:4px;text-align:center">
-            <div style="font-size:9px;color:${isCurrent?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${isCurrent?'600':'400'}">H${i+1}</div>
-            <div style="padding:6px 2px;background:${isCompleted?'rgba(74,222,128,.15)':isCurrent?'rgba(232,255,71,.1)':'var(--bg3)'};border:1px solid ${isCompleted?'rgba(74,222,128,.3)':isCurrent?'rgba(232,255,71,.3)':'var(--border)'};border-radius:8px">
-              <div style="font-size:11px;font-weight:600;color:${isCompleted?'var(--success)':isCurrent?'var(--accent)':'var(--text)'}">${kg}</div>
-              <div style="font-size:9px;color:var(--muted)">kg</div>
+      <div class="gb" id="g-${gid}">
+        ${g.exercises.filter(e=>e.hasWeight).map(ex => {
+          const sv = S.maxes[ex.id];
+          return `<div class="ec">
+            <div class="en">${ex.name}</div>
+            <div class="esch">${ex.scheme}</div>
+            <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
+            <select id="alt-${ex.id}" style="margin-bottom:10px">
+              <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
+              ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
+            </select>
+            <div class="g2">
+              <div><div class="lbl">Başlangıç kg</div>
+                <input type="number" id="kg-${ex.id}" placeholder="ör. 50" min="0" step="0.5" value="${sv?.kg||''}"/></div>
+              <div><div class="lbl">Haftalık artış (kg)</div>
+                <input type="number" id="inc-${ex.id}" placeholder="ör. 2.5" min="0" step="0.5" value="${sv?.inc||''}"/></div>
             </div>
           </div>`;
         }).join('')}
+        ${g.exercises.filter(e=>!e.hasWeight).length?`
+          <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;line-height:1.5">
+            <b style="color:var(--text)">${g.exercises.filter(e=>!e.hasWeight).map(e=>e.name).join(', ')}</b><br>
+            Vücut ağırlığı — giriş gerekmez
+          </div>`:''}
       </div>
-    </div>`;
+    </div>`).join('');
+}
+
+function toggleG(id){
+  const el=document.getElementById(id), ch=document.getElementById(id+'-ch');
+  el.classList.toggle('open');
+  ch.textContent=el.classList.contains('open')?'▾':'▸';
+}
+
+function saveAndStart(){
+  let missing=false;
+  Object.values(GROUPS).forEach(g=>g.exercises.forEach(ex=>{
+    if(!ex.hasWeight) return;
+    const kg=parseFloat(document.getElementById('kg-'+ex.id)?.value);
+    const inc=parseFloat(document.getElementById('inc-'+ex.id)?.value);
+    const altIdx=parseInt(document.getElementById('alt-'+ex.id)?.value??-1);
+    if(isNaN(kg)||kg<=0){missing=true;return;}
+    S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx};
+  }));
+  if(missing){alert('Lütfen ağırlık olan tüm hareketlerin başlangıç kg değerini gir!');return;}
+  S.setupDone=true; saveS();
+  renderProgram(); renderProgress();
+  showPage('program',document.querySelectorAll('.nb')[1]);
+}
+
+function getDisplayName(ex){
+  if(!ex.hasWeight) return ex.name;
+  const m=S.maxes[ex.id];
+  if(!m||m.altIdx<0||m.altIdx===undefined) return ex.name;
+  return ex.alts[m.altIdx]||ex.name;
+}
+
+// ============================================================
+// PROGRAM
+// ============================================================
+function renderProgram(){
+  const w=S.currentWeek, d=S.currentDay;
+  const exs=getDayExs(d);
+  const wk='w'+w, dk='d'+d;
+  const doneMap=S.weekData[wk]?.[dk]||{};
+
+  document.getElementById('week-disp').textContent='H'+(w+1);
+  document.getElementById('btn-prev').disabled=w<=0;
+  document.getElementById('btn-next').disabled=w>=11;
+  const pct=Math.round(((w+1)/12)*100);
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+
+  let totalSets=0, totalVol=0;
+  exs.forEach(ex=>{
+    totalSets+=ex.sets;
+    if(ex.hasWeight){ const kg=getKgAt(ex.id,w); totalVol+=kg*ex.sets*ex.reps; }
   });
-  el.innerHTML = html || '<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Veri yok.</div>';
+  document.getElementById('s-ex').textContent=exs.length;
+  document.getElementById('s-sets').textContent=totalSets;
+  document.getElementById('s-vol').textContent=(totalVol/1000).toFixed(1);
+
+  const allDone=exs.every(ex=>doneMap[ex.id]);
+  let html='';
+  if(allDone&&exs.length>0){
+    html+=`<div class="done-banner"><div style="font-family:var(--fd);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div></div>`;
+  }
+
+  exs.forEach(ex=>{
+    const done=!!doneMap[ex.id];
+    const name=getDisplayName(ex);
+    let wtxt='', badge='', bcls='';
+    if(ex.hasWeight){
+      const m=S.maxes[ex.id];
+      if(!m){wtxt='— kg gir';badge='GİRİLMEDİ';bcls='bsame';}
+      else{
+        const kg=getKgAt(ex.id,w);
+        const prevKg=w>0?getKgAt(ex.id,w-1):kg;
+        wtxt=`${kg} kg`;
+        if(w===0){badge='BAŞLANGIÇ';bcls='bnew';}
+        else if(kg>prevKg){badge=`+${r2(kg-prevKg)}kg`;bcls='bup';}
+        else{badge='AYNI';bcls='bsame';}
+      }
+    } else {
+      wtxt='Vücut ağırlığı'; badge='MAX'; bcls='bmax';
+    }
+    html+=`
+      <div class="xc${done?' done':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div class="xname">${name}</div>
+          <span class="badge ${bcls}">${badge}</span>
+        </div>
+        <div class="xw">${wtxt}</div>
+        <div class="xsch">${ex.scheme}</div>
+        <div class="xalt">Alt: ${ex.alts.join(' · ')}</div>
+        ${done
+          ?`<div style="margin-top:12px;font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>`
+          :`<button class="btn bo" style="margin-top:12px" onclick="confirmDone('${ex.id}','${name}',${w},${d})">✓ Tamamlandı</button>`}
+      </div>`;
+  });
+
+  document.getElementById('ex-list').innerHTML=html||'<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Önce kurulum sayfasından ağırlıklarını gir.</div>';
 }
 
-// ===================== NAVIGATION =====================
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
-  if (name === 'program') renderProgram();
-  if (name === 'progress') renderProgress();
+function confirmDone(exId,name,w,d){
+  document.getElementById('modal-title').textContent=name;
+  document.getElementById('modal-sub').textContent='Tüm set ve tekrarları hedef adette tamamladın mı? Evet dersen bu hafta ağırlık artışın uygulanır, hayır dersen aynı ağırlıkla devam edersin.';
+  document.getElementById('modal-ok').textContent='Evet, tamamladım ✓';
+  document.getElementById('modal-ok').onclick=()=>{markDone(exId,w,d);closeModal();};
+  document.getElementById('modal').classList.add('open');
 }
 
-function hideOnboard() {
-  document.getElementById('onboard').style.display = 'none';
+function markDone(exId,w,d){
+  const wk='w'+w, dk='d'+d;
+  if(!S.weekData[wk]) S.weekData[wk]={};
+  if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+  S.weekData[wk][dk][exId]=true;
+  saveS(); renderProgram(); renderProgress();
 }
 
-// ===================== INIT =====================
-loadState();
-buildSetupPage();
-updateTimerUI();
-
-if (state.setupDone) {
-  hideOnboard();
-  renderProgram();
+function changeWeek(delta){
+  S.currentWeek=Math.max(0,Math.min(11,S.currentWeek+delta));
+  saveS(); renderProgram();
 }
 
-// Update day tabs UI on load
-const dt = document.querySelectorAll('.day-tab');
-dt.forEach((t,i) => t.classList.toggle('active', i === state.currentDay));
+function changeDay(d,el){
+  S.currentDay=d; saveS();
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderProgram();
+}
+
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ============================================================
+// TIMER
+// ============================================================
+let tTot=90,tRem=90,tInt=null,tRun=false;
+const CIRC=578;
+
+function setPreset(s,btn){
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('ap'));
+  btn.classList.add('ap');
+  tTot=s;tRem=s;tRun=false;clearInterval(tInt);
+  document.getElementById('t-btn').textContent='BAŞLAT';
+  updTimer();
+}
+
+function updTimer(){
+  const m=Math.floor(tRem/60),s=tRem%60;
+  document.getElementById('t-disp').textContent=m+':'+(s<10?'0':'')+s;
+  document.getElementById('t-ring').setAttribute('stroke-dashoffset',CIRC*(1-tRem/tTot));
+  document.getElementById('t-ring').style.stroke=tRem<=10?'#f87171':'#e8ff47';
+  document.getElementById('t-status').textContent=tRun?(tRem<=10?'HAZIR OL!':'DİNLENİYORSUN'):'HAZIR';
+}
+
+function toggleTimer(){
+  if(tRun){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='DEVAM';}
+  else{
+    if(tRem<=0) tRem=tTot;
+    tRun=true;document.getElementById('t-btn').textContent='DURAKLAT';
+    tInt=setInterval(()=>{
+      tRem--;updTimer();
+      if(tRem<=0){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='BAŞLAT';document.getElementById('t-status').textContent='HAZIR!';if(navigator.vibrate)navigator.vibrate([200,100,200]);}
+    },1000);
+  }
+  updTimer();
+}
+
+function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function renderProgress(){
+  const el=document.getElementById('progress-content');
+  if(!S.setupDone||!Object.keys(S.maxes).length){
+    el.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Önce kurulum yap.</div>';
+    return;
+  }
+  let html='';
+  Object.values(GROUPS).forEach(g=>{
+    g.exercises.filter(e=>e.hasWeight).forEach(ex=>{
+      if(!S.maxes[ex.id]) return;
+      const name=getDisplayName(ex);
+      const inc=S.maxes[ex.id].inc;
+      const weeks=Array.from({length:12},(_,i)=>({
+        w:i, kg:getKgAt(ex.id,i),
+        done:exCompletedInWeek(ex.id,i),
+        cur:i===S.currentWeek
+      }));
+      html+=`<div class="pec">
+        <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">+${inc}kg/hafta</span></div>
+        <div class="wscroll">
+          ${weeks.map(wk=>`
+            <div class="wkcell">
+              <div style="font-size:9px;color:${wk.cur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${wk.cur?700:400}">${wk.w+1}</div>
+              <div class="wkbox" style="background:${wk.done?'rgba(74,222,128,.12)':wk.cur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${wk.done?'rgba(74,222,128,.3)':wk.cur?'rgba(232,255,71,.3)':'var(--border)'}">
+                <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.kg}</div>
+                <div style="font-size:9px;color:var(--muted)">kg</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML=html;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='program') renderProgram();
+  if(name==='progress') renderProgress();
+}
+
+function hideOb(){ document.getElementById('ob').style.display='none'; }
+
+// ============================================================
+// INIT
+// ============================================================
+loadS();
+buildSetup();
+updTimer();
+if(S.setupDone){ hideOb(); renderProgram(); renderProgress(); }
+document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===S.currentDay));
 </script>
 
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-</script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 </body>
 </html>
