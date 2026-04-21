@@ -259,19 +259,19 @@ const EX = {
   // --- G1 hareketleri ---
   g1_cp:  {id:"g1_cp",  name:"Chest Press Machine",    scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.80,
             alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
-  g1_spm: {id:"g1_spm", name:"Shoulder Press Machine", scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.60,
+  g1_spm: {id:"g1_spm", name:"Shoulder Press Machine", scheme:"3x10",   sets:3,reps:10,  repType:"fixed",  hasWeight:true,  rmMult:0.85*0.60,
             alts:["Dumbbell OHP","Arnold Press","Machine Lateral Raise"]},
-  g1_rdl: {id:"g1_rdl", name:"Romanian DL",            scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.60,
+  g1_rdl: {id:"g1_rdl", name:"Romanian DL",            scheme:"3x8",   sets:3,reps:8,  repType:"fixed",  hasWeight:true,  rmMult:0.85*0.60,
             alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"]},
-  g1_lpd: {id:"g1_lpd", name:"Lat Pulldown",           scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.65,
+  g1_lpd: {id:"g1_lpd", name:"Lat Pulldown",           scheme:"3x10-14",   sets:3,reps:10,  repType:"range",  hasWeight:true,  rmMult:0.85*0.65,
             alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"]},
-  g1_le:  {id:"g1_le",  name:"Leg Extension",          scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.65,
+  g1_le:  {id:"g1_le",  name:"Leg Extension",          scheme:"3x10-14",   sets:3,reps:10,  repType:"range",  hasWeight:true,  rmMult:0.85*0.65,
             alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"]},
   g1_cr:  {id:"g1_cr",  name:"Crunch",                 scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
             alts:["Ab Wheel","Cable Crunch","Decline Crunch"]},
 
   // --- G2 hareketleri ---
-  g2_lp:  {id:"g2_lp",  name:"Leg Press",              scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.70,
+  g2_lp:  {id:"g2_lp",  name:"Leg Press",              scheme:"4×5+",   sets:4,reps:5, repType:"plus", hasWeight:true,  rmMult:0.85*0.70,
             alts:["Hack Squat","Smith Machine Squat","Goblet Squat"]},
   g2_cp:  {id:"g2_cp",  name:"Chest Press Machine",    scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
             alts:["Incline Dumbbell Press","Cable Fly","Smith Machine Bench"]},
@@ -327,6 +327,8 @@ function saveS(){ localStorage.setItem('ft_v6', JSON.stringify(S)); }
 function loadS(){ try{ const d=localStorage.getItem('ft_v6'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
 
 function r2(v){ return Math.round(v*2)/2; }
+
+function mround25(v){return Math.round(v / 2.5) * 2.5;}
 
 function getKgAt(exId, weekIdx){
   const m=S.maxes[exId]; if(!m) return 0;
@@ -417,7 +419,7 @@ function calcStart(exId, mult){
   const valEl=document.getElementById('calcval-'+exId);
   if(kg>0&&reps>0){
     const orm=kg+(kg*reps*0.0333);
-    const start=r2(orm*mult);
+    const start = mround25(orm * mult);
     if(valEl) valEl.textContent=start+' kg';
     if(calcEl) calcEl.style.display='flex';
   } else {
@@ -447,7 +449,7 @@ function saveAndStart(){
     const customName=customEl?.value.trim()||'';
     if(isNaN(rmKg)||rmKg<=0||rmReps<=0){missing=true;return;}
     const orm=rmKg+(rmKg*rmReps*0.0333);
-    const kg=r2(orm*ex.rmMult);
+    const kg = mround25(orm * ex.rmMult);
     S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps};
   });
   if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
