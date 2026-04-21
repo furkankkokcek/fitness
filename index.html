@@ -78,6 +78,14 @@ select option{background:var(--bg3)}
 .bnew{background:rgba(232,255,71,.12);color:var(--accent)}
 .bmax{background:rgba(251,191,36,.15);color:var(--warn)}
 .done-banner{background:linear-gradient(135deg,rgba(74,222,128,.1),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.25);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px}
+.set-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.set-inp-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.set-inp-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.set-inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:18px;font-weight:600;padding:10px 6px;border-radius:10px;outline:none;text-align:center;-webkit-appearance:none}
+.set-inp:focus{border-color:var(--accent)}
+.set-inp::placeholder{color:var(--muted);font-size:14px;font-weight:400}
+.set-total{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+.btn-undo{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--danger);font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:var(--fb);font-weight:600;width:auto}
 /* TIMER */
 .tw{display:flex;flex-direction:column;align-items:center;padding:6px 0}
 .pr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:26px}
@@ -102,7 +110,7 @@ select option{background:var(--bg3)}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .mo.open{display:flex}
 .ms{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px}
-.mt{font-family:var(--fd);font-size:28px;margin-bottom:8px}
+.mt2{font-family:var(--fd);font-size:28px;margin-bottom:8px}
 .msub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* ONBOARD */
@@ -124,9 +132,9 @@ select option{background:var(--bg3)}
   <div class="obl">FITTRACK</div>
   <div class="obs">12 haftalık progresif yüklenme<br/>antrenman takipçisi</div>
   <div class="obst">
-    <div class="ost"><div class="osn">1</div><div class="ostx"><b>Ağırlık, artış miktarı ve alternatif seç</b> — her hareket için</div></div>
-    <div class="ost"><div class="osn">2</div><div class="ostx"><b>Antrenman yap</b> — tamamladıktan sonra onayla</div></div>
-    <div class="ost"><div class="osn">3</div><div class="ostx"><b>Tamamlarsan ağırlık artar</b> — tamamlamazsan aynı kalır</div></div>
+    <div class="ost"><div class="osn">1</div><div class="ostx"><b>Ağırlık, artış ve alternatif seç</b> — her hareket için ayrı</div></div>
+    <div class="ost"><div class="osn">2</div><div class="ostx"><b>Antrenman yap</b> — setleri bitirince onayla</div></div>
+    <div class="ost"><div class="osn">3</div><div class="ostx"><b>Tamamlarsan artar</b> — tamamlamazsan aynı kalır</div></div>
   </div>
   <div style="margin-top:36px;width:100%;max-width:360px">
     <button class="btn bp" onclick="hideOb()">Başla →</button>
@@ -140,7 +148,7 @@ select option{background:var(--bg3)}
     <div class="page active" id="page-setup">
       <div class="pt">KURULUM</div>
       <div class="ps">Her hareket için başlangıç kg, haftalık artış ve alternatif seç</div>
-      <div id="setup-groups"></div>
+      <div id="setup-list"></div>
       <button class="btn bp" onclick="saveAndStart()" style="margin-top:4px">Programı Oluştur →</button>
       <div style="height:24px"></div>
     </div>
@@ -232,7 +240,7 @@ select option{background:var(--bg3)}
 
 <div class="mo" id="modal">
   <div class="ms">
-    <div class="mt" id="modal-title">Tamamlandı mı?</div>
+    <div class="mt2" id="modal-title">Tamamlandı mı?</div>
     <div class="msub" id="modal-sub"></div>
     <div class="mbtns">
       <button class="btn bo" onclick="closeModal()">İptal</button>
@@ -243,167 +251,206 @@ select option{background:var(--bg3)}
 
 <script>
 // ============================================================
-// DATA
+// EXERCISE MASTER LIST
+// id, name, scheme, sets, reps, repType, hasWeight, alts
+// repType: fixed | plus | range | max
 // ============================================================
-const GROUPS = {
-  G1:{label:"Push + Legs",exercises:[
-    {id:"g1_cp",name:"Chest Press Machine",  scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
-     alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
-    {id:"g1_lp",name:"Leg Press",            scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
-     alts:["Hack Squat","Smith Machine Squat","Goblet Squat"]},
-    {id:"g1_sp",name:"Smith Machine Shoulder",scheme:"4×5+",sets:4,reps:5,repType:"plus",hasWeight:true,
-     alts:["Dumbbell OHP","Arnold Press","Landmine Press"]},
-  ]},
-  G2:{label:"Full Body",exercises:[
-    {id:"g2_spm",name:"Shoulder Press Machine",scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
-     alts:["Dumbbell OHP","Machine Lateral Raise","Cable Upright Row"]},
-    {id:"g2_rdl",name:"Romanian DL",           scheme:"3×8", sets:3,reps:8, repType:"fixed",hasWeight:true,
-     alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"]},
-    {id:"g2_cp", name:"Chest Press Machine",   scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
-     alts:["Incline Dumbbell Press","Smith Machine Bench","Cable Fly"]},
-    {id:"g2_br", name:"Barbell Row 45",        scheme:"4×10",sets:4,reps:10,repType:"fixed",hasWeight:true,
-     alts:["Dumbbell Row","Cable Seated Row","T-Bar Row"]},
-    {id:"g2_lp", name:"Leg Press",             scheme:"3×10",sets:3,reps:10,repType:"fixed",hasWeight:true,
-     alts:["Hack Squat","Bulgarian Split Squat","Smith Machine Squat"]},
-    {id:"g2_pu", name:"Pull Ups",              scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
-     alts:["Lat Pulldown","Assisted Pull-Up","Cable Straight-Arm Pushdown"]},
-  ]},
-  G3:{label:"İzolasyon",exercises:[
-    {id:"g3_lr", name:"Lateral Raises",       scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
-     alts:["Cable Lateral Raise","Upright Row","Machine Lateral Raise"]},
-    {id:"g3_lpd",name:"Lat Pulldown Machine", scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
-     alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"]},
-    {id:"g3_cf", name:"Chest Fly Machine",    scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
-     alts:["Cable Fly","Dumbbell Fly","Pec Deck"]},
-    {id:"g3_le", name:"Leg Extension",        scheme:"3×10-14",sets:3,reps:10,repType:"range",hasWeight:true,
-     alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"]},
-  ]},
-  G4:{label:"Kol + Core",exercises:[
-    {id:"g4_cpd",name:"Cable Pushdown",       scheme:"3×8-12",sets:3,reps:8,repType:"range",hasWeight:true,
-     alts:["Overhead Triceps Extension","Dumbbell Kickback","Bench Dips"]},
-    {id:"g4_idc",name:"Incline Dumbbell Curl",scheme:"3×8-12",sets:3,reps:8,repType:"range",hasWeight:true,
-     alts:["Barbell Curl","Hammer Curl","Cable Curl"]},
-    {id:"g4_cr", name:"Crunch",               scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
-     alts:["Ab Wheel","Cable Crunch","Decline Crunch"]},
-    {id:"g4_lr", name:"Leg Raises",           scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
-     alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"]},
-    {id:"g4_pl", name:"Plank",                scheme:"3×max",sets:3,reps:0,repType:"max",hasWeight:false,
-     alts:["RKC Plank","Dead Bug","Pallof Press"]},
-  ]},
+const EX = {
+  // --- G1 hareketleri ---
+  g1_cp:  {id:"g1_cp",  name:"Chest Press Machine",    scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.80,
+            alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
+  g1_spm: {id:"g1_spm", name:"Shoulder Press Machine", scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Dumbbell OHP","Arnold Press","Machine Lateral Raise"]},
+  g1_rdl: {id:"g1_rdl", name:"Romanian DL",            scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"]},
+  g1_lpd: {id:"g1_lpd", name:"Lat Pulldown",           scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.65,
+            alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"]},
+  g1_le:  {id:"g1_le",  name:"Leg Extension",          scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.65,
+            alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"]},
+  g1_cr:  {id:"g1_cr",  name:"Crunch",                 scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
+            alts:["Ab Wheel","Cable Crunch","Decline Crunch"]},
+
+  // --- G2 hareketleri ---
+  g2_lp:  {id:"g2_lp",  name:"Leg Press",              scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.70,
+            alts:["Hack Squat","Smith Machine Squat","Goblet Squat"]},
+  g2_cp:  {id:"g2_cp",  name:"Chest Press Machine",    scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Incline Dumbbell Press","Cable Fly","Smith Machine Bench"]},
+  g2_pu:  {id:"g2_pu",  name:"Pull Ups",               scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
+            alts:["Lat Pulldown","Assisted Pull-Up","Cable Straight-Arm Pushdown"]},
+  g2_lr:  {id:"g2_lr",  name:"Lateral Raises",         scheme:"3×10-14",sets:3,reps:10, repType:"range", hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Cable Lateral Raise","Upright Row","Machine Lateral Raise"]},
+  g2_idc: {id:"g2_idc", name:"Incline Dumbbell Curl",  scheme:"3×8-12", sets:3,reps:8,  repType:"range", hasWeight:true,  rmMult:0.85*0.75,
+            alts:["Barbell Curl","Hammer Curl","Cable Curl"]},
+  g2_lgr: {id:"g2_lgr", name:"Leg Raises",             scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
+            alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"]},
+
+  // --- G3 hareketleri ---
+  g3_sp:  {id:"g3_sp",  name:"Smith Machine Shoulder", scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.70,
+            alts:["Dumbbell OHP","Arnold Press","Landmine Press"]},
+  g3_lp:  {id:"g3_lp",  name:"Leg Press",              scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Hack Squat","Bulgarian Split Squat","Smith Machine Squat"]},
+  g3_br:  {id:"g3_br",  name:"Barbell Row",            scheme:"4×10",   sets:4,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
+            alts:["Dumbbell Row","Cable Seated Row","T-Bar Row"]},
+  g3_cf:  {id:"g3_cf",  name:"Chest Fly Machine",      scheme:"3×10-14",sets:3,reps:10, repType:"range", hasWeight:true,  rmMult:0.85*0.65,
+            alts:["Cable Fly","Dumbbell Fly","Pec Deck"]},
+  g3_cpd: {id:"g3_cpd", name:"Cable Pushdown",         scheme:"3×8-12", sets:3,reps:8,  repType:"range", hasWeight:true,  rmMult:0.85*0.75,
+            alts:["Overhead Triceps Extension","Dumbbell Kickback","Bench Dips"]},
+  g3_pl:  {id:"g3_pl",  name:"Plank",                  scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
+            alts:["RKC Plank","Dead Bug","Pallof Press"]},
 };
 
-// Day definitions: each day picks N exercises from each group in order
-const DAY_DEFS = [
-  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:2},{g:"G4",n:1}], // Gün 1
-  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:1},{g:"G4",n:2}], // Gün 2
-  [{g:"G1",n:1},{g:"G2",n:2},{g:"G3",n:1},{g:"G4",n:2}], // Gün 3
+// Fixed day exercise lists — exact order as specified
+const DAYS = [
+  // Gün 1
+  ["g1_cp","g1_spm","g1_rdl","g1_lpd","g1_le","g1_cr"],
+  // Gün 2
+  ["g2_lp","g2_cp","g2_pu","g2_lr","g2_idc","g2_lgr"],
+  // Gün 3
+  ["g3_sp","g3_lp","g3_br","g3_cf","g3_cpd","g3_pl"],
 ];
 
-function getDayExs(dayIdx) {
-  const def = DAY_DEFS[dayIdx];
-  const idx = {}; Object.keys(GROUPS).forEach(g => idx[g]=0);
-  const out = [];
-  def.forEach(({g,n}) => {
-    for(let i=0;i<n;i++){
-      const arr = GROUPS[g].exercises;
-      out.push({...arr[idx[g]%arr.length], gid:g});
-      idx[g]++;
-    }
-  });
-  return out;
-}
+function getDayExs(d){ return DAYS[d].map(id => EX[id]); }
+
+// All exercises that need weight input (for setup page)
+const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
+// Deduplicate by name — Chest Press Machine and 45 Leg Press appear in multiple days
+// but are separate entries with different IDs (different scheme). Keep all.
 
 // ============================================================
 // STATE
 // ============================================================
 let S = { maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false };
+// weekData[wk][dk][exId] = true  (for weight exercises)
+// weekData[wk][dk][exId] = {s1:9,s2:7,s3:5}  (for max exercises)
 
-function saveS(){ localStorage.setItem('ft_v4', JSON.stringify(S)); }
-function loadS(){ try{ const d=localStorage.getItem('ft_v4'); if(d){S=JSON.parse(d);return true;} }catch(e){} return false; }
+function saveS(){ localStorage.setItem('ft_v6', JSON.stringify(S)); }
+function loadS(){ try{ const d=localStorage.getItem('ft_v6'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
 
 function r2(v){ return Math.round(v*2)/2; }
 
-// Get actual kg for an exercise at a given week
-// = base + inc * number_of_weeks_completed_before_this_week
-function getKgAt(exId, weekIdx) {
-  const m = S.maxes[exId];
-  if(!m) return 0;
-  let kg = m.kg;
-  for(let w=0; w<weekIdx; w++){
-    if(exCompletedInWeek(exId, w)) kg = r2(kg + (m.inc||0));
-  }
+function getKgAt(exId, weekIdx){
+  const m=S.maxes[exId]; if(!m) return 0;
+  let kg=m.kg;
+  for(let w=0;w<weekIdx;w++){ if(exCompletedInWeek(exId,w)) kg=r2(kg+(m.inc||0)); }
   return r2(kg);
 }
 
-// Check if an exercise was completed in ALL days that include it during a week
-function exCompletedInWeek(exId, weekIdx) {
-  const wk = 'w'+weekIdx;
+function exCompletedInWeek(exId, weekIdx){
+  const wk='w'+weekIdx;
   for(let d=0;d<3;d++){
-    const exs = getDayExs(d);
-    if(exs.find(e=>e.id===exId)){
-      if(!S.weekData[wk]?.['d'+d]?.[exId]) return false;
+    if(DAYS[d].includes(exId)){
+      const val=S.weekData[wk]?.['d'+d]?.[exId];
+      if(!val) return false; // false, undefined, 0 → not done
     }
   }
   return true;
 }
 
 // ============================================================
-// SETUP
+// SETUP PAGE
 // ============================================================
 function buildSetup(){
-  const el = document.getElementById('setup-groups');
-  el.innerHTML = Object.entries(GROUPS).map(([gid,g]) => `
+  // Group exercises by day for display
+  const el=document.getElementById('setup-list');
+  const dayNames=["Gün 1","Gün 2","Gün 3"];
+  el.innerHTML = DAYS.map((dayIds,di)=>{
+    const weightExs = dayIds.map(id=>EX[id]).filter(e=>e.hasWeight);
+    const bwExs = dayIds.map(id=>EX[id]).filter(e=>!e.hasWeight);
+    return `
     <div style="margin-bottom:8px">
-      <div class="gh" onclick="toggleG('g-${gid}')">
-        <div class="gt">${gid}</div>
-        <div style="font-size:13px;color:var(--muted);flex:1;margin-left:8px">${g.label}</div>
-        <span id="g-${gid}-ch">▸</span>
+      <div class="gh" onclick="toggleG('g-d${di}')">
+        <div class="gt">${dayNames[di].toUpperCase()}</div>
+        <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${dayIds.length} hareket</div>
+        <span id="g-d${di}-ch">▸</span>
       </div>
-      <div class="gb" id="g-${gid}">
-        ${g.exercises.filter(e=>e.hasWeight).map(ex => {
-          const sv = S.maxes[ex.id];
+      <div class="gb" id="g-d${di}">
+        ${weightExs.map(ex=>{
+          const sv=S.maxes[ex.id];
+          const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
+          const startKg=sv?.kg ? `${sv.kg} kg` : '—';
           return `<div class="ec">
             <div class="en">${ex.name}</div>
             <div class="esch">${ex.scheme}</div>
             <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
-            <select id="alt-${ex.id}" style="margin-bottom:10px">
+            <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
               <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
               ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
+              <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
             </select>
-            <div class="g2">
-              <div><div class="lbl">Başlangıç kg</div>
-                <input type="number" id="kg-${ex.id}" placeholder="ör. 50" min="0" step="0.5" value="${sv?.kg||''}"/></div>
-              <div><div class="lbl">Haftalık artış (kg)</div>
-                <input type="number" id="inc-${ex.id}" placeholder="ör. 2.5" min="0" step="0.5" value="${sv?.inc||''}"/></div>
+            <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
+              style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
+              value="${sv?.customName||''}"/>
+            <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı</div>
+            <div class="g2" style="margin-bottom:6px">
+              <div><div class="lbl">Ağırlık (kg)</div>
+                <input type="number" id="rmkg-${ex.id}" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
+                  oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
+              <div><div class="lbl">Tekrar sayısı</div>
+                <input type="number" id="rmrep-${ex.id}" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
+                  oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
             </div>
+            <div id="calc-${ex.id}" style="font-size:13px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:10px;display:${sv?.kg?'flex':'none'};align-items:center;justify-content:space-between">
+              <span style="color:var(--muted)">Başlangıç ağırlığı</span>
+              <span style="font-size:16px;font-weight:700;color:var(--accent)" id="calcval-${ex.id}">${startKg}</span>
+            </div>
+            <div><div class="lbl">Haftalık artış (kg)</div>
+              <input type="number" id="inc-${ex.id}" placeholder="ör. 2.5" min="0" step="0.5" value="${sv?.inc||''}"/></div>
           </div>`;
         }).join('')}
-        ${g.exercises.filter(e=>!e.hasWeight).length?`
-          <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;line-height:1.5">
-            <b style="color:var(--text)">${g.exercises.filter(e=>!e.hasWeight).map(e=>e.name).join(', ')}</b><br>
-            Vücut ağırlığı — giriş gerekmez
-          </div>`:''}
+        ${bwExs.length?`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:4px;line-height:1.6">
+          <b style="color:var(--text)">${bwExs.map(e=>e.name).join(' · ')}</b><br>Vücut ağırlığı — giriş gerekmez</div>`:''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function toggleG(id){
-  const el=document.getElementById(id), ch=document.getElementById(id+'-ch');
+  const el=document.getElementById(id),ch=document.getElementById(id+'-ch');
   el.classList.toggle('open');
   ch.textContent=el.classList.contains('open')?'▾':'▸';
 }
 
+function calcStart(exId, mult){
+  const kg=parseFloat(document.getElementById('rmkg-'+exId)?.value)||0;
+  const reps=parseInt(document.getElementById('rmrep-'+exId)?.value)||0;
+  const calcEl=document.getElementById('calc-'+exId);
+  const valEl=document.getElementById('calcval-'+exId);
+  if(kg>0&&reps>0){
+    const orm=kg+(kg*reps*0.0333);
+    const start=r2(orm*mult);
+    if(valEl) valEl.textContent=start+' kg';
+    if(calcEl) calcEl.style.display='flex';
+  } else {
+    if(calcEl) calcEl.style.display='none';
+  }
+}
+
+function toggleCustom(exId, val){
+  const el=document.getElementById('custom-'+exId);
+  if(el) el.style.display=(val==='custom')?'block':'none';
+}
+
 function saveAndStart(){
   let missing=false;
-  Object.values(GROUPS).forEach(g=>g.exercises.forEach(ex=>{
-    if(!ex.hasWeight) return;
-    const kg=parseFloat(document.getElementById('kg-'+ex.id)?.value);
-    const inc=parseFloat(document.getElementById('inc-'+ex.id)?.value);
-    const altIdx=parseInt(document.getElementById('alt-'+ex.id)?.value??-1);
-    if(isNaN(kg)||kg<=0){missing=true;return;}
-    S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx};
-  }));
-  if(missing){alert('Lütfen ağırlık olan tüm hareketlerin başlangıç kg değerini gir!');return;}
+  Object.values(EX).filter(e=>e.hasWeight).forEach(ex=>{
+    const rmkgEl=document.getElementById('rmkg-'+ex.id);
+    const rmrepEl=document.getElementById('rmrep-'+ex.id);
+    const incEl=document.getElementById('inc-'+ex.id);
+    const altEl=document.getElementById('alt-'+ex.id);
+    const customEl=document.getElementById('custom-'+ex.id);
+    if(!rmkgEl) return;
+    const rmKg=parseFloat(rmkgEl.value);
+    const rmReps=parseInt(rmrepEl?.value)||0;
+    const inc=parseFloat(incEl?.value);
+    const altVal=altEl?.value??'-1';
+    const altIdx=altVal==='custom'?'custom':parseInt(altVal);
+    const customName=customEl?.value.trim()||'';
+    if(isNaN(rmKg)||rmKg<=0||rmReps<=0){missing=true;return;}
+    const orm=rmKg+(rmKg*rmReps*0.0333);
+    const kg=r2(orm*ex.rmMult);
+    S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps};
+  });
+  if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
   S.setupDone=true; saveS();
   renderProgram(); renderProgress();
   showPage('program',document.querySelectorAll('.nb')[1]);
@@ -412,12 +459,14 @@ function saveAndStart(){
 function getDisplayName(ex){
   if(!ex.hasWeight) return ex.name;
   const m=S.maxes[ex.id];
-  if(!m||m.altIdx<0||m.altIdx===undefined) return ex.name;
+  if(!m||m.altIdx===undefined||m.altIdx===null) return ex.name;
+  if(m.altIdx==='custom') return m.customName||ex.name;
+  if(m.altIdx<0) return ex.name;
   return ex.alts[m.altIdx]||ex.name;
 }
 
 // ============================================================
-// PROGRAM
+// PROGRAM PAGE
 // ============================================================
 function renderProgram(){
   const w=S.currentWeek, d=S.currentDay;
@@ -432,7 +481,7 @@ function renderProgram(){
   document.getElementById('prog-pct').textContent=pct+'%';
   document.getElementById('prog-fill').style.width=pct+'%';
 
-  let totalSets=0, totalVol=0;
+  let totalSets=0,totalVol=0;
   exs.forEach(ex=>{
     totalSets+=ex.sets;
     if(ex.hasWeight){ const kg=getKgAt(ex.id,w); totalVol+=kg*ex.sets*ex.reps; }
@@ -447,15 +496,16 @@ function renderProgram(){
     html+=`<div class="done-banner"><div style="font-family:var(--fd);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div></div>`;
   }
 
-  exs.forEach(ex=>{
+  exs.forEach((ex, exIdx)=>{
     const done=!!doneMap[ex.id];
     const name=getDisplayName(ex);
-    let wtxt='', badge='', bcls='';
+    const isMax=(ex.repType==='max');
+    let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
       if(!m){wtxt='— kg gir';badge='GİRİLMEDİ';bcls='bsame';}
       else{
-        const kg=getKgAt(ex.id,w);
+        kg=getKgAt(ex.id,w);
         const prevKg=w>0?getKgAt(ex.id,w-1):kg;
         wtxt=`${kg} kg`;
         if(w===0){badge='BAŞLANGIÇ';bcls='bnew';}
@@ -465,6 +515,94 @@ function renderProgram(){
     } else {
       wtxt='Vücut ağırlığı'; badge='MAX'; bcls='bmax';
     }
+
+    // Warmup logic:
+    // exIdx 0 (1. hareket): 3 ısınma seti → ×0.60, ×0.70, ×0.85
+    // exIdx 1,2 (2. ve 3. hareket): 2 ısınma seti → ×0.60, ×0.85
+    //   İSTİSNA: Gün 2 (d===1), exIdx===2 (Pull-Ups, 3. hareket) → ısınma yok
+    // hasWeight olmayan hareketler → ısınma yok
+    let warmupHtml='';
+    if(ex.hasWeight && kg>0){
+      const isDay2PullUps=(d===1 && exIdx===2);
+      if(!isDay2PullUps){
+        let sets=[];
+        if(exIdx===0){
+          sets=[
+            {mult:0.60,label:'Isınma 1'},
+            {mult:0.70,label:'Isınma 2'},
+            {mult:0.85,label:'Isınma 3'},
+          ];
+        } else if(exIdx===1||exIdx===2){
+          sets=[
+            {mult:0.60,label:'Isınma 1'},
+            {mult:0.85,label:'Isınma 2'},
+          ];
+        }
+        if(sets.length){
+          warmupHtml=`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Isınma Setleri</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${sets.map(s=>{
+                const wkg=r2(kg*s.mult);
+                return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
+                  <div style="font-size:10px;color:var(--muted);margin-bottom:3px">${s.label}</div>
+                  <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} kg</div>
+                  <div style="font-size:10px;color:var(--muted)">×${Math.round(s.mult*100)}%</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }
+      }
+    }
+
+    // For max exercises, read saved set values
+    const savedSets = isMax && done && typeof doneMap[ex.id]==='object' ? doneMap[ex.id] : {};
+    const sv1=savedSets.s1||'', sv2=savedSets.s2||'', sv3=savedSets.s3||'';
+    const svTotal = (savedSets.s1||0)+(savedSets.s2||0)+(savedSets.s3||0);
+
+    let bottomSection='';
+    if(done){
+      if(isMax){
+        bottomSection=`
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">${sv1} + ${sv2} + ${sv3} = <b style="color:var(--text)">${svTotal} tekrar</b></div>
+            </div>
+            <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
+          </div>`;
+      } else {
+        bottomSection=`
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>
+            <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
+          </div>`;
+      }
+    } else {
+      if(isMax){
+        bottomSection=`
+          <div class="set-inputs" id="sets-${ex.id}">
+            <div class="set-inp-wrap">
+              <div class="set-inp-lbl">Set 1</div>
+              <input class="set-inp" type="number" id="s1-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
+            </div>
+            <div class="set-inp-wrap">
+              <div class="set-inp-lbl">Set 2</div>
+              <input class="set-inp" type="number" id="s2-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
+            </div>
+            <div class="set-inp-wrap">
+              <div class="set-inp-lbl">Set 3</div>
+              <input class="set-inp" type="number" id="s3-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
+            </div>
+          </div>
+          <div class="set-total" id="total-${ex.id}">Toplam: —</div>
+          <button class="btn bo" style="margin-top:10px" onclick="saveMaxDone('${ex.id}',${w},${d})">✓ Tamamlandı</button>`;
+      } else {
+        bottomSection=`<button class="btn bo" style="margin-top:12px" onclick="confirmDone('${ex.id}','${name.replace(/'/g,"\\'")}',${w},${d})">✓ Tamamlandı</button>`;
+      }
+    }
+
     html+=`
       <div class="xc${done?' done':''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
@@ -473,10 +611,8 @@ function renderProgram(){
         </div>
         <div class="xw">${wtxt}</div>
         <div class="xsch">${ex.scheme}</div>
-        <div class="xalt">Alt: ${ex.alts.join(' · ')}</div>
-        ${done
-          ?`<div style="margin-top:12px;font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>`
-          :`<button class="btn bo" style="margin-top:12px" onclick="confirmDone('${ex.id}','${name}',${w},${d})">✓ Tamamlandı</button>`}
+        ${warmupHtml}
+        ${bottomSection}
       </div>`;
   });
 
@@ -485,17 +621,44 @@ function renderProgram(){
 
 function confirmDone(exId,name,w,d){
   document.getElementById('modal-title').textContent=name;
-  document.getElementById('modal-sub').textContent='Tüm set ve tekrarları hedef adette tamamladın mı? Evet dersen bu hafta ağırlık artışın uygulanır, hayır dersen aynı ağırlıkla devam edersin.';
+  document.getElementById('modal-sub').textContent='Tüm set ve tekrarları hedefte tamamladın mı? Evet dersen bu hafta ağırlık artışın uygulanır. Hayır dersen aynı ağırlıkla devam edersin.';
   document.getElementById('modal-ok').textContent='Evet, tamamladım ✓';
   document.getElementById('modal-ok').onclick=()=>{markDone(exId,w,d);closeModal();};
   document.getElementById('modal').classList.add('open');
 }
 
 function markDone(exId,w,d){
-  const wk='w'+w, dk='d'+d;
+  const wk='w'+w,dk='d'+d;
   if(!S.weekData[wk]) S.weekData[wk]={};
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
   S.weekData[wk][dk][exId]=true;
+  saveS(); renderProgram(); renderProgress();
+}
+
+function undoDone(exId,w,d){
+  const wk='w'+w,dk='d'+d;
+  if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
+  saveS(); renderProgram(); renderProgress();
+}
+
+function updSetTotal(exId){
+  const s1=parseInt(document.getElementById('s1-'+exId)?.value)||0;
+  const s2=parseInt(document.getElementById('s2-'+exId)?.value)||0;
+  const s3=parseInt(document.getElementById('s3-'+exId)?.value)||0;
+  const total=s1+s2+s3;
+  const el=document.getElementById('total-'+exId);
+  if(el) el.textContent=total>0?`Toplam: ${total} tekrar`:'Toplam: —';
+}
+
+function saveMaxDone(exId,w,d){
+  const s1=parseInt(document.getElementById('s1-'+exId)?.value)||0;
+  const s2=parseInt(document.getElementById('s2-'+exId)?.value)||0;
+  const s3=parseInt(document.getElementById('s3-'+exId)?.value)||0;
+  if(s1===0&&s2===0&&s3===0){alert('En az 1 sete tekrar sayısı gir!');return;}
+  const wk='w'+w,dk='d'+d;
+  if(!S.weekData[wk]) S.weekData[wk]={};
+  if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+  S.weekData[wk][dk][exId]={s1,s2,s3};
   saveS(); renderProgram(); renderProgress();
 }
 
@@ -550,7 +713,7 @@ function toggleTimer(){
 function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
 
 // ============================================================
-// PROGRESS
+// PROGRESS PAGE
 // ============================================================
 function renderProgress(){
   const el=document.getElementById('progress-content');
@@ -559,31 +722,73 @@ function renderProgress(){
     return;
   }
   let html='';
-  Object.values(GROUPS).forEach(g=>{
-    g.exercises.filter(e=>e.hasWeight).forEach(ex=>{
-      if(!S.maxes[ex.id]) return;
-      const name=getDisplayName(ex);
-      const inc=S.maxes[ex.id].inc;
-      const weeks=Array.from({length:12},(_,i)=>({
-        w:i, kg:getKgAt(ex.id,i),
-        done:exCompletedInWeek(ex.id,i),
-        cur:i===S.currentWeek
-      }));
+
+  // — Ağırlıklı hareketler —
+  html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Ağırlık Takibi</div>`;
+  const seen=new Set();
+  DAYS.flat().forEach(id=>{
+    const ex=EX[id];
+    if(!ex.hasWeight||seen.has(id)||!S.maxes[id]) return;
+    seen.add(id);
+    const name=getDisplayName(ex);
+    const inc=S.maxes[id].inc;
+    const weeks=Array.from({length:12},(_,i)=>({
+      w:i, kg:getKgAt(id,i),
+      done:exCompletedInWeek(id,i),
+      cur:i===S.currentWeek
+    }));
+    html+=`<div class="pec">
+      <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">+${inc}kg/hafta</span></div>
+      <div class="wscroll">
+        ${weeks.map(wk=>`
+          <div class="wkcell">
+            <div style="font-size:9px;color:${wk.cur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${wk.cur?700:400}">${wk.w+1}</div>
+            <div class="wkbox" style="background:${wk.done?'rgba(74,222,128,.12)':wk.cur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${wk.done?'rgba(74,222,128,.3)':wk.cur?'rgba(232,255,71,.3)':'var(--border)'}">
+              <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.kg}</div>
+              <div style="font-size:9px;color:var(--muted)">kg</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  // — Max hareketler —
+  const maxExIds = [...new Set(DAYS.flat().filter(id=>EX[id].repType==='max'))];
+  if(maxExIds.length){
+    html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:18px 0 10px">Max Tekrar Takibi</div>`;
+    maxExIds.forEach(id=>{
+      const ex=EX[id];
+      const name=ex.name;
+      // Find which day this ex is in
+      const dayIdx=DAYS.findIndex(d=>d.includes(id));
+      const dk='d'+dayIdx;
+      const weeks=Array.from({length:12},(_,i)=>{
+        const wk='w'+i;
+        const val=S.weekData[wk]?.[dk]?.[id];
+        let total=0, sets=['-','-','-'];
+        if(val&&typeof val==='object'){
+          total=(val.s1||0)+(val.s2||0)+(val.s3||0);
+          sets=[val.s1||0,val.s2||0,val.s3||0];
+        }
+        return {w:i, total, sets, done:!!val, cur:i===S.currentWeek};
+      });
       html+=`<div class="pec">
-        <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">+${inc}kg/hafta</span></div>
+        <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">toplam tekrar</span></div>
         <div class="wscroll">
           ${weeks.map(wk=>`
             <div class="wkcell">
               <div style="font-size:9px;color:${wk.cur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${wk.cur?700:400}">${wk.w+1}</div>
               <div class="wkbox" style="background:${wk.done?'rgba(74,222,128,.12)':wk.cur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${wk.done?'rgba(74,222,128,.3)':wk.cur?'rgba(232,255,71,.3)':'var(--border)'}">
-                <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.kg}</div>
-                <div style="font-size:9px;color:var(--muted)">kg</div>
+                <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.done?wk.total:'—'}</div>
+                <div style="font-size:9px;color:var(--muted)">${wk.done?'top':'tek'}</div>
               </div>
             </div>`).join('')}
         </div>
+        ${weeks[S.currentWeek].done?`<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets[0]} + ${weeks[S.currentWeek].sets[1]} + ${weeks[S.currentWeek].sets[2]} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>`:''}
       </div>`;
     });
-  });
+  }
+
   el.innerHTML=html;
 }
 
