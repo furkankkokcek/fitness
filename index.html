@@ -387,6 +387,16 @@ select option{background:var(--bg3)}
   </div>
 </div>
 
+<div class="mo" id="gif-modal">
+  <div class="ms" style="max-width:500px;width:90%">
+    <div class="mt2" id="gif-title">Hareket Nasıl Yapılır?</div>
+    <div style="margin:20px 0;background:var(--bg3);border-radius:12px;overflow:hidden">
+      <img id="gif-img" src="" alt="Exercise GIF" style="width:100%;display:block"/>
+    </div>
+    <button class="btn bp" onclick="closeGifModal()">Kapat</button>
+  </div>
+</div>
+
 <div class="mo" id="profile-setup-modal">
   <div class="ms">
     <div class="mt2">Kişisel Bilgilerin</div>
@@ -440,45 +450,45 @@ select option{background:var(--bg3)}
 const EX = {
   // --- G1 hareketleri ---
   g1_cp:  {id:"g1_cp",  name:"Chest Press Machine",    scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.80,
-            alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
+            alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"], gifUrl:""},
   g1_spm: {id:"g1_spm", name:"Shoulder Press Machine", scheme:"3x10",   sets:3,reps:10,  repType:"fixed",  hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Dumbbell OHP","Arnold Press","Machine Lateral Raise"]},
+            alts:["Dumbbell OHP","Arnold Press","Machine Lateral Raise"], gifUrl:""},
   g1_rdl: {id:"g1_rdl", name:"Romanian DL",            scheme:"3x8",   sets:3,reps:8,  repType:"fixed",  hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"]},
+            alts:["Stiff-Leg Deadlift","Cable Pull-Through","DB Romanian DL"], gifUrl:""},
   g1_lpd: {id:"g1_lpd", name:"Lat Pulldown",           scheme:"3x10-14",   sets:3,reps:10,  repType:"range",  hasWeight:true,  rmMult:0.85*0.65,
-            alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"]},
+            alts:["Cable Wide-Grip Pulldown","Assisted Pull-Up","Straight-Arm Pulldown"], gifUrl:""},
   g1_le:  {id:"g1_le",  name:"Leg Extension",          scheme:"3x10-14",   sets:3,reps:10,  repType:"range",  hasWeight:true,  rmMult:0.85*0.65,
-            alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"]},
+            alts:["Terminal Knee Extension","Sissy Squat","Step-Up with Knee Drive"], gifUrl:""},
   g1_cr:  {id:"g1_cr",  name:"Crunch",                 scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
-            alts:["Ab Wheel","Cable Crunch","Decline Crunch"]},
+            alts:["Ab Wheel","Cable Crunch","Decline Crunch"], gifUrl:""},
 
   // --- G2 hareketleri ---
   g2_lp:  {id:"g2_lp",  name:"Leg Press",              scheme:"4×5+",   sets:4,reps:5, repType:"plus", hasWeight:true,  rmMult:0.85*0.70,
-            alts:["Hack Squat","Smith Machine Squat","Goblet Squat"]},
+            alts:["Hack Squat","Smith Machine Squat","Goblet Squat"], gifUrl:""},
   g2_cp:  {id:"g2_cp",  name:"Chest Press Machine",    scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"]},
+            alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"], gifUrl:""},
   g2_pu:  {id:"g2_pu",  name:"Pull Ups",               scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
-            alts:["Lat Pulldown","Assisted Pull-Up","Cable Straight-Arm Pushdown"]},
+            alts:["Lat Pulldown","Assisted Pull-Up","Cable Straight-Arm Pushdown"], gifUrl:""},
   g2_lr:  {id:"g2_lr",  name:"Lateral Raises",         scheme:"3×10-14",sets:3,reps:10, repType:"range", hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Cable Lateral Raise","Upright Row","Machine Lateral Raise"]},
+            alts:["Cable Lateral Raise","Upright Row","Machine Lateral Raise"], gifUrl:""},
   g2_idc: {id:"g2_idc", name:"Incline Dumbbell Curl",  scheme:"3×8-12", sets:3,reps:8,  repType:"range", hasWeight:true,  rmMult:0.85*0.75,
-            alts:["Barbell Curl","Hammer Curl","Cable Curl"]},
+            alts:["Barbell Curl","Hammer Curl","Cable Curl"], gifUrl:""},
   g2_lgr: {id:"g2_lgr", name:"Leg Raises",             scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
-            alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"]},
+            alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"], gifUrl:""},
 
   // --- G3 hareketleri ---
   g3_sp:  {id:"g3_sp",  name:"Smith Machine Shoulder", scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.70,
-            alts:["Dumbbell OHP","Arnold Press","Landmine Press"]},
+            alts:["Dumbbell OHP","Arnold Press","Landmine Press"], gifUrl:""},
   g3_lp:  {id:"g3_lp",  name:"Leg Press",              scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Hack Squat","Bulgarian Split Squat","Smith Machine Squat"]},
+            alts:["Hack Squat","Smith Machine Squat","Goblet Squat"], gifUrl:""},
   g3_br:  {id:"g3_br",  name:"Barbell Row",            scheme:"4×10",   sets:4,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
-            alts:["Dumbbell Row","Cable Seated Row","T-Bar Row"]},
+            alts:["Dumbbell Row","Cable Seated Row","T-Bar Row"], gifUrl:""},
   g3_cf:  {id:"g3_cf",  name:"Chest Fly Machine",      scheme:"3×10-14",sets:3,reps:10, repType:"range", hasWeight:true,  rmMult:0.85*0.65,
-            alts:["Cable Fly","Dumbbell Fly","Pec Deck"]},
+            alts:["Cable Fly","Dumbbell Fly","Pec Deck"], gifUrl:""},
   g3_cpd: {id:"g3_cpd", name:"Cable Pushdown",         scheme:"3×8-12", sets:3,reps:8,  repType:"range", hasWeight:true,  rmMult:0.85*0.75,
-            alts:["Overhead Triceps Extension","Dumbbell Kickback","Bench Dips"]},
+            alts:["Overhead Triceps Extension","Dumbbell Kickback","Bench Dips"], gifUrl:""},
   g3_pl:  {id:"g3_pl",  name:"Plank",                  scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
-            alts:["RKC Plank","Dead Bug","Pallof Press"]},
+            alts:["RKC Plank","Dead Bug","Pallof Press"], gifUrl:""},
 };
 
 // Fixed day exercise lists — exact order as specified
@@ -497,6 +507,76 @@ function getDayExs(d){ return DAYS[d].map(id => EX[id]); }
 const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
 // Deduplicate by name — Chest Press Machine and 45 Leg Press appear in multiple days
 // but are separate entries with different IDs (different scheme). Keep all.
+
+// ============================================================
+// GIF HARITA — Tüm hareketler için GIF URL'leri (lokalden okunacak)
+// ============================================================
+// Helper fonksiyon: hareket adını dosya adına çevir
+function getGifPath(exerciseName) {
+  return 'exercises/' + exerciseName.toLowerCase().replace(/\s+/g, '-').replace(/[&]/g, 'and') + '.gif';
+}
+
+const EXERCISE_GIFS = {
+  "Chest Press Machine": getGifPath("Chest-Press-Machine"),
+  "Dumbbell Bench Press": getGifPath("Dumbbell-Press-1"),
+  "Smith Machine Bench": getGifPath("Smith-Machine-Bench-Press"),
+  "Cable Chest Press": getGifPath("Seated-Cable-Chest-Press"),
+  "Shoulder Press Machine": getGifPath("Lever-Shoulder-Press"),
+  "Dumbbell OHP": getGifPath("Standing-Dumbbell-Overhead-Press"),
+  "Arnold Press": getGifPath("Arnold-Press"),
+  "Machine Lateral Raise": getGifPath("Lateral-Raise-Machine"),
+  "Romanian DL": getGifPath("Barbell-Romanian-Deadlift"),
+  "Stiff-Leg Deadlift": getGifPath("Stiff-Leg-Deadlift"),
+  "Cable Pull-Through": getGifPath("Cable-Pull-Through"),
+  "DB Romanian DL": getGifPath("Dumbbell-Romanian-Deadlift.gif"),
+  "Lat Pulldown": getGifPath("Lat-Pulldown"),
+  "Cable Wide-Grip Pulldown": getGifPath("Lat-Pulldown"),
+  "Assisted Pull-Up": getGifPath("Assisted-Pull-up"),
+  "Straight-Arm Pulldown": getGifPath("Cable-Straight-Arm-Pulldown"),
+  "Leg Extension": getGifPath("LEG-EXTENSION"),
+  "Terminal Knee Extension": getGifPath("Terminal Knee Extension"),
+  "Sissy Squat": getGifPath("sissy-squat"),
+  "Step-Up with Knee Drive": getGifPath("Step-up"),
+  "Crunch": getGifPath("Crunch"),
+  "Ab Wheel": getGifPath("Ab-Wheel-Rollout"),
+  "Cable Crunch": getGifPath("Standing-Cable-Crunch"),
+  "Decline Crunch": getGifPath("Decline-Sit-up"),
+  "Leg Press": getGifPath("Leg-Press"),
+  "Hack Squat": getGifPath("Sled-Hack-Squat"),
+  "Smith Machine Squat": getGifPath("smith-machine-squat"),
+  "Goblet Squat": getGifPath("Heel-Elevated-Goblet-Squat"),
+  "Pull Ups": getGifPath("Pull-up"),
+  "Cable Straight-Arm Pushdown": getGifPath("Pushdown"),
+  "Lateral Raises": getGifPath("Dumbbell-Lateral-Raise"),
+  "Cable Lateral Raise": getGifPath("Cable-Lateral-Raise"),
+  "Upright Row": getGifPath("Barbell-Upright-Row"),
+  "Incline Dumbbell Curl": getGifPath("Flexor-Incline-Dumbbell-Curls"),
+  "Barbell Curl": getGifPath("Barbell-Curl"),
+  "Hammer Curl": getGifPath("Hammer-Curl"),
+  "Cable Curl": getGifPath("cable-curl"),
+  "Leg Raises": getGifPath("Lying-Leg-Raise"),
+  "Hanging Knee Raise": getGifPath("Hanging Knee Raise"),
+  "Reverse Crunch": getGifPath("Reverse-Crunch-1"),
+  "Flutter Kicks": getGifPath("Flutter-Kicks"),
+  "Smith Machine Shoulder": getGifPath("Smith-Machine-Shoulder-Press"),
+  "Landmine Press": getGifPath("Kneeling-Landmine-Press"),
+  "Barbell Row": getGifPath("Barbell-Bent-Over-Row"),
+  "Dumbbell Row": getGifPath("Dumbbell-Row"),
+  "Cable Seated Row": getGifPath("Seated-Cable-Row"),
+  "T-Bar Row": getGifPath("t-bar-rows"),
+  "Chest Fly Machine": getGifPath("Pec-Deck-Fly"),
+  "Cable Fly": getGifPath("Cable-Crossover"),
+  "Dumbbell Fly": getGifPath("Dumbbell-Fly"),
+  "Pec Deck": getGifPath("Pec-Deck-Fly"),
+  "Cable Pushdown": getGifPath("Pushdown"),
+  "Overhead Triceps Extension": getGifPath("Seated-One-Arm-Dumbbell-Triceps-Extension"),
+  "Dumbbell Kickback": getGifPath("Dumbbell-Kickback"),
+  "Bench Dips": getGifPath("Bench-Dips"),
+  "Plank": getGifPath("Plank"),
+  "RKC Plank": getGifPath("RKC Plank"),
+  "Dead Bug": getGifPath("Dead Bug"),
+  "Pallof Press": getGifPath("Pallof Press")
+};
 
 // ============================================================
 // STATE
@@ -617,7 +697,10 @@ function buildSetup(){
           const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
           const startKg=sv?.kg ? `${sv.kg} kg` : '—';
           return `<div class="ec">
-            <div class="en">${ex.name}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div class="en" style="margin:0">${ex.name}</div>
+              <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+            </div>
             <div class="esch">${ex.scheme}</div>
             <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
             <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
@@ -657,10 +740,105 @@ function buildSetup(){
   }).join('');
 }
 
+// Replace Turkish uppercase characters with ASCII equivalents
+function asciiUpper(s){
+  if(!s) return s;
+  const up = s.toString().toUpperCase();
+  return up.replace(/[İI]/g,'I')
+           .replace(/Ö/g,'O')
+           .replace(/Ü/g,'U')
+           .replace(/Ç/g,'C')
+           .replace(/Ş/g,'S')
+           .replace(/Ğ/g,'G');
+}
+
+function normalizeUppercaseText(){
+  const all = document.querySelectorAll('body *');
+  all.forEach(el=>{
+    try{
+      const cs = window.getComputedStyle(el);
+      if(cs && cs.textTransform && cs.textTransform.toLowerCase()==='uppercase'){
+        if(el.childElementCount===0){
+          const txt = el.textContent?.trim();
+          if(txt) el.textContent = asciiUpper(txt);
+        }
+      }
+    }catch(e){}
+  });
+}
+
 function toggleG(id){
   const el=document.getElementById(id),ch=document.getElementById(id+'-ch');
   el.classList.toggle('open');
   ch.textContent=el.classList.contains('open')?'▾':'▸';
+}
+
+function showGif(exId){
+  const ex = EX[exId];
+  if(!ex) return;
+  
+  // Eğer kurulum sayfasındaysa, dropdown'tan doğrudan oku
+  // Aksi takdirde S.maxes'ten oku
+  let displayName = ex.name;
+  let altIdx = -1;
+  let customName = '';
+  
+  // Dropdown'u bul (kurulum sayfasında mevcut)
+  const altSelectEl = document.getElementById('alt-' + exId);
+  if(altSelectEl) {
+    const altVal = altSelectEl.value;
+    const customEl = document.getElementById('custom-' + exId);
+    
+    if(altVal === 'custom' && customEl) {
+      customName = customEl.value.trim();
+      displayName = customName || ex.name;
+    } else if(altVal !== '-1' && !isNaN(parseInt(altVal))) {
+      altIdx = parseInt(altVal);
+      displayName = ex.alts[altIdx] || ex.name;
+    }
+  } else {
+    // Program sayfasındaysa S.maxes'ten oku
+    const sv = S.maxes[exId];
+    if(sv?.altIdx !== undefined && sv.altIdx !== null) {
+      if(sv.altIdx === 'custom') {
+        displayName = sv.customName || ex.name;
+      } else if(sv.altIdx >= 0 && ex.alts) {
+        displayName = ex.alts[sv.altIdx];
+      }
+    }
+  }
+  
+  // Özel hareket seçiliyse — GIF gösterme
+  if(displayName !== ex.name && !EXERCISE_GIFS[displayName]) {
+    alert(`"${displayName}" için GIF bulunamadı.`);
+    return;
+  }
+  
+  // GIF URL'sini bul
+  const gifUrl = EXERCISE_GIFS[displayName];
+  if(!gifUrl) {
+    alert(`"${displayName}" için GIF bulunamadı.`);
+    return;
+  }
+  
+  // Modal boyutunu sayfaya göre ayarla (Kurulum / Profil için daha küçük)
+  const modal = document.getElementById('gif-modal');
+  const ms = modal?.querySelector('.ms');
+  const isSmallContext = !!document.getElementById('alt-'+exId) || document.getElementById('page-setup')?.classList.contains('active') || document.getElementById('page-profile')?.classList.contains('active');
+  if(ms){
+    if(isSmallContext){ ms.style.maxWidth = '380px'; ms.style.width = '90%'; }
+    else { ms.style.maxWidth = '700px'; ms.style.width = '90%'; }
+  }
+
+  // Modal'ı aç
+  document.getElementById('gif-title').textContent = displayName + ' — Nasıl Yapılır?';
+  document.getElementById('gif-img').src = gifUrl;
+  modal.classList.add('open');
+}
+
+function closeGifModal(){
+  document.getElementById('gif-modal').classList.remove('open');
+  document.getElementById('gif-img').src='';
 }
 
 function calcStart(exId, mult){
