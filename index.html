@@ -39,6 +39,10 @@ input,select{width:100%;background:var(--bg3);border:1px solid var(--border);col
 input:focus,select:focus{border-color:var(--accent)}
 input::placeholder{color:var(--muted)}
 select option{background:var(--bg3)}
+/* Hide number spinners in setup */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.no-spin{-moz-appearance:textfield}
 .lbl{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--fb);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
 .bp{background:var(--accent);color:#0a0a0a}.bp:active{transform:scale(.97)}
@@ -190,6 +194,20 @@ select option{background:var(--bg3)}
         <div class="sb"><div class="sv" id="s-sets">0</div><div class="sl">Set</div></div>
         <div class="sb"><div class="sv" id="s-vol">0</div><div class="sl">~Ton</div></div>
       </div>
+
+      <!-- HAFTALIK KİLO TAKİBİ -->
+      <div id="prog-weight-wrap" style="display:none;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px">Bu Hafta Kilom</div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px">
+          <div style="flex:1">
+            <input type="number" id="prog-week-weight" class="no-spin" placeholder="ör. 80.50" step="0.01" min="0"
+              style="font-size:20px;font-weight:600;color:var(--accent);background:transparent;border:none;padding:0;width:100%"
+              onchange="updateProgWeekWeight(this.value)" oninput="this.value=limitDecimals(this.value,2)"/>
+          </div>
+          <div style="font-size:13px;color:var(--muted)">kg</div>
+          <div id="prog-weight-diff" style="font-size:12px;font-weight:600;min-width:40px;text-align:right"></div>
+        </div>
+      </div>
       <div class="dtabs">
         <div class="dtab active" onclick="changeDay(0,this)">GÜN 1</div>
         <div class="dtab" onclick="changeDay(1,this)">GÜN 2</div>
@@ -262,35 +280,71 @@ select option{background:var(--bg3)}
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Kişisel Bilgiler (Opsiyonel)</div>
         <div class="g2" style="margin-bottom:8px">
           <div><div class="lbl">Kilo (kg)</div>
-            <input type="number" id="prof-kg" placeholder="ör. 80" min="0" step="0.1" oninput="calcCalories()"/></div>
+            <input type="number" id="prof-kg" class="no-spin" placeholder="ör. 80" min="0" step="0.1" oninput="calcCalories()"/></div>
           <div><div class="lbl">Boy (cm)</div>
-            <input type="number" id="prof-cm" placeholder="ör. 175" min="0" step="1" oninput="calcCalories()"/></div>
+            <input type="number" id="prof-cm" class="no-spin" placeholder="ör. 175" min="0" step="1" oninput="calcCalories()"/></div>
         </div>
         <div class="g2" style="margin-bottom:8px">
           <div><div class="lbl">Yaş</div>
-            <input type="number" id="prof-age" placeholder="ör. 25" min="0" max="120" step="1" oninput="calcCalories()"/></div>
+            <input type="number" id="prof-age" class="no-spin" placeholder="ör. 25" min="0" max="120" step="1" oninput="calcCalories()"/></div>
           <div><div class="lbl">Cinsiyet</div>
-            <select id="prof-gender" onchange="calcCalories()">
+            <select id="prof-gender" onchange="onGenderChange()">
               <option value="">Seç</option>
               <option value="male">Erkek</option>
               <option value="female">Kadın</option>
             </select></div>
         </div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Vücut Ölçüleri (Opsiyonel)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bel + boyun girersen yağ oranın US Navy formülüyle hesaplanır.</div>
+        <div class="g2" style="margin-bottom:8px">
+          <div><div class="lbl">Bel çevresi (cm)</div>
+            <input type="number" id="prof-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5" oninput="calcCalories()"/></div>
+          <div><div class="lbl">Boyun çevresi (cm)</div>
+            <input type="number" id="prof-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5" oninput="calcCalories()"/></div>
+        </div>
+        <div id="hip-row" style="display:none;margin-bottom:8px">
+          <div class="lbl">Kalça çevresi (cm) — Kadınlar için</div>
+          <input type="number" id="prof-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5" oninput="calcCalories()"/>
+        </div>
         <button class="btn bp" onclick="saveProfile()">Kaydet</button>
       </div>
 
-      <div id="calorie-display" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Günlük Kalori İhtiyacı</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--fd);font-size:22px;color:var(--accent);margin-bottom:4px" id="cal-min">0</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Bazal</div></div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--fd);font-size:22px;color:#60a5fa;margin-bottom:4px" id="cal-maint">0</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Koruma</div></div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-family:var(--fd);font-size:22px;color:#f87171;margin-bottom:4px" id="cal-cut">0</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Yağ Yakım</div></div>
+      <div id="calorie-display" style="display:none;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Günlük Kalori İhtiyacı</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 10px;text-align:center">
+            <div style="font-family:var(--fd);font-size:30px;color:var(--muted);margin-bottom:4px" id="cal-min">0</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Bazal</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">BMR</div>
+          </div>
+          <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:16px 10px;text-align:center">
+            <div style="font-family:var(--fd);font-size:30px;color:var(--accent);margin-bottom:4px" id="cal-maint">0</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Koruma</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Kilo koru</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:16px 10px;text-align:center">
+            <div style="font-family:var(--fd);font-size:30px;color:var(--danger);margin-bottom:4px" id="cal-cut">0</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Yağ Yakım</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">−%15</div>
+          </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Haftalık Kilo Takibi</div>
-        <div id="weight-tracker"></div>
+        <div id="fat-display" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Vücut Kompozisyonu</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="text-align:center">
+              <div style="font-family:var(--fd);font-size:26px;color:var(--danger)" id="fat-pct">—</div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Yağ %</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:var(--fd);font-size:26px;color:var(--warn)" id="fat-kg">—</div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Yağ kg</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:var(--fd);font-size:26px;color:var(--success)" id="lean-kg">—</div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Yağsız kg</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div style="height:16px"></div>
@@ -337,24 +391,40 @@ select option{background:var(--bg3)}
   <div class="ms">
     <div class="mt2">Kişisel Bilgilerin</div>
     <div class="msub">Başlamadan önce temel bilgilerini gir. (Opsiyonel, daha sonra değiştirebilirsin)</div>
-    <div style="margin-top:18px">
+    <div style="margin-top:18px;max-height:60vh;overflow-y:auto">
       <div class="lbl">Başlangıç Kilosu (kg)</div>
-      <input type="number" id="onb-kg" placeholder="ör. 80" min="0" step="0.1" style="margin-bottom:12px"/>
+      <input type="number" id="onb-kg" class="no-spin" placeholder="ör. 80" min="0" step="0.1" style="margin-bottom:12px"/>
       
       <div class="lbl">Boy (cm)</div>
-      <input type="number" id="onb-cm" placeholder="ör. 175" min="0" step="1" style="margin-bottom:12px"/>
+      <input type="number" id="onb-cm" class="no-spin" placeholder="ör. 175" min="0" step="1" style="margin-bottom:12px"/>
       
       <div class="lbl">Yaş</div>
-      <input type="number" id="onb-age" placeholder="ör. 25" min="0" max="120" step="1" style="margin-bottom:12px"/>
+      <input type="number" id="onb-age" class="no-spin" placeholder="ör. 25" min="0" max="120" step="1" style="margin-bottom:12px"/>
       
       <div class="lbl">Cinsiyet</div>
-      <select id="onb-gender" style="margin-bottom:16px">
+      <select id="onb-gender" style="margin-bottom:12px" onchange="onOnbGenderChange()">
         <option value="">Seç</option>
         <option value="male">Erkek</option>
         <option value="female">Kadın</option>
       </select>
+
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Vücut Ölçüleri (Opsiyonel)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div>
+          <div class="lbl">Bel çevresi (cm)</div>
+          <input type="number" id="onb-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5"/>
+        </div>
+        <div>
+          <div class="lbl">Boyun çevresi (cm)</div>
+          <input type="number" id="onb-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5"/>
+        </div>
+      </div>
+      <div id="onb-hip-row" style="display:none;margin-bottom:12px">
+        <div class="lbl">Kalça çevresi (cm)</div>
+        <input type="number" id="onb-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5"/>
+      </div>
     </div>
-    <div class="mbtns">
+    <div class="mbtns" style="margin-top:16px">
       <button class="btn bo" onclick="skipProfileSetup()">Atla</button>
       <button class="btn bp" onclick="saveProfileSetup()">Devam →</button>
     </div>
@@ -440,8 +510,67 @@ let S = {
 // weekData[wk][dk][exId] = true  (for weight exercises)
 // weekData[wk][dk][exId] = {s1:9,s2:7,s3:5}  (for max exercises)
 
-function saveS(){ localStorage.setItem('ft_v8', JSON.stringify(S)); }
-function loadS(){ try{ const d=localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
+let changeCount=0;
+function saveS(){
+  localStorage.setItem('ft_v9', JSON.stringify(S));
+  changeCount++;
+  if(changeCount>=10){
+    changeCount=0;
+    setTimeout(()=>{ if(confirm('💾 10 değişiklik yapıldı. Yedek almak ister misin?')) exportData(); },200);
+  }
+}
+function loadS(){ try{ const d=localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
+
+function limitDecimals(v,d){
+  if(!v) return v;
+  const parts=v.toString().split('.');
+  if(parts.length>1&&parts[1].length>d) return parts[0]+'.'+parts[1].slice(0,d);
+  return v;
+}
+
+function updateProgWeekWeight(val){
+  const kg=parseFloat(parseFloat(val).toFixed(2))||0;
+  if(kg<=0) return;
+  const w=S.currentWeek;
+  if(!S.weeklyWeights) S.weeklyWeights={};
+  const prev=S.weeklyWeights[w-1]||S.profile?.kg||0;
+  S.weeklyWeights[w]=kg;
+  saveS();
+  // Show diff
+  const diffEl=document.getElementById('prog-weight-diff');
+  if(diffEl&&prev>0){
+    const diff=(kg-prev).toFixed(1);
+    const sign=diff>0?'+':'';
+    diffEl.textContent=sign+diff+' kg';
+    diffEl.style.color=diff>0?'var(--danger)':diff<0?'var(--success)':'var(--muted)';
+  }
+}
+
+function renderProgWeightTracker(){
+  const wrap=document.getElementById('prog-weight-wrap');
+  if(!wrap) return;
+  const hasProfile=S.profile&&S.profile.kg>0;
+  if(!hasProfile){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  if(!S.weeklyWeights) S.weeklyWeights={};
+  if(Object.keys(S.weeklyWeights).length===0){
+    for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg;
+  }
+  const w=S.currentWeek;
+  const kg=S.weeklyWeights[w]||S.profile.kg;
+  const inp=document.getElementById('prog-week-weight');
+  if(inp) inp.value=kg.toFixed(2);
+  const prev=S.weeklyWeights[w-1]||S.profile.kg;
+  const diff=(kg-prev).toFixed(1);
+  const diffEl=document.getElementById('prog-weight-diff');
+  if(diffEl&&w>0){
+    const sign=diff>0?'+':'';
+    diffEl.textContent=sign+diff+' kg';
+    diffEl.style.color=diff>0?'var(--danger)':diff<0?'var(--success)':'var(--muted)';
+  } else if(diffEl){
+    diffEl.textContent='';
+  }
+}
 
 
 
@@ -502,10 +631,10 @@ function buildSetup(){
             <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı</div>
             <div class="g2" style="margin-bottom:6px">
               <div><div class="lbl">Ağırlık (kg)</div>
-                <input type="number" id="rmkg-${ex.id}" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
+                <input type="number" id="rmkg-${ex.id}" class="no-spin" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
               <div><div class="lbl">Tekrar sayısı</div>
-                <input type="number" id="rmrep-${ex.id}" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
+                <input type="number" id="rmrep-${ex.id}" class="no-spin" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
             </div>
             <div id="calc-${ex.id}" style="font-size:13px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:10px;display:${sv?.kg?'flex':'none'};align-items:center;justify-content:space-between">
@@ -515,7 +644,7 @@ function buildSetup(){
             <div><div class="lbl">Haftalık artış (kg)</div>
               <div style="display:flex;gap:8px;align-items:center">
                 <button class="btn bo" type="button" onclick="decrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">−</button>
-                <input type="number" id="inc-${ex.id}" placeholder="ör. 2.5" min="0" step="0.5" value="${(typeof sv!=='undefined' && typeof sv.inc!=='undefined')?sv.inc:2.5}" style="text-align:center;flex:1"/>
+                <input type="number" id="inc-${ex.id}" class="no-spin" placeholder="ör. 2.5" min="0" step="0.5" value="${(typeof sv!=='undefined' && typeof sv.inc!=='undefined')?sv.inc:2.5}" style="text-align:center;flex:1"/>
                 <button class="btn bp" type="button" onclick="incrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">+</button>
               </div>
             </div>
@@ -640,6 +769,7 @@ function renderProgram(){
   document.getElementById('s-ex').textContent=exs.length;
   document.getElementById('s-sets').textContent=totalSets;
   document.getElementById('s-vol').textContent=(totalVol/1000).toFixed(1);
+  renderProgWeightTracker();
 
   const allDone=exs.every(ex=>doneMap[ex.id]);
   let html='';
@@ -835,9 +965,14 @@ const CIRC=578;
 function setPreset(s,btn){
   document.querySelectorAll('.pb').forEach(b=>b.classList.remove('ap'));
   btn.classList.add('ap');
-  tTot=s;tRem=s;tRun=false;clearInterval(tInt);
-  document.getElementById('t-btn').textContent='BAŞLAT';
-  updTimer();
+  // Don't reset if timer is running — just update total for next round
+  if(!tRun){
+    tTot=s; tRem=s;
+    document.getElementById('t-btn').textContent='BAŞLAT';
+    updTimer();
+  } else {
+    tTot=s; // apply after current run ends
+  }
 }
 
 function updTimer(){
@@ -851,11 +986,19 @@ function updTimer(){
 function toggleTimer(){
   if(tRun){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='DEVAM';}
   else{
-    if(tRem<=0) tRem=tTot;
+    if(tRem<=0){ tRem=tTot; }
     tRun=true;document.getElementById('t-btn').textContent='DURAKLAT';
     tInt=setInterval(()=>{
       tRem--;updTimer();
-      if(tRem<=0){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='BAŞLAT';document.getElementById('t-status').textContent='HAZIR!';if(navigator.vibrate)navigator.vibrate([200,100,200]);}
+      if(tRem<=0){
+        clearInterval(tInt);tRun=false;
+        document.getElementById('t-btn').textContent='BAŞLAT';
+        document.getElementById('t-status').textContent='HAZIR!';
+        if(navigator.vibrate)navigator.vibrate([200,100,200]);
+        // apply any preset change that happened while running
+        tRem=tTot;
+        updTimer();
+      }
     },1000);
   }
   updTimer();
@@ -940,6 +1083,44 @@ function renderProgress(){
     });
   }
 
+  // — Haftalık Kilo Takibi —
+  if(S.profile?.kg>0){
+    if(!S.weeklyWeights||Object.keys(S.weeklyWeights).length===0){
+      for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg;
+    }
+    const startKg=S.weeklyWeights[0]||S.profile.kg;
+    const curKg=S.weeklyWeights[S.currentWeek]||S.profile.kg;
+    const totalDiff=Math.round((curKg-startKg)*10)/10;
+    const diffSign=totalDiff>0?'+':'';
+    const diffColor=totalDiff>0?'var(--danger)':totalDiff<0?'var(--success)':'var(--muted)';
+
+    html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:18px 0 10px">Kilo Takibi</div>`;
+    html+=`<div class="pec" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="pen" style="margin:0">Haftalık Kilo</div>
+        <div style="font-size:13px;font-weight:600;color:${diffColor}">${diffSign}${totalDiff} kg başlangıçtan</div>
+      </div>
+      <div class="wscroll">
+        ${Array.from({length:12},(_,i)=>{
+          const kg=(S.weeklyWeights[i]||S.profile.kg).toFixed(2);
+          const isCur=i===S.currentWeek;
+          const hasDiff=i>0;
+          const prevKg=S.weeklyWeights[i-1]||S.profile.kg;
+          const diff=hasDiff?Math.round((parseFloat(kg)-prevKg)*10)/10:0;
+          const dColor=diff>0?'var(--danger)':diff<0?'var(--success)':'var(--muted)';
+          const dSign=diff>0?'+':'';
+          return `<div class="wkcell" style="width:54px">
+            <div style="font-size:9px;color:${isCur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${isCur?700:400}">H${i+1}</div>
+            <div class="wkbox" style="background:${isCur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${isCur?'var(--accent)':'var(--border)'}">
+              <div class="wkkg" style="color:${isCur?'var(--accent)':'var(--text)'};font-size:12px">${kg}</div>
+              <div style="font-size:8px;color:${hasDiff?dColor:'var(--muted)'};">${hasDiff?(dSign+diff):''}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
   el.innerHTML=html;
 }
 
@@ -978,11 +1159,45 @@ function applyTheme(){
 // ============================================================
 // PROFILE & CALORIES
 // ============================================================
+function onGenderChange(){
+  const g=document.getElementById('prof-gender')?.value;
+  const hipRow=document.getElementById('hip-row');
+  if(hipRow) hipRow.style.display=(g==='female')?'block':'none';
+  calcCalories();
+}
+
+function onOnbGenderChange(){
+  const g=document.getElementById('onb-gender')?.value;
+  const hipRow=document.getElementById('onb-hip-row');
+  if(hipRow) hipRow.style.display=(g==='female')?'block':'none';
+}
+
+function calcNavyFat(gender, heightCm, waistCm, neckCm, hipCm){
+  if(!heightCm||!waistCm||!neckCm) return null;
+  let fat=null;
+  if(gender==='male'){
+    const val = waistCm - neckCm;
+    if(val<=0) return null;
+    fat = 495 / (1.0324 - 0.19077*Math.log10(val) + 0.15456*Math.log10(heightCm)) - 450;
+  } else if(gender==='female'){
+    if(!hipCm) return null;
+    const val = waistCm + hipCm - neckCm;
+    if(val<=0) return null;
+    fat = 495 / (1.29579 - 0.35004*Math.log10(val) + 0.22100*Math.log10(heightCm)) - 450;
+  }
+  if(fat===null||isNaN(fat)||fat<2||fat>70) return null;
+  return Math.round(fat*10)/10;
+}
+
 function calcCalories(){
   const kg=parseFloat(document.getElementById('prof-kg')?.value)||0;
   const cm=parseFloat(document.getElementById('prof-cm')?.value)||0;
   const age=parseInt(document.getElementById('prof-age')?.value)||0;
   const gender=document.getElementById('prof-gender')?.value||'';
+  const waist=parseFloat(document.getElementById('prof-waist')?.value)||0;
+  const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
+  const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
+
   if(kg>0&&cm>0&&age>0&&gender){
     let bmr=0;
     if(gender==='male') bmr=10*kg + 6.25*cm - 5*age + 5;
@@ -996,6 +1211,21 @@ function calcCalories(){
   } else {
     document.getElementById('calorie-display').style.display='none';
   }
+
+  // US Navy body fat
+  const fatEl=document.getElementById('fat-display');
+  if(!fatEl) return;
+  const fat=calcNavyFat(gender, cm, waist, neck, hip);
+  if(fat!==null&&kg>0){
+    const fatKg=(kg*fat/100).toFixed(1);
+    const leanKg=(kg*(1-fat/100)).toFixed(1);
+    document.getElementById('fat-pct').textContent=fat+'%';
+    document.getElementById('fat-kg').textContent=fatKg;
+    document.getElementById('lean-kg').textContent=leanKg;
+    fatEl.style.display='block';
+  } else {
+    fatEl.style.display='none';
+  }
 }
 
 function saveProfile(){
@@ -1003,8 +1233,10 @@ function saveProfile(){
   const cm=parseFloat(document.getElementById('prof-cm')?.value)||0;
   const age=parseInt(document.getElementById('prof-age')?.value)||0;
   const gender=document.getElementById('prof-gender')?.value||'';
-  S.profile={...S.profile,kg,cm,age,gender};
-  // Initialize weekly weights with current weight for all weeks
+  const waist=parseFloat(document.getElementById('prof-waist')?.value)||0;
+  const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
+  const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
+  S.profile={...S.profile,kg,cm,age,gender,waist,neck,hip};
   if(kg>0 && Object.keys(S.weeklyWeights).length===0){
     for(let i=0;i<12;i++) S.weeklyWeights[i]=kg;
   }
@@ -1019,8 +1251,12 @@ function renderProfile(){
   if(p.cm) document.getElementById('prof-cm').value=p.cm;
   if(p.age) document.getElementById('prof-age').value=p.age;
   if(p.gender) document.getElementById('prof-gender').value=p.gender;
-  
-  // Load and display photo
+  if(p.waist) document.getElementById('prof-waist').value=p.waist;
+  if(p.neck) document.getElementById('prof-neck').value=p.neck;
+  if(p.hip) document.getElementById('prof-hip').value=p.hip;
+  // show/hide hip row
+  const hipRow=document.getElementById('hip-row');
+  if(hipRow) hipRow.style.display=(p.gender==='female')?'block':'none';
   if(p.photo){
     document.getElementById('photo-preview').style.backgroundImage=`url(${p.photo})`;
     document.getElementById('photo-preview').innerHTML='';
@@ -1030,9 +1266,7 @@ function renderProfile(){
     document.getElementById('photo-preview').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="width:40px;height:40px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
     document.getElementById('remove-photo-btn').style.display='none';
   }
-  
   calcCalories();
-  renderWeightTracker();
 }
 
 function uploadPhoto(event){
@@ -1170,16 +1404,17 @@ function saveProfileSetup(){
   const cm=parseFloat(document.getElementById('onb-cm')?.value)||0;
   const age=parseInt(document.getElementById('onb-age')?.value)||0;
   const gender=document.getElementById('onb-gender')?.value||'';
-  
+  const waist=parseFloat(document.getElementById('onb-waist')?.value)||0;
+  const neck=parseFloat(document.getElementById('onb-neck')?.value)||0;
+  const hip=parseFloat(document.getElementById('onb-hip')?.value)||0;
+
   if(kg>0||cm>0||age>0||gender){
-    S.profile={kg,cm,age,gender};
+    S.profile={kg,cm,age,gender,waist,neck,hip};
     if(kg>0){
       for(let i=0;i<12;i++) S.weeklyWeights[i]=kg;
     }
     saveS();
   }
-  
-  // Close modal, hide onboard, go directly to setup
   document.getElementById('profile-setup-modal').classList.remove('open');
   document.getElementById('ob').style.display='none';
   document.getElementById('first-choice').style.display='none';
