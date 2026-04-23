@@ -87,10 +87,10 @@ select option{background:var(--bg3)}
 .bnew{background:rgba(232,255,71,.12);color:var(--accent)}
 .bmax{background:rgba(251,191,36,.15);color:var(--warn)}
 .done-banner{background:linear-gradient(135deg,rgba(74,222,128,.1),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.25);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px}
-.set-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
-.set-inp-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.set-inputs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.set-inp-wrap{flex:1;min-width:55px;max-width:80px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .set-inp-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.set-inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:18px;font-weight:600;padding:10px 6px;border-radius:10px;outline:none;text-align:center;-webkit-appearance:none}
+.set-inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:18px;font-weight:600;padding:8px 4px;border-radius:10px;outline:none;text-align:center;-webkit-appearance:none}
 .set-inp:focus{border-color:var(--accent)}
 .set-inp::placeholder{color:var(--muted);font-size:14px;font-weight:400}
 .set-inp::-webkit-outer-spin-button,
@@ -389,17 +389,6 @@ select option{background:var(--bg3)}
   </nav>
 </div>
 
-<div class="mo" id="modal">
-  <div class="ms">
-    <div class="mt2" id="modal-title">Tamamlandı mı?</div>
-    <div class="msub" id="modal-sub"></div>
-    <div class="mbtns">
-      <button class="btn bo" onclick="closeModal()">İptal</button>
-      <button class="btn bp" id="modal-ok">Evet ✓</button>
-    </div>
-  </div>
-</div>
-
 <div class="mo" id="gif-modal">
   <div class="ms" style="max-width:500px;width:90%">
     <div class="mt2" id="gif-title">Hareket Nasıl Yapılır?</div>
@@ -515,15 +504,8 @@ const DAYS = [
 ];
 
 function getDayExs(d){ return DAYS[d].map(id => EX[id]); }
-
-// All exercises that need weight input (for setup page)
 const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
-// Deduplicate by name — Chest Press Machine and 45 Leg Press appear in multiple days
-// but are separate entries with different IDs (different scheme). Keep all.
 
-// ============================================================
-// GIF HARITA — Tüm hareketler için GIF URL'leri (boş - sen ekleyebilirsin)
-// ============================================================
 const EXERCISE_GIFS = {
   "Chest Press Machine": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Chest-Press-Machine.gif",
   "Dumbbell Bench Press": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Dumbbell-Press-1.gif",
@@ -586,9 +568,6 @@ const EXERCISE_GIFS = {
   "Pallof Press": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Pallof-Press.gif"
 };
 
-// ============================================================
-// STATE
-// ============================================================
 let S = {
   maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
   profile:{kg:0,cm:0,age:0,gender:''},
@@ -661,8 +640,6 @@ function renderProgWeightTracker(){
   }
 }
 
-
-
 function mround25(v){return Math.round(v / 2.5) * 2.5;}
 
 function getKgAt(exId, weekIdx){
@@ -687,7 +664,6 @@ function exCompletedInWeek(exId, weekIdx){
 // SETUP PAGE
 // ============================================================
 function buildSetup(){
-  // Group exercises by day for display
   const el=document.getElementById('setup-list');
   const dayNames=["Gün 1","Gün 2","Gün 3"];
   el.innerHTML = DAYS.map((dayIds,di)=>{
@@ -767,16 +743,9 @@ function buildSetup(){
   }).join('');
 }
 
-// Replace Turkish uppercase characters with ASCII equivalents
 function asciiUpper(s){
   if(!s) return s;
-  const up = s.toString().toUpperCase();
-  return up.replace(/[İI]/g,'I')
-           .replace(/Ö/g,'O')
-           .replace(/Ü/g,'U')
-           .replace(/Ç/g,'C')
-           .replace(/Ş/g,'S')
-           .replace(/Ğ/g,'G');
+  return s.toString().toUpperCase().replace(/[İI]/g,'I').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ç/g,'C').replace(/Ş/g,'S').replace(/Ğ/g,'G');
 }
 
 function normalizeUppercaseText(){
@@ -815,7 +784,6 @@ function showGif(exId){
   if(altSelectEl) {
     const altVal = altSelectEl.value;
     const customEl = document.getElementById('custom-' + exId);
-    
     if(altVal === 'custom' && customEl) {
       customName = customEl.value.trim();
       displayName = customName || ex.name;
@@ -824,7 +792,6 @@ function showGif(exId){
       displayName = ex.alts[altIdx] || ex.name;
     }
   } else {
-    // Program sayfasındaysa S.maxes'ten oku
     const sv = S.maxes[exId];
     if(sv?.altIdx !== undefined && sv.altIdx !== null) {
       if(sv.altIdx === 'custom') {
@@ -977,8 +944,67 @@ function saveExplanation(exId,text){
 }
 
 // ============================================================
-// PROGRAM PAGE
+// PROGRAM & DYNAMIC SET INPUTS
 // ============================================================
+function updSetTotalDynamic(exId, numSets){
+    let total = 0;
+    for(let i=1; i<=numSets; i++){
+        total += parseInt(document.getElementById(`s${i}-${exId}`)?.value) || 0;
+    }
+    const el=document.getElementById('total-'+exId);
+    if(el) el.textContent=total>0?`Toplam: ${total} tekrar`:'Toplam: —';
+}
+
+function saveDynamicDone(exId, w, d, numSets){
+    let setsData = {};
+    let allFilled = true;
+    let allTargetReached = true;
+    let total = 0;
+    const ex=EX[exId];
+    
+    // Varsayılan tekrar hedefini belirle
+    let targetReps = ex.reps;
+    if(ex.repType === 'plus') targetReps = ex.reps + 1;
+    if(ex.repType === 'range') targetReps = ex.reps + 1;
+
+    for(let i=1; i<=numSets; i++){
+        const val = parseInt(document.getElementById(`s${i}-${exId}`)?.value) || 0;
+        setsData[`s${i}`] = val;
+        total += val;
+        if(val === 0) allFilled = false;
+        
+        // Eğer max hareket değilse ve tekrar sayısı hedefin altındaysa başarısız say
+        if(ex.repType !== 'max' && val < targetReps) allTargetReached = false;
+    }
+
+    if(ex.repType === 'max' && total === 0){ alert('En az 1 sete tekrar sayısı gir!'); return; }
+    if(ex.repType !== 'max' && !allFilled){ 
+        if(!confirm('Bazı setleri boş bıraktın veya sıfır girdin. Yine de tamamlandı olarak işaretlemek istiyor musun?')) return; 
+    }
+
+    const wk='w'+w,dk='d'+d;
+    if(!S.weekData[wk]) S.weekData[wk]={};
+    if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+    S.weekData[wk][dk][exId] = setsData;
+
+    // Hedefe ulaşıldıysa otomatik ağırlık artışı (Max ağırlıksız hareketler hariç)
+    if(allTargetReached && w < 11 && ex.hasWeight){
+        const m=S.maxes[exId];
+        if(m){
+          const kg=getKgAt(exId,w);
+          S.maxes[exId].kg=mround25(kg+m.inc);
+        }
+    }
+    
+    saveS(); renderProgram(); renderProgress();
+}
+
+function undoDone(exId,w,d){
+  const wk='w'+w,dk='d'+d;
+  if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
+  saveS(); renderProgram(); renderProgress();
+}
+
 function renderProgram(){
   const w=S.currentWeek, d=S.currentDay;
   const exs=getDayExs(d);
@@ -1011,7 +1037,7 @@ function renderProgram(){
   exs.forEach((ex, exIdx)=>{
     const done=!!doneMap[ex.id];
     const name=getDisplayName(ex);
-    const isMax=(ex.repType==='max');
+    
     let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
@@ -1028,29 +1054,14 @@ function renderProgram(){
       wtxt='Vücut ağırlığı'; badge='MAX'; bcls='bmax';
     }
 
-    // Warmup logic:
-    // exIdx 0 (1. hareket): 3 ısınma seti → ×0.60, ×0.70, ×0.85
-    // exIdx 1,2 (2. ve 3. hareket): 2 ısınma seti → ×0.60, ×0.85
-    //   İSTİSNA: Gün 2 (d===1), exIdx===2 (Pull-Ups, 3. hareket) → ısınma yok
-    // hasWeight olmayan hareketler → ısınma yok
     let warmupHtml='';
-    
-    // Calculate special alternative loading if applicable
     let altLoadingText='';
     if(ex.hasWeight && kg>0){
-      if(ex.id==='g1_rdl'){
-        const altVal=((kg-20)/2);
-        altLoadingText=` (${altVal} kg)`;
-      } else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){
-        const altVal=(kg/2);
-        altLoadingText=` (${altVal} kg)`;
-      } else if(ex.id==='g3_br'){
-        const altVal=((kg-10)/2);
-        altLoadingText=` (${altVal} kg)`;
-      }
+      if(ex.id==='g1_rdl'){ altLoadingText=` (${(kg-20)/2} kg)`; } 
+      else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){ altLoadingText=` (${kg/2} kg)`; } 
+      else if(ex.id==='g3_br'){ altLoadingText=` (${(kg-10)/2} kg)`; }
     }
     
-    // Update wtxt with alternative loading
     if(altLoadingText && ex.hasWeight){
       wtxt=`${kg} kg<span style="font-size:13px;color:var(--muted);font-weight:400">${altLoadingText}</span>`;
     }
@@ -1059,18 +1070,8 @@ function renderProgram(){
       const isDay2PullUps=(d===1 && exIdx===2);
       if(!isDay2PullUps){
         let sets=[];
-        if(exIdx===0){
-          sets=[
-            {mult:0.60,label:'Isınma 1'},
-            {mult:0.70,label:'Isınma 2'},
-            {mult:0.85,label:'Isınma 3'},
-          ];
-        } else if(exIdx===1||exIdx===2){
-          sets=[
-            {mult:0.60,label:'Isınma 1'},
-            {mult:0.85,label:'Isınma 2'},
-          ];
-        }
+        if(exIdx===0){ sets=[{mult:0.60,label:'Isınma 1'},{mult:0.70,label:'Isınma 2'},{mult:0.85,label:'Isınma 3'}]; } 
+        else if(exIdx===1||exIdx===2){ sets=[{mult:0.60,label:'Isınma 1'},{mult:0.85,label:'Isınma 2'}]; }
         if(sets.length){
           warmupHtml=`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Isınma Setleri</div>
@@ -1092,51 +1093,36 @@ function renderProgram(){
       }
     }
 
-    // For max exercises, read saved set values
-    const savedSets = isMax && done && typeof doneMap[ex.id]==='object' ? doneMap[ex.id] : {};
-    const sv1=savedSets.s1||'', sv2=savedSets.s2||'', sv3=savedSets.s3||'';
-    const svTotal = (savedSets.s1||0)+(savedSets.s2||0)+(savedSets.s3||0);
-
     let bottomSection='';
     if(done){
-      if(isMax){
-        bottomSection=`
-          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">${sv1} + ${sv2} + ${sv3} = <b style="color:var(--text)">${svTotal} tekrar</b></div>
-            </div>
-            <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
-          </div>`;
-      } else {
-        bottomSection=`
-          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      const savedSets = typeof doneMap[ex.id]==='object' ? doneMap[ex.id] : {};
+      let setDisplays = [];
+      let totalReps = 0;
+      for(let i=1; i<=ex.sets; i++){
+         const val = savedSets['s'+i];
+         setDisplays.push(val !== undefined ? val : '-');
+         totalReps += (parseInt(val) || 0);
+      }
+      
+      bottomSection=`
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <div>
             <div style="font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>
-            <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${setDisplays.join(' + ')} = <b style="color:var(--text)">${totalReps} tekrar</b></div>
+          </div>
+          <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
+        </div>`;
+    } else {
+      let inputsHtml = `<div class="set-inputs" id="sets-${ex.id}">`;
+      for(let i=1; i<=ex.sets; i++){
+         inputsHtml += `
+          <div class="set-inp-wrap">
+            <div class="set-inp-lbl">Set ${i}</div>
+            <input class="set-inp" type="number" id="s${i}-${ex.id}" placeholder="${ex.reps>0 ? ex.reps : '—'}" min="0" max="999" step="1" oninput="updSetTotalDynamic('${ex.id}', ${ex.sets})"/>
           </div>`;
       }
-    } else {
-      if(isMax){
-        bottomSection=`
-          <div class="set-inputs" id="sets-${ex.id}">
-            <div class="set-inp-wrap">
-              <div class="set-inp-lbl">Set 1</div>
-              <input class="set-inp" type="number" id="s1-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
-            </div>
-            <div class="set-inp-wrap">
-              <div class="set-inp-lbl">Set 2</div>
-              <input class="set-inp" type="number" id="s2-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
-            </div>
-            <div class="set-inp-wrap">
-              <div class="set-inp-lbl">Set 3</div>
-              <input class="set-inp" type="number" id="s3-${ex.id}" placeholder="—" min="0" max="999" step="1" oninput="updSetTotal('${ex.id}')"/>
-            </div>
-          </div>
-          <div class="set-total" id="total-${ex.id}">Toplam: —</div>
-          <button class="btn bo" style="margin-top:10px" onclick="saveMaxDone('${ex.id}',${w},${d})">✓ Tamamlandı</button>`;
-      } else {
-        bottomSection=`<button class="btn bo" style="margin-top:12px" onclick="confirmDone('${ex.id}','${name.replace(/'/g,"\\'")}',${w},${d})">✓ Tamamlandı</button>`;
-      }
+      inputsHtml += `</div><div class="set-total" id="total-${ex.id}">Toplam: —</div>`;
+      bottomSection = inputsHtml + `<button class="btn bo" style="margin-top:10px" onclick="saveDynamicDone('${ex.id}',${w},${d},${ex.sets})">✓ Tamamlandı</button>`;
     }
 
     html+=`
@@ -1169,81 +1155,6 @@ function renderProgram(){
   document.getElementById('ex-list').innerHTML=html||'<div style="color:var(--muted);font-size:14px;text-align:center;padding:2rem">Önce kurulum sayfasından ağırlıklarını gir.</div>';
 }
 
-function confirmDone(exId,name,w,d){
-  document.getElementById('modal-title').textContent=name;
-  document.getElementById('modal-sub').textContent='Tüm set ve tekrarları hedefte tamamladın mı? Evet dersen bu hafta ağırlık artışın uygulanır. Hayır dersen aynı ağırlıkla devam edersin.';
-  document.getElementById('modal-ok').textContent='Evet, tamamladım ✓';
-  document.getElementById('modal-ok').onclick=()=>{markDone(exId,w,d);closeModal();};
-  document.getElementById('modal').classList.add('open');
-}
-
-function markDone(exId,w,d){
-  const wk='w'+w,dk='d'+d;
-  if(!S.weekData[wk]) S.weekData[wk]={};
-  if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
-  S.weekData[wk][dk][exId]=true;
-  
-  // Check if all sets were completed at max for weight exercises
-  const ex=EX[exId];
-  if(ex&&ex.hasWeight&&!ex.repType){
-    const m=S.maxes[exId];
-    if(m){
-      const kg=getKgAt(exId,w);
-      const targetReps=ex.repType==='plus'?ex.reps+1:ex.repType==='range'?ex.reps+1:ex.reps;
-      // For now, assume completion means max was reached - this will be refined with set inputs
-      if(w<11){ // Don't increase on last week
-        const newKg=mround25(kg+m.inc);
-        S.maxes[exId].kg=newKg;
-      }
-    }
-  }
-  
-  saveS(); renderProgram(); renderProgress();
-}
-
-function undoDone(exId,w,d){
-  const wk='w'+w,dk='d'+d;
-  if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
-  saveS(); renderProgram(); renderProgress();
-}
-
-function updSetTotal(exId){
-  const s1=parseInt(document.getElementById('s1-'+exId)?.value)||0;
-  const s2=parseInt(document.getElementById('s2-'+exId)?.value)||0;
-  const s3=parseInt(document.getElementById('s3-'+exId)?.value)||0;
-  const total=s1+s2+s3;
-  const el=document.getElementById('total-'+exId);
-  if(el) el.textContent=total>0?`Toplam: ${total} tekrar`:'Toplam: —';
-}
-
-function saveMaxDone(exId,w,d){
-  const s1=parseInt(document.getElementById('s1-'+exId)?.value)||0;
-  const s2=parseInt(document.getElementById('s2-'+exId)?.value)||0;
-  const s3=parseInt(document.getElementById('s3-'+exId)?.value)||0;
-  if(s1===0&&s2===0&&s3===0){alert('En az 1 sete tekrar sayısı gir!');return;}
-  
-  const ex=EX[exId];
-  const targetReps=ex.repType==='plus'?ex.reps+1:ex.repType==='range'?ex.reps+1:ex.reps;
-  const allMax=(s1>=targetReps&&s2>=targetReps&&s3>=targetReps);
-  
-  const wk='w'+w,dk='d'+d;
-  if(!S.weekData[wk]) S.weekData[wk]={};
-  if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
-  S.weekData[wk][dk][exId]={s1,s2,s3};
-  
-  // Auto-increase weight if all sets were completed at max
-  if(allMax&&w<11){
-    const m=S.maxes[exId];
-    if(m){
-      const kg=getKgAt(exId,w);
-      const newKg=mround25(kg+m.inc);
-      S.maxes[exId].kg=newKg;
-    }
-  }
-  
-  saveS(); renderProgram(); renderProgress();
-}
-
 function changeWeek(delta){
   S.currentWeek=Math.max(0,Math.min(11,S.currentWeek+delta));
   saveS(); renderProgram();
@@ -1254,8 +1165,6 @@ function changeDay(d,el){
   document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active'); renderProgram();
 }
-
-function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 
 // ============================================================
 // TIMER
@@ -1360,10 +1269,13 @@ function renderProgress(){
       const weeks=Array.from({length:12},(_,i)=>{
         const wk='w'+i;
         const val=S.weekData[wk]?.[dk]?.[id];
-        let total=0, sets=['-','-','-'];
+        let total=0, sets=[];
         if(val&&typeof val==='object'){
-          total=(val.s1||0)+(val.s2||0)+(val.s3||0);
-          sets=[val.s1||0,val.s2||0,val.s3||0];
+          for(let k=1; k<=ex.sets; k++){
+              let sVal = val['s'+k]||0;
+              sets.push(sVal);
+              total += sVal;
+          }
         }
         return {w:i, total, sets, done:!!val, cur:i===S.currentWeek};
       });
@@ -1379,7 +1291,7 @@ function renderProgress(){
               </div>
             </div>`).join('')}
         </div>
-        ${weeks[S.currentWeek].done?`<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets[0]} + ${weeks[S.currentWeek].sets[1]} + ${weeks[S.currentWeek].sets[2]} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>`:''}
+        ${weeks[S.currentWeek].done?`<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets.join(' + ')} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>`:''}
       </div>`;
     });
   }
@@ -1555,7 +1467,6 @@ function renderProfile(){
   if(p.waist) document.getElementById('prof-waist').value=p.waist;
   if(p.neck) document.getElementById('prof-neck').value=p.neck;
   if(p.hip) document.getElementById('prof-hip').value=p.hip;
-  // show/hide hip row
   const hipRow=document.getElementById('hip-row');
   if(hipRow) hipRow.style.display=(p.gender==='female')?'block':'none';
   if(p.photo){
@@ -1573,7 +1484,6 @@ function renderProfile(){
 function uploadPhoto(event){
   const file=event.target.files?.[0];
   if(!file) return;
-  
   const reader=new FileReader();
   reader.onload=e=>{
     const photoData=e.target.result;
@@ -1593,60 +1503,8 @@ function removePhoto(){
   alert('✓ Fotoğraf silindi!');
 }
 
-function renderWeightTracker(){
-  const el=document.getElementById('weight-tracker');
-  if(!S.profile||!S.profile.kg||S.profile.kg<=0){
-    el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:1rem">Önce kişisel bilgileri gir.</div>';
-    return;
-  }
-  // Initialize weights if empty
-  if(Object.keys(S.weeklyWeights).length===0){
-    for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg+2.5;
-  }
-  let html='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">';
-  for(let w=0;w<12;w++){
-    const isCurrent=w===S.currentWeek;
-    const kg=(S.weeklyWeights[w]||S.profile.kg+2.5).toFixed(1);
-    html+=`
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:10px;color:${isCurrent?'var(--accent)':'var(--muted)'};text-transform:uppercase;letter-spacing:.06em;font-weight:600;text-align:center">H${w+1}</div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <button class="btn bo" onclick="decrementWeekWeight(${w})" style="flex:1;padding:6px 4px;font-size:14px;font-weight:600">−</button>
-          <input type="number" step="0.1" value="${kg}" onblur="updateWeekWeight(${w},this.value)" style="flex:1;padding:8px 6px;text-align:center;font-size:13px;font-weight:600;color:var(--accent);background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:var(--fb);outline:none" />
-          <button class="btn bp" onclick="incrementWeekWeight(${w})" style="flex:1;padding:6px 4px;font-size:14px;font-weight:600">+</button>
-        </div>
-      </div>`;
-  }
-  html+='</div>';
-  el.innerHTML=html;
-}
-
-function incrementWeekWeight(w){
-  const current=S.weeklyWeights[w]||S.profile.kg+2.5;
-  S.weeklyWeights[w]=Math.round((current+0.5)*10)/10;
-  saveS();
-  renderWeightTracker();
-}
-
-function decrementWeekWeight(w){
-  const current=S.weeklyWeights[w]||S.profile.kg+2.5;
-  S.weeklyWeights[w]=Math.max(0,Math.round((current-0.5)*10)/10);
-  saveS();
-  renderWeightTracker();
-}
-
-function updateWeekWeight(w,val){
-  const kg=Math.max(0,parseFloat(val)||S.profile.kg);
-  S.weeklyWeights[w]=kg;
-  saveS();
-  renderWeightTracker();
-}
-
-// ============================================================
-// IMPORT/EXPORT
-// ============================================================
 function exportData(){
-  const data={version:8,state:S,timestamp:Date.now()};
+  const data={version:9,state:S,timestamp:Date.now()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1736,7 +1594,6 @@ function resetAllData(){
   // Keep only profile and theme
   const profile = S.profile;
   const theme = S.theme;
-  
   S = {
     maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
     profile:profile,
@@ -1744,13 +1601,12 @@ function resetAllData(){
     explanations:{},   
     theme:theme
   };
-  
   saveS();
   buildSetup();
   renderProgram();
   renderProgress();
   showPage('setup', document.querySelectorAll('.nb')[0]);
-  alert('✓ Tüm veriler sıfırlandı! Kurulumdan başlayabilirsiniz.');
+  alert('✓ Tüm veriler sıfırlandı! Kurulum adımından başlayabilirsiniz.');
 }
 
 // ============================================================
@@ -1766,11 +1622,11 @@ if(!hasData){
   document.getElementById('first-choice').style.display='flex';
 } else if(S.setupDone){
   hideOb();
-  hideFirstChoice();
+  document.getElementById('first-choice').style.display='none';
   renderProgram();
   renderProgress();
 } else {
-  hideFirstChoice();
+  document.getElementById('first-choice').style.display='none';
 }
 
 document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===S.currentDay));
