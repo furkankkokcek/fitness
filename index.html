@@ -603,9 +603,9 @@ let changeCount=0;
 function saveS(){
   localStorage.setItem('ft_v9', JSON.stringify(S));
   changeCount++;
-  if(changeCount>=10){
+  if(changeCount>=50){
     changeCount=0;
-    setTimeout(()=>{ if(confirm('💾 10 değişiklik yapıldı. Yedek almak ister misin?')) exportData(); },200);
+    setTimeout(()=>{ if(confirm('💾 50 değişiklik yapıldı. Yedek almak ister misin?')) exportData(); },200);
   }
 }
 function loadS(){ try{ const d=localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
@@ -1041,7 +1041,7 @@ function renderProgram(){
       if(ex.id==='g1_rdl'){
         const altVal=((kg-20)/2);
         altLoadingText=` (${altVal} kg)`;
-      } else if(ex.id==='g2_lp'||ex.id==='g3_lp'){
+      } else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){
         const altVal=(kg/2);
         altLoadingText=` (${altVal} kg)`;
       } else if(ex.id==='g3_br'){
@@ -1079,7 +1079,7 @@ function renderProgram(){
                 const wkg=mround25(kg*s.mult);
                 let altLoading='';
                 if(ex.id==='g1_rdl') altLoading=` (${mround25((wkg-20)/2)} kg)`;
-                else if(ex.id==='g2_lp'||ex.id==='g3_lp') altLoading=` (${mround25(wkg/2)} kg)`;
+                else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp') altLoading=` (${mround25(wkg/2)} kg)`;
                 else if(ex.id==='g3_br') altLoading=` (${mround25((wkg-10)/2)} kg)`;
                 return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
                   <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} kg</div>
