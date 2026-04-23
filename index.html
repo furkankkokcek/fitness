@@ -529,7 +529,7 @@ const EXERCISE_GIFS = {
   "Assisted Pull-Up": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Assisted-Pull-up.gif",
   "Straight-Arm Pulldown": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Cable-Straight-Arm-Pulldown.gif",
   "Leg Extension": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/LEG-EXTENSION.gif",
-  "Terminal Knee Extension": "",
+  "Terminal Knee Extension": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Terminal-Knee-Extension.gif",
   "Sissy Squat": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/sissy-squat.gif",
   "Step-Up with Knee Drive": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Step-up.gif",
   "Crunch": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Crunch.gif",
@@ -550,7 +550,7 @@ const EXERCISE_GIFS = {
   "Hammer Curl": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Hammer-Curl.gif",
   "Cable Curl": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/cable-curl.gif",
   "Leg Raises": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Lying-Leg-Raise.gif",
-  "Hanging Knee Raise": "",
+  "Hanging Knee Raise": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Hanging-Knee-Raise.gif",
   "Reverse Crunch": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Reverse-Crunch-1.gif",
   "Flutter Kicks": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Flutter-Kicks.gif",
   "Smith Machine Shoulder": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Smith-Machine-Shoulder-Press.gif",
@@ -567,10 +567,10 @@ const EXERCISE_GIFS = {
   "Overhead Triceps Extension": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Seated-One-Arm-Dumbbell-Triceps-Extension.gif",
   "Dumbbell Kickback": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Dumbbell-Kickback.gif",
   "Bench Dips": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Bench-Dips.gif",
-  "Plank": "",
-  "RKC Plank": "",
-  "Dead Bug": "",
-  "Pallof Press": ""
+  "Plank": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/plank.gif",
+  "RKC Plank": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/RKC-Plank.png",
+  "Dead Bug": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Dead-Bug.gif",
+  "Pallof Press": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Pallof-Press.gif"
 };
 
 // ============================================================
@@ -728,8 +728,26 @@ function buildSetup(){
             </div>
           </div>`;
         }).join('')}
-        ${bwExs.length?`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:4px;line-height:1.6">
-          <b style="color:var(--text)">${bwExs.map(e=>e.name).join(' · ')}</b><br>Vücut ağırlığı — giriş gerekmez</div>`:''}
+        ${bwExs.map(ex=>{
+          const sv=S.maxes[ex.id];
+          return `<div class="ec">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div class="en" style="margin:0">${ex.name}</div>
+              <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+            </div>
+            <div class="esch">${ex.scheme}</div>
+            <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
+            <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
+              <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
+              ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
+              <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
+            </select>
+            <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
+              style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
+              value="${sv?.customName||''}"/>
+            <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px">Vücut ağırlığı — giriş gerekmez</div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
@@ -892,6 +910,18 @@ function saveAndStart(){
   });
   if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
   
+  // Vücut ağırlığı egzersizleri için alternatif seçimini kaydet
+  Object.values(EX).filter(e=>!e.hasWeight).forEach(ex=>{
+    const altEl=document.getElementById('alt-'+ex.id);
+    const customEl=document.getElementById('custom-'+ex.id);
+    if(altEl){
+      const altVal=altEl.value??'-1';
+      const altIdx=altVal==='custom'?'custom':parseInt(altVal);
+      const customName=customEl?.value.trim()||'';
+      S.maxes[ex.id]={altIdx, customName};
+    }
+  });
+  
   // Save profile from setup inputs
   const kg=parseFloat(document.getElementById('setup-kg')?.value)||0;
   const cm=parseFloat(document.getElementById('setup-cm')?.value)||0;
@@ -910,7 +940,6 @@ function saveAndStart(){
 }
 
 function getDisplayName(ex){
-  if(!ex.hasWeight) return ex.name;
   const m=S.maxes[ex.id];
   if(!m||m.altIdx===undefined||m.altIdx===null) return ex.name;
   if(m.altIdx==='custom') return m.customName||ex.name;
@@ -1225,7 +1254,7 @@ function renderProgress(){
     html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:18px 0 10px">Max Tekrar Takibi</div>`;
     maxExIds.forEach(id=>{
       const ex=EX[id];
-      const name=ex.name;
+      const name=getDisplayName(ex);
       // Find which day this ex is in
       const dayIdx=DAYS.findIndex(d=>d.includes(id));
       const dk='d'+dayIdx;
