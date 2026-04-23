@@ -56,20 +56,20 @@ select option{background:var(--bg3)}
 .esch{font-size:12px;color:var(--accent);margin-bottom:10px;font-weight:500}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 /* PROGRAM */
-.wn{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
+.wn{display:flex;align-items:center;gap:12px;margin-bottom:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;position:sticky;top:-20px;z-index:9}
 .wn button{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
 .wn button:disabled{color:var(--border)}
 .wi{flex:1;text-align:center}
 .wnum{font-family:var(--fd);font-size:28px;color:var(--accent);line-height:1}
-.wlbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.dtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.wlbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.dtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;margin-top:0;position:sticky;top:36px;z-index:8;background:var(--bg);padding:6px 0;border-top:1px solid var(--border)}
 .dtab{padding:10px 4px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
 .dtab.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a;font-weight:700}
 .sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .sb{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
 .sv{font-family:var(--fd);font-size:26px;color:var(--accent);line-height:1}
 .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-.pbw{margin-bottom:14px}
+.pbw{margin-bottom:14px;margin-top: 14px;}
 .pbh{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px}
 .pt2{background:var(--bg3);border-radius:99px;height:5px}
 .pf{height:100%;background:var(--accent);border-radius:99px;transition:width .5s}
@@ -93,6 +93,9 @@ select option{background:var(--bg3)}
 .set-inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:18px;font-weight:600;padding:10px 6px;border-radius:10px;outline:none;text-align:center;-webkit-appearance:none}
 .set-inp:focus{border-color:var(--accent)}
 .set-inp::placeholder{color:var(--muted);font-size:14px;font-weight:400}
+.set-inp::-webkit-outer-spin-button,
+.set-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.set-inp{-moz-appearance:textfield}
 .set-total{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
 .btn-undo{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--danger);font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:var(--fb);font-weight:600;width:auto}
 /* TIMER */
@@ -219,7 +222,7 @@ select option{background:var(--bg3)}
 
     <!-- TIMER -->
     <div class="page" id="page-timer">
-      <div class="pt">TİMER</div>
+      <div class="pt">TIMER</div>
       <div class="ps">Set arası dinlenme</div>
       <div class="tw">
         <div class="pr">
@@ -344,6 +347,16 @@ select option{background:var(--bg3)}
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Yağsız kg</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Veri Yönetimi</div>
+        <button class="btn bo" onclick="resetAllData()" style="width:100%;background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:var(--danger);font-weight:600">
+          🗑️ Tüm Verileri Sıfırla
+        </button>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center">
+          Bu işlem tüm antrenman verilerini, ağırlıkları ve açıklamaları siler. Profil bilgileriniz korunur.
         </div>
       </div>
 
@@ -580,6 +593,7 @@ let S = {
   maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
   profile:{kg:0,cm:0,age:0,gender:''},
   weeklyWeights:{},  // {0:80, 1:81, 2:80.5, ...}
+  explanations:{},   // {exId: "explanation text", ...}
   theme:'dark'
 };
 // weekData[wk][dk][exId] = true  (for weight exercises)
@@ -947,6 +961,21 @@ function getDisplayName(ex){
   return ex.alts[m.altIdx]||ex.name;
 }
 
+function toggleExpl(exId,el){
+  const content=document.getElementById('expl-content-'+exId);
+  const arrow=document.getElementById('expl-arrow-'+exId);
+  if(content){
+    content.style.display=content.style.display==='none'?'block':'none';
+    if(arrow) arrow.textContent=content.style.display==='none'?'▸':'▾';
+  }
+}
+
+function saveExplanation(exId,text){
+  if(!S.explanations) S.explanations={};
+  S.explanations[exId]=text.trim();
+  saveS();
+}
+
 // ============================================================
 // PROGRAM PAGE
 // ============================================================
@@ -1005,6 +1034,27 @@ function renderProgram(){
     //   İSTİSNA: Gün 2 (d===1), exIdx===2 (Pull-Ups, 3. hareket) → ısınma yok
     // hasWeight olmayan hareketler → ısınma yok
     let warmupHtml='';
+    
+    // Calculate special alternative loading if applicable
+    let altLoadingText='';
+    if(ex.hasWeight && kg>0){
+      if(ex.id==='g1_rdl'){
+        const altVal=((kg-20)/2);
+        altLoadingText=` (${altVal} kg)`;
+      } else if(ex.id==='g2_lp'||ex.id==='g3_lp'){
+        const altVal=(kg/2);
+        altLoadingText=` (${altVal} kg)`;
+      } else if(ex.id==='g3_br'){
+        const altVal=((kg-10)/2);
+        altLoadingText=` (${altVal} kg)`;
+      }
+    }
+    
+    // Update wtxt with alternative loading
+    if(altLoadingText && ex.hasWeight){
+      wtxt=`${kg} kg<span style="font-size:13px;color:var(--muted);font-weight:400">${altLoadingText}</span>`;
+    }
+    
     if(ex.hasWeight && kg>0){
       const isDay2PullUps=(d===1 && exIdx===2);
       if(!isDay2PullUps){
@@ -1027,10 +1077,13 @@ function renderProgram(){
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               ${sets.map(s=>{
                 const wkg=mround25(kg*s.mult);
+                let altLoading='';
+                if(ex.id==='g1_rdl') altLoading=` (${mround25((wkg-20)/2)} kg)`;
+                else if(ex.id==='g2_lp'||ex.id==='g3_lp') altLoading=` (${mround25(wkg/2)} kg)`;
+                else if(ex.id==='g3_br') altLoading=` (${mround25((wkg-10)/2)} kg)`;
                 return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
-                  <div style="font-size:10px;color:var(--muted);margin-bottom:3px">${s.label}</div>
                   <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} kg</div>
-                  <div style="font-size:10px;color:var(--muted)">×${Math.round(s.mult*100)}%</div>
+                  <div style="font-size:12px;color:var(--muted);font-weight:400"">${altLoading}</div>
                 </div>`;
               }).join('')}
             </div>
@@ -1093,7 +1146,21 @@ function renderProgram(){
           <span class="badge ${bcls}">${badge}</span>
         </div>
         <div class="xw">${wtxt}</div>
-        <div class="xsch">${ex.scheme}</div>
+        <div class="xsch">
+          ${ex.scheme}${
+            ex.repType === 'range'
+              ? (['g1_lpd','g3_cf'].includes(ex.id) ? ' (RPE 8)' : ' (RPE 9)')
+              : ''
+          }
+        </div>        
+        <div style="margin-top:8px;cursor:pointer" onclick="toggleExpl('${ex.id}',this)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;display:flex;align-items:center;gap:4px">
+            <span id="expl-arrow-${ex.id}">▸</span> Açıklama
+          </div>
+        </div>
+        <div id="expl-content-${ex.id}" style="display:none;margin-top:8px;margin-bottom:8px">
+          <textarea id="expl-text-${ex.id}" placeholder="Bu hareket hakkında not..." style="width:100%;min-height:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:13px;padding:10px;border-radius:8px;outline:none;resize:none;-webkit-appearance:none" oninput="saveExplanation('${ex.id}',this.value)">${S.explanations?.[ex.id]||''}</textarea>
+        </div>
         ${warmupHtml}
         ${bottomSection}
       </div>`;
@@ -1115,6 +1182,22 @@ function markDone(exId,w,d){
   if(!S.weekData[wk]) S.weekData[wk]={};
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
   S.weekData[wk][dk][exId]=true;
+  
+  // Check if all sets were completed at max for weight exercises
+  const ex=EX[exId];
+  if(ex&&ex.hasWeight&&!ex.repType){
+    const m=S.maxes[exId];
+    if(m){
+      const kg=getKgAt(exId,w);
+      const targetReps=ex.repType==='plus'?ex.reps+1:ex.repType==='range'?ex.reps+1:ex.reps;
+      // For now, assume completion means max was reached - this will be refined with set inputs
+      if(w<11){ // Don't increase on last week
+        const newKg=mround25(kg+m.inc);
+        S.maxes[exId].kg=newKg;
+      }
+    }
+  }
+  
   saveS(); renderProgram(); renderProgress();
 }
 
@@ -1138,10 +1221,26 @@ function saveMaxDone(exId,w,d){
   const s2=parseInt(document.getElementById('s2-'+exId)?.value)||0;
   const s3=parseInt(document.getElementById('s3-'+exId)?.value)||0;
   if(s1===0&&s2===0&&s3===0){alert('En az 1 sete tekrar sayısı gir!');return;}
+  
+  const ex=EX[exId];
+  const targetReps=ex.repType==='plus'?ex.reps+1:ex.repType==='range'?ex.reps+1:ex.reps;
+  const allMax=(s1>=targetReps&&s2>=targetReps&&s3>=targetReps);
+  
   const wk='w'+w,dk='d'+d;
   if(!S.weekData[wk]) S.weekData[wk]={};
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
   S.weekData[wk][dk][exId]={s1,s2,s3};
+  
+  // Auto-increase weight if all sets were completed at max
+  if(allMax&&w<11){
+    const m=S.maxes[exId];
+    if(m){
+      const kg=getKgAt(exId,w);
+      const newKg=mround25(kg+m.inc);
+      S.maxes[exId].kg=newKg;
+    }
+  }
+  
   saveS(); renderProgram(); renderProgress();
 }
 
@@ -1629,6 +1728,29 @@ function skipProfileSetup(){
   document.getElementById('ob').style.display='none';
   document.getElementById('first-choice').style.display='none';
   showPage('setup', document.querySelectorAll('.nb')[0]);
+}
+
+function resetAllData(){
+  if(!confirm('⚠️ Tüm antrenman verilerini, ağırlıkları ve açıklamaları silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!')) return;
+  
+  // Keep only profile and theme
+  const profile = S.profile;
+  const theme = S.theme;
+  
+  S = {
+    maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
+    profile:profile,
+    weeklyWeights:{},  
+    explanations:{},   
+    theme:theme
+  };
+  
+  saveS();
+  buildSetup();
+  renderProgram();
+  renderProgress();
+  showPage('setup', document.querySelectorAll('.nb')[0]);
+  alert('✓ Tüm veriler sıfırlandı! Kurulumdan başlayabilirsiniz.');
 }
 
 // ============================================================
