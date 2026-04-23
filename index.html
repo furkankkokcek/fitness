@@ -10,7 +10,7 @@
 <title>FitTrack</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans&family=Inter&family=Sekuya&family=Bungee:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;
@@ -39,7 +39,6 @@ input,select{width:100%;background:var(--bg3);border:1px solid var(--border);col
 input:focus,select:focus{border-color:var(--accent)}
 input::placeholder{color:var(--muted)}
 select option{background:var(--bg3)}
-/* Hide number spinners in setup */
 .no-spin::-webkit-outer-spin-button,
 .no-spin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .no-spin{-moz-appearance:textfield}
@@ -47,7 +46,6 @@ select option{background:var(--bg3)}
 .btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:var(--fb);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
 .bp{background:var(--accent);color:#0a0a0a}.bp:active{transform:scale(.97)}
 .bo{background:transparent;border:1px solid var(--border);color:var(--text)}
-/* SETUP */
 .gh{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:2px}
 .gt{font-family:var(--fd);font-size:22px;color:var(--accent)}
 .gb{display:none;padding:4px 0}.gb.open{display:block}
@@ -55,7 +53,6 @@ select option{background:var(--bg3)}
 .en{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
 .esch{font-size:12px;color:var(--accent);margin-bottom:10px;font-weight:500}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-/* PROGRAM */
 .wn{display:flex;align-items:center;gap:12px;margin-bottom:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;position:sticky;top:-20px;z-index:9}
 .wn button{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
 .wn button:disabled{color:var(--border)}
@@ -98,7 +95,6 @@ select option{background:var(--bg3)}
 .set-inp{-moz-appearance:textfield}
 .set-total{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
 .btn-undo{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--danger);font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:var(--fb);font-weight:600;width:auto}
-/* TIMER */
 .tw{display:flex;flex-direction:column;align-items:center;padding:6px 0}
 .pr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:26px}
 .pb{padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:var(--fb);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
@@ -109,7 +105,6 @@ select option{background:var(--bg3)}
 .td{font-family:var(--fd);font-size:68px;color:var(--text);line-height:1;letter-spacing:2px}
 .ts{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 .ta{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
-/* PROGRESS */
 .pec{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
 .pen{font-size:14px;font-weight:600;margin-bottom:10px}
 .wscroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px}
@@ -118,14 +113,12 @@ select option{background:var(--bg3)}
 .wkcell{flex-shrink:0;width:42px;text-align:center}
 .wkbox{padding:6px 2px;border-radius:8px;border:1px solid var(--border)}
 .wkkg{font-size:11px;font-weight:700}
-/* MODAL */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center}
 .mo.open{display:flex}
 .ms{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px;max-height:90vh;overflow-y:auto}
 .mt2{font-family:var(--fd);font-size:28px;margin-bottom:8px}
 .msub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* ONBOARD */
 .ob{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
 .obl{font-family:var(--fd);font-size:60px;color:var(--accent);letter-spacing:4px;margin-bottom:8px}
 .obs{font-size:15px;color:var(--muted);margin-bottom:36px;line-height:1.6}
@@ -166,7 +159,6 @@ select option{background:var(--bg3)}
 <div id="app">
   <div class="pages">
 
-    <!-- SETUP -->
     <div class="page active" id="page-setup">
       <div class="pt">KURULUM</div>
       <div class="ps">Her hareket için başlangıç kg, haftalık artış ve alternatif seç</div>
@@ -180,7 +172,6 @@ select option{background:var(--bg3)}
       <div style="height:24px"></div>
     </div>
 
-    <!-- PROGRAM -->
     <div class="page" id="page-program">
       <div class="pt">PROGRAM</div>
       <div class="wn">
@@ -198,7 +189,6 @@ select option{background:var(--bg3)}
         <div class="sb"><div class="sv" id="s-vol">0</div><div class="sl">~Ton</div></div>
       </div>
 
-      <!-- HAFTALIK KİLO TAKİBİ -->
       <div id="prog-weight-wrap" style="display:none;margin-bottom:14px">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px">Bu Hafta Kilom</div>
         <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px">
@@ -220,7 +210,6 @@ select option{background:var(--bg3)}
       <div style="height:16px"></div>
     </div>
 
-    <!-- TIMER -->
     <div class="page" id="page-timer">
       <div class="pt">TIMER</div>
       <div class="ps">Set arası dinlenme</div>
@@ -249,7 +238,6 @@ select option{background:var(--bg3)}
       </div>
     </div>
 
-    <!-- PROGRESS -->
     <div class="page" id="page-progress">
       <div class="pt">İLERLEME</div>
       <div class="ps">Haftalık ağırlık artışın</div>
@@ -257,7 +245,6 @@ select option{background:var(--bg3)}
       <div style="height:16px"></div>
     </div>
 
-    <!-- PROFILE -->
     <div class="page" id="page-profile">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px">
         <div>
@@ -446,11 +433,8 @@ select option{background:var(--bg3)}
 <script>
 // ============================================================
 // EXERCISE MASTER LIST
-// id, name, scheme, sets, reps, repType, hasWeight, alts
-// repType: fixed | plus | range | max
 // ============================================================
 const EX = {
-  // --- G1 hareketleri ---
   g1_cp:  {id:"g1_cp",  name:"Chest Press Machine",    scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.80,
             alts:["Dumbbell Bench Press","Smith Machine Bench","Cable Chest Press"], gifUrl:""},
   g1_spm: {id:"g1_spm", name:"Shoulder Press Machine", scheme:"3x10",   sets:3,reps:10,  repType:"fixed",  hasWeight:true,  rmMult:0.85*0.60,
@@ -464,7 +448,6 @@ const EX = {
   g1_cr:  {id:"g1_cr",  name:"Crunch",                 scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
             alts:["Ab Wheel","Cable Crunch","Decline Crunch"], gifUrl:""},
 
-  // --- G2 hareketleri ---
   g2_lp:  {id:"g2_lp",  name:"Leg Press",              scheme:"4×5+",   sets:4,reps:5, repType:"plus", hasWeight:true,  rmMult:0.85*0.70,
             alts:["Hack Squat","Smith Machine Squat","Goblet Squat"], gifUrl:""},
   g2_cp:  {id:"g2_cp",  name:"Chest Press Machine",    scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
@@ -478,7 +461,6 @@ const EX = {
   g2_lgr: {id:"g2_lgr", name:"Leg Raises",             scheme:"3×max",  sets:3,reps:0,  repType:"max",   hasWeight:false, rmMult:0,
             alts:["Hanging Knee Raise","Reverse Crunch","Flutter Kicks"], gifUrl:""},
 
-  // --- G3 hareketleri ---
   g3_sp:  {id:"g3_sp",  name:"Smith Machine Shoulder", scheme:"4×5+",   sets:4,reps:5,  repType:"plus",  hasWeight:true,  rmMult:0.85*0.70,
             alts:["Dumbbell OHP","Arnold Press","Landmine Press"], gifUrl:""},
   g3_lp:  {id:"g3_lp",  name:"Leg Press",              scheme:"3×10",   sets:3,reps:10, repType:"fixed", hasWeight:true,  rmMult:0.85*0.60,
@@ -493,13 +475,9 @@ const EX = {
             alts:["RKC Plank","Dead Bug","Pallof Press"], gifUrl:""},
 };
 
-// Fixed day exercise lists — exact order as specified
 const DAYS = [
-  // Gün 1
   ["g1_cp","g1_spm","g1_rdl","g1_lpd","g1_le","g1_cr"],
-  // Gün 2
   ["g2_lp","g2_cp","g2_pu","g2_lr","g2_idc","g2_lgr"],
-  // Gün 3
   ["g3_sp","g3_lp","g3_br","g3_cf","g3_cpd","g3_pl"],
 ];
 
@@ -571,12 +549,10 @@ const EXERCISE_GIFS = {
 let S = {
   maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
   profile:{kg:0,cm:0,age:0,gender:''},
-  weeklyWeights:{},  // {0:80, 1:81, 2:80.5, ...}
-  explanations:{},   // {exId: "explanation text", ...}
+  weeklyWeights:{},
+  explanations:{},
   theme:'dark'
 };
-// weekData[wk][dk][exId] = true  (for weight exercises)
-// weekData[wk][dk][exId] = {s1:9,s2:7,s3:5}  (for max exercises)
 
 let changeCount=0;
 function saveS(){
@@ -604,7 +580,6 @@ function updateProgWeekWeight(val){
   const prev=S.weeklyWeights[w-1]||S.profile?.kg||0;
   S.weeklyWeights[w]=kg;
   saveS();
-  // Show diff
   const diffEl=document.getElementById('prog-weight-diff');
   if(diffEl&&prev>0){
     const diff=(kg-prev).toFixed(1);
@@ -654,15 +629,18 @@ function exCompletedInWeek(exId, weekIdx){
   for(let d=0;d<3;d++){
     if(DAYS[d].includes(exId)){
       const val=S.weekData[wk]?.['d'+d]?.[exId];
-      if(!val) return false; // false, undefined, 0 → not done
+      if(!val) return false;
+      // Yeni format objeyse ve hedefe ulaşıldıysa true dön
+      if(typeof val === 'object') {
+          return val.targetMet === true;
+      }
+      // Geriye dönük uyumluluk
+      return val === true;
     }
   }
-  return true;
+  return false;
 }
 
-// ============================================================
-// SETUP PAGE
-// ============================================================
 function buildSetup(){
   const el=document.getElementById('setup-list');
   const dayNames=["Gün 1","Gün 2","Gün 3"];
@@ -743,26 +721,6 @@ function buildSetup(){
   }).join('');
 }
 
-function asciiUpper(s){
-  if(!s) return s;
-  return s.toString().toUpperCase().replace(/[İI]/g,'I').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ç/g,'C').replace(/Ş/g,'S').replace(/Ğ/g,'G');
-}
-
-function normalizeUppercaseText(){
-  const all = document.querySelectorAll('body *');
-  all.forEach(el=>{
-    try{
-      const cs = window.getComputedStyle(el);
-      if(cs && cs.textTransform && cs.textTransform.toLowerCase()==='uppercase'){
-        if(el.childElementCount===0){
-          const txt = el.textContent?.trim();
-          if(txt) el.textContent = asciiUpper(txt);
-        }
-      }
-    }catch(e){}
-  });
-}
-
 function toggleG(id){
   const el=document.getElementById(id),ch=document.getElementById(id+'-ch');
   el.classList.toggle('open');
@@ -773,13 +731,10 @@ function showGif(exId){
   const ex = EX[exId];
   if(!ex) return;
   
-  // Eğer kurulum sayfasındaysa, dropdown'tan doğrudan oku
-  // Aksi takdirde S.maxes'ten oku
   let displayName = ex.name;
   let altIdx = -1;
   let customName = '';
   
-  // Dropdown'u bul (kurulum sayfasında mevcut)
   const altSelectEl = document.getElementById('alt-' + exId);
   if(altSelectEl) {
     const altVal = altSelectEl.value;
@@ -802,20 +757,17 @@ function showGif(exId){
     }
   }
   
-  // Özel hareket seçiliyse — GIF gösterme
   if(displayName !== ex.name && !EXERCISE_GIFS[displayName]) {
     alert(`"${displayName}" için GIF bulunamadı.`);
     return;
   }
   
-  // GIF URL'sini bul
   const gifUrl = EXERCISE_GIFS[displayName];
   if(!gifUrl) {
     alert(`"${displayName}" için GIF bulunamadı.`);
     return;
   }
   
-  // Modal boyutunu sayfaya göre ayarla (Kurulum / Profil için daha küçük)
   const modal = document.getElementById('gif-modal');
   const ms = modal?.querySelector('.ms');
   const isSmallContext = !!document.getElementById('alt-'+exId) || document.getElementById('page-setup')?.classList.contains('active') || document.getElementById('page-profile')?.classList.contains('active');
@@ -824,7 +776,6 @@ function showGif(exId){
     else { ms.style.maxWidth = '700px'; ms.style.width = '90%'; }
   }
 
-  // Modal'ı aç
   document.getElementById('gif-title').textContent = displayName + ' — Nasıl Yapılır?';
   document.getElementById('gif-img').src = gifUrl;
   modal.classList.add('open');
@@ -891,7 +842,6 @@ function saveAndStart(){
   });
   if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
   
-  // Vücut ağırlığı egzersizleri için alternatif seçimini kaydet
   Object.values(EX).filter(e=>!e.hasWeight).forEach(ex=>{
     const altEl=document.getElementById('alt-'+ex.id);
     const customEl=document.getElementById('custom-'+ex.id);
@@ -903,7 +853,6 @@ function saveAndStart(){
     }
   });
   
-  // Save profile from setup inputs
   const kg=parseFloat(document.getElementById('setup-kg')?.value)||0;
   const cm=parseFloat(document.getElementById('setup-cm')?.value)||0;
   const age=parseInt(document.getElementById('setup-age')?.value)||0;
@@ -962,10 +911,14 @@ function saveDynamicDone(exId, w, d, numSets){
     let total = 0;
     const ex=EX[exId];
     
-    // Varsayılan tekrar hedefini belirle
-    let targetReps = ex.reps;
-    if(ex.repType === 'plus') targetReps = ex.reps + 1;
-    if(ex.repType === 'range') targetReps = ex.reps + 1;
+    // Egzersiz tipine göre hedefleri belirliyoruz
+    let rangeMax = ex.reps;
+    if (ex.repType === 'range') {
+        const match = ex.scheme.match(/-(\d+)/);
+        if (match && match[1]) {
+            rangeMax = parseInt(match[1]);
+        }
+    }
 
     for(let i=1; i<=numSets; i++){
         const val = parseInt(document.getElementById(`s${i}-${exId}`)?.value) || 0;
@@ -973,28 +926,34 @@ function saveDynamicDone(exId, w, d, numSets){
         total += val;
         if(val === 0) allFilled = false;
         
-        // Eğer max hareket değilse ve tekrar sayısı hedefin altındaysa başarısız say
-        if(ex.repType !== 'max' && val < targetReps) allTargetReached = false;
+        if (ex.repType === 'fixed') {
+            if (val < ex.reps) allTargetReached = false;
+        } else if (ex.repType === 'range') {
+            if (val < rangeMax) allTargetReached = false;
+        } else if (ex.repType === 'plus') {
+            if (i < numSets) {
+                if (val < ex.reps) allTargetReached = false;
+            } else {
+                if (val <= ex.reps) allTargetReached = false;
+            }
+        }
     }
 
-    if(ex.repType === 'max' && total === 0){ alert('En az 1 sete tekrar sayısı gir!'); return; }
-    if(ex.repType !== 'max' && !allFilled){ 
-        if(!confirm('Bazı setleri boş bıraktın veya sıfır girdin. Yine de tamamlandı olarak işaretlemek istiyor musun?')) return; 
+    if(ex.repType === 'max') {
+        if(total === 0){ alert('En az 1 sete tekrar sayısı gir!'); return; }
+        allTargetReached = true; 
+    } else {
+        if(!allFilled){ 
+            if(!confirm('Bazı setleri boş bıraktın veya sıfır girdin. Yine de kaydetmek istiyor musun? (Hedefe ulaşılamadığı için haftaya ağırlık artmayacak)')) return; 
+        }
     }
+
+    setsData.targetMet = allTargetReached;
 
     const wk='w'+w,dk='d'+d;
     if(!S.weekData[wk]) S.weekData[wk]={};
     if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
     S.weekData[wk][dk][exId] = setsData;
-
-    // Hedefe ulaşıldıysa otomatik ağırlık artışı (Max ağırlıksız hareketler hariç)
-    if(allTargetReached && w < 11 && ex.hasWeight){
-        const m=S.maxes[exId];
-        if(m){
-          const kg=getKgAt(exId,w);
-          S.maxes[exId].kg=mround25(kg+m.inc);
-        }
-    }
     
     saveS(); renderProgram(); renderProgress();
 }
@@ -1037,7 +996,6 @@ function renderProgram(){
   exs.forEach((ex, exIdx)=>{
     const done=!!doneMap[ex.id];
     const name=getDisplayName(ex);
-    
     let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
@@ -1104,10 +1062,14 @@ function renderProgram(){
          totalReps += (parseInt(val) || 0);
       }
       
+      const statusHtml = (ex.repType !== 'max' && savedSets.targetMet === false)
+          ? `<div style="font-size:13px;color:var(--warn);font-weight:600">✓ Kaydedildi (Ağırlık sabit)</div>`
+          : `<div style="font-size:13px;color:var(--success);font-weight:600">✓ Hedef Tamamlandı</div>`;
+
       bottomSection=`
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-size:13px;color:var(--success);font-weight:600">✓ Tamamlandı</div>
+            ${statusHtml}
             <div style="font-size:12px;color:var(--muted);margin-top:2px">${setDisplays.join(' + ')} = <b style="color:var(--text)">${totalReps} tekrar</b></div>
           </div>
           <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
@@ -1175,13 +1137,12 @@ const CIRC=578;
 function setPreset(s,btn){
   document.querySelectorAll('.pb').forEach(b=>b.classList.remove('ap'));
   btn.classList.add('ap');
-  // Don't reset if timer is running — just update total for next round
   if(!tRun){
     tTot=s; tRem=s;
     document.getElementById('t-btn').textContent='BAŞLAT';
     updTimer();
   } else {
-    tTot=s; // apply after current run ends
+    tTot=s;
   }
 }
 
@@ -1205,7 +1166,6 @@ function toggleTimer(){
         document.getElementById('t-btn').textContent='BAŞLAT';
         document.getElementById('t-status').textContent='HAZIR!';
         if(navigator.vibrate)navigator.vibrate([200,100,200]);
-        // apply any preset change that happened while running
         tRem=tTot;
         updTimer();
       }
@@ -1227,7 +1187,6 @@ function renderProgress(){
   }
   let html='';
 
-  // — Ağırlıklı hareketler —
   html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Ağırlık Takibi</div>`;
   const seen=new Set();
   DAYS.flat().forEach(id=>{
@@ -1256,14 +1215,12 @@ function renderProgress(){
     </div>`;
   });
 
-  // — Max hareketler —
   const maxExIds = [...new Set(DAYS.flat().filter(id=>EX[id].repType==='max'))];
   if(maxExIds.length){
     html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:18px 0 10px">Max Tekrar Takibi</div>`;
     maxExIds.forEach(id=>{
       const ex=EX[id];
       const name=getDisplayName(ex);
-      // Find which day this ex is in
       const dayIdx=DAYS.findIndex(d=>d.includes(id));
       const dk='d'+dayIdx;
       const weeks=Array.from({length:12},(_,i)=>{
@@ -1296,7 +1253,6 @@ function renderProgress(){
     });
   }
 
-  // — Haftalık Kilo Takibi —
   if(S.profile?.kg>0){
     if(!S.weeklyWeights||Object.keys(S.weeklyWeights).length===0){
       for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg;
@@ -1337,9 +1293,6 @@ function renderProgress(){
   el.innerHTML=html;
 }
 
-// ============================================================
-// NAVIGATION
-// ============================================================
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -1353,9 +1306,6 @@ function showPage(name,btn){
 
 function hideOb(){ document.getElementById('ob').style.display='none'; }
 
-// ============================================================
-// THEME
-// ============================================================
 function toggleTheme(){
   S.theme = S.theme==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme', S.theme);
@@ -1369,9 +1319,6 @@ function applyTheme(){
   if(btn) btn.textContent = (S.theme||'dark')==='dark'?'🌙 Koyu':'☀️ Açık';
 }
 
-// ============================================================
-// PROFILE & CALORIES
-// ============================================================
 function onGenderChange(){
   const g=document.getElementById('prof-gender')?.value;
   const hipRow=document.getElementById('hip-row');
@@ -1425,7 +1372,6 @@ function calcCalories(){
     document.getElementById('calorie-display').style.display='none';
   }
 
-  // US Navy body fat
   const fatEl=document.getElementById('fat-display');
   if(!fatEl) return;
   const fat=calcNavyFat(gender, cm, waist, neck, hip);
@@ -1590,8 +1536,6 @@ function skipProfileSetup(){
 
 function resetAllData(){
   if(!confirm('⚠️ Tüm antrenman verilerini, ağırlıkları ve açıklamaları silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!')) return;
-  
-  // Keep only profile and theme
   const profile = S.profile;
   const theme = S.theme;
   S = {
@@ -1606,19 +1550,15 @@ function resetAllData(){
   renderProgram();
   renderProgress();
   showPage('setup', document.querySelectorAll('.nb')[0]);
-  alert('✓ Tüm veriler sıfırlandı! Kurulum adımından başlayabilirsiniz.');
+  alert('✓ Tüm veriler sıfırlandı! Kurulumdan başlayabilirsiniz.');
 }
 
-// ============================================================
-// INIT
-// ============================================================
 const hasData=loadS();
 buildSetup();
 updTimer();
 applyTheme();
 
 if(!hasData){
-  // First time user — show choice modal
   document.getElementById('first-choice').style.display='flex';
 } else if(S.setupDone){
   hideOb();
