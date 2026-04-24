@@ -1218,16 +1218,55 @@ function setPreset(s,btn){
     tTot=s;
   }
 }
-
-function updTimer(){
-  const m=Math.floor(tRem/60),s=tRem%60;
-  document.getElementById('t-disp').textContent=m+':'+(s<10?'0':'')+s;
-  document.getElementById('t-ring').setAttribute('stroke-dashoffset',CIRC*(1-tRem/tTot));
-  document.getElementById('t-ring').style.stroke=tRem<=10?'#f87171':'#e8ff47';
-  document.getElementById('t-status').textContent=tRun?(tRem<=10?'HAZIR OL!':'DİNLENİYORSUN'):'HAZIR';
+function sendNotification() {
+  if (Notification.permission === "granted") {
+    new Notification("FitTrack", {
+      body: "Dinlenme süresi doldu! Yeni sete hazır mısın?",
+      icon: "https://cdn-icons-png.flaticon.com/512/3616/3616215.png" // Örnek bir ikon
+    });
+  }else{
+    console.log("Bildirim izni verilmedi.");
+  }
 }
 
-function toggleTimer(){
+function playAlarmSound() {
+  // Standart bir bildirim sesi (Mixkit'ten kısa bir bip sesi)
+  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+  audio.play().catch(e => console.log("Ses çalma engellendi: ", e));
+}
+function updTimer(){
+  const m = Math.floor(tRem/60), s = tRem%60;
+  
+  // Ekrandaki süreyi güncelle
+  document.getElementById('t-disp').textContent = m + ':' + (s<10 ? '0' : '') + s;
+  
+  // Halka animasyonunu ve rengini güncelle
+  document.getElementById('t-ring').setAttribute('stroke-dashoffset', CIRC*(1-tRem/tTot));
+  document.getElementById('t-ring').style.stroke = tRem<=10 ? '#f87171' : '#e8ff47';
+  
+  // Durum metnini güncelle (0 olduğunda "SÜRE BİTTİ!" yazacak şekilde ayarladım)
+  document.getElementById('t-status').textContent = tRun 
+    ? (tRem===0 ? 'SÜRE BİTTİ!' : (tRem<=10 ? 'HAZIR OL!' : 'DİNLENİYORSUN')) 
+    : 'HAZIR';
+
+  // --- BİLDİRİM VE SES KONTROLÜ ---
+  // Eğer timer çalışıyorsa (tRun) ve süre tam 0 olduysa:
+  if(tRun && tRem === 0) {
+    sendNotification();
+    playAlarmSound();
+    
+    // Telefonu titreştir (Eğer mobil cihaz destekliyorsa)
+    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    
+    // Timer'ı durdur (Eğer clearInterval işlemini başka bir yerde yapmıyorsan bu tRun'ı false yapmak mantıklıdır)
+    tRun = false; 
+  }
+}
+
+async function toggleTimer(){
+  const ok = await ensureNotificationPermission();
+  if (!ok) return;
+
   if(tRun){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='DEVAM';}
   else{
     if(tRem<=0){ tRem=tTot; }
@@ -1245,6 +1284,22 @@ function toggleTimer(){
     },1000);
   }
   updTimer();
+}
+async function ensureNotificationPermission() {
+  if (!("Notification" in window)) {
+    alert("Tarayıcı bildirim desteklemiyor");
+    return false;
+  }
+
+  if (Notification.permission === "granted") return true;
+
+  if (Notification.permission === "denied") {
+    alert("Bildirim izni reddedilmiş");
+    return false;
+  }
+
+  const permission = await Notification.requestPermission();
+  return permission === "granted";
 }
 
 function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
