@@ -10,13 +10,14 @@
 <title>FitTrack</title>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans&family=Inter&family=Sekuya&family=Bungee:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans&family=Inter&family=Sekuya&family=Anton+SC&family=Bungee:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;
   --text:#f0f0f0;--muted:#666;--accent:#e8ff47;
   --success:#4ade80;--danger:#f87171;--warn:#fbbf24;
   --radius:14px;--fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;
+  --fa:'Anton SC',sans-serif;
 }
 [data-theme="light"]{
   --bg:#f5f5f5;--bg2:#fff;--bg3:#e8e8e8;--border:#d0d0d0;
@@ -53,13 +54,13 @@ select option{background:var(--bg3)}
 .en{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
 .esch{font-size:12px;color:var(--accent);margin-bottom:10px;font-weight:500}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.wn{display:flex;align-items:center;gap:12px;margin-bottom:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;position:sticky;top:-20px;z-index:9}
+.wn{display:flex;align-items:center;gap:12px;margin-bottom:0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;top:-20px;z-index:9}
 .wn button{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
 .wn button:disabled{color:var(--border)}
 .wi{flex:1;text-align:center}
 .wnum{font-family:var(--fd);font-size:28px;color:var(--accent);line-height:1}
 .wlbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-.dtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;margin-top:0;position:sticky;top:36px;z-index:8;background:var(--bg);padding:6px 0;border-top:1px solid var(--border)}
+.dtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;margin-top:0;top:36px;z-index:8;background:var(--bg);padding:6px 0;border-top:1px solid var(--border)}
 .dtab{padding:10px 4px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
 .dtab.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a;font-weight:700}
 .sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
@@ -74,8 +75,8 @@ select option{background:var(--bg3)}
 .xc.done{opacity:.4}
 .xc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
 .xc.done::before{background:var(--success)}
-.xname{font-family:var(--fd);font-size:22px;letter-spacing:.5px;line-height:1.1;margin-bottom:4px}
-.xw{font-size:28px;font-weight:600;color:var(--accent);margin:4px 0 2px}
+.xname{font-family:var(--fa);font-size:20px;letter-spacing:0.8px;line-height:1.1;margin-bottom:4px;color:var(--accent);}
+.xw{font-size:28px;font-weight:600;color:var(--text);margin:4px 0 2px}
 .xsch{font-size:13px;color:var(--muted)}
 .xalt{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
@@ -180,7 +181,7 @@ select option{background:var(--bg3)}
         <button onclick="changeWeek(1)" id="btn-next">›</button>
       </div>
       <div class="pbw">
-        <div class="pbh"><span>12 HAFTALIK İLERLEME</span><span id="prog-pct">8%</span></div>
+        <div class="pbh"><span>PROGRAM İLERLEME</span><span id="prog-pct">8%</span></div>
         <div class="pt2"><div class="pf" id="prog-fill" style="width:8%"></div></div>
       </div>
       <div class="sr">
@@ -572,6 +573,12 @@ function limitDecimals(v,d){
   return v;
 }
 
+// DOĞRU TÜRKÇE BÜYÜK HARF FONKSİYONU
+function normalizeUppercaseText(text) {
+  if (!text) return "";
+  return text.toLocaleUpperCase('tr-TR');
+}
+
 function updateProgWeekWeight(val){
   const kg=parseFloat(parseFloat(val).toFixed(2))||0;
   if(kg<=0) return;
@@ -597,7 +604,8 @@ function renderProgWeightTracker(){
   wrap.style.display='block';
   if(!S.weeklyWeights) S.weeklyWeights={};
   if(Object.keys(S.weeklyWeights).length===0){
-    for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg;
+    // 13 HAFTA (Deload dahil) için alan oluşturulur
+    for(let i=0;i<13;i++) S.weeklyWeights[i]=S.profile.kg;
   }
   const w=S.currentWeek;
   const kg=S.weeklyWeights[w]||S.profile.kg;
@@ -650,7 +658,7 @@ function buildSetup(){
     return `
     <div style="margin-bottom:8px">
       <div class="gh" onclick="toggleG('g-d${di}')">
-        <div class="gt">${dayNames[di].toUpperCase()}</div>
+        <div class="gt">${dayNames[di].toLocaleUpperCase('tr-TR')}</div>
         <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${dayIds.length} hareket</div>
         <span id="g-d${di}-ch">▸</span>
       </div>
@@ -860,7 +868,7 @@ function saveAndStart(){
   if(kg>0||cm>0||age>0||gender){
     S.profile={kg,cm,age,gender};
     if(kg>0 && Object.keys(S.weeklyWeights).length===0){
-      for(let i=0;i<12;i++) S.weeklyWeights[i]=kg;
+      for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
     }
   }
   
@@ -931,11 +939,8 @@ function saveDynamicDone(exId, w, d, numSets){
         } else if (ex.repType === 'range') {
             if (val < rangeMax) allTargetReached = false;
         } else if (ex.repType === 'plus') {
-            if (i < numSets) {
-                if (val < ex.reps) allTargetReached = false;
-            } else {
-                if (val <= ex.reps) allTargetReached = false;
-            }
+            // ARTIK SON SETTE 6 YERİNE 5 (ex.reps) İSTENİYOR
+            if (val < ex.reps) allTargetReached = false;
         }
     }
 
@@ -966,16 +971,83 @@ function undoDone(exId,w,d){
 
 function renderProgram(){
   const w=S.currentWeek, d=S.currentDay;
-  const exs=getDayExs(d);
   const wk='w'+w, dk='d'+d;
-  const doneMap=S.weekData[wk]?.[dk]||{};
 
   document.getElementById('week-disp').textContent='H'+(w+1);
   document.getElementById('btn-prev').disabled=w<=0;
-  document.getElementById('btn-next').disabled=w>=11;
-  const pct=Math.round(((w+1)/12)*100);
+  
+  // 13. Haftaya (İndeks 12) izin veriyoruz
+  document.getElementById('btn-next').disabled=w>=12; 
+  
+  // Progress Bar %100 limitli
+  const pct=Math.min(100, Math.round(((w+1)/13)*100));
   document.getElementById('prog-pct').textContent=pct+'%';
   document.getElementById('prog-fill').style.width=pct+'%';
+
+  renderProgWeightTracker();
+
+  // ==========================================
+  // 13. HAFTA (DELOAD / DİNLENME HAFTASI)
+  // ==========================================
+  if(w === 12) {
+     // Dinlenme haftasında üst menüleri ve sekmeleri gizle
+     document.querySelector('.dtabs').style.display = 'none';
+     document.querySelector('.sr').style.display = 'none';
+     
+     let html = `
+     <div style="text-align:center; padding:20px; background:var(--bg2); border-radius:var(--radius); border:1px solid var(--accent); margin-bottom:20px;">
+       <h1 style="font-family:var(--fa); color:var(--accent); font-size:32px; letter-spacing:1px; margin-bottom:10px;">TEBRİKLER! 💪</h1>
+       <p style="font-family:var(--fb); line-height:1.6; font-size:15px; color:var(--text);">
+         12 döngüyü tamamladın ve dinlenme haftasına ulaştın.<br>
+         Bu hafta yalnızca 2 gün, hafif antrenmanlar yapacaksın ve bol bol dinleneceksin. 😴<br><br>
+         <small style="color:var(--muted)">Hafta 12'de yapabildiğin en son ağırlık ve tekrarları bir kenara not etmeyi unutma.</small><br><br>
+         <strong style="color:var(--accent)">Antrenmanlara nasıl devam etmen gerektiği hakkında bilgi almak için e-kitaptaki sayfa 37'yi kontrol et!</strong>
+       </p>
+     </div>`;
+
+     const deloadDays = [
+       { title: "GÜN 1", exercises: ["g2_lp", "g1_cp", "g2_pu"] },
+       { title: "GÜN 2", exercises: ["g3_sp", "g1_rdl", "g3_br"] }
+     ];
+
+     deloadDays.forEach(day => {
+       html += `<h2 style="font-family:var(--fa); margin:24px 0 12px; color:var(--text); font-size:24px; letter-spacing:1px;">${day.title}</h2>`;
+       
+       day.exercises.forEach(exId => {
+         const ex = EX[exId];
+         const name = normalizeUppercaseText(getDisplayName(ex));
+         let weightText = "Vücut Ağırlığı";
+         
+         if (ex.hasWeight) {
+            // 12. Haftanın (indeks 11) ağırlığını çekip %70'ini hesaplıyoruz
+            const lastWeight = getKgAt(exId, 11) || 0; 
+            const deloadWeight = mround25(lastWeight * 0.7);
+            weightText = `${deloadWeight} kg`;
+         }
+         
+         html += `
+         <div class="xc" style="background:var(--bg3); padding:15px; border-radius:var(--radius); margin-bottom:10px; border-left:4px solid var(--accent)">
+           <div class="xname">${name}</div>
+           <div style="color:var(--muted); font-size:14px; font-weight:500;">
+             3 Set × 5 Tekrar <span style="margin:0 8px; color:var(--border);">|</span> <span style="color:var(--accent); font-weight:600;">Hedef: ${weightText}</span>
+           </div>
+         </div>`;
+       });
+     });
+
+     document.getElementById('ex-list').innerHTML = html;
+     return; // Normal hafta programını basmamak için işlemi durdur
+  } 
+  // Normal haftalarda sekmeleri görünür yap
+  else {
+     document.querySelector('.dtabs').style.display = 'grid';
+     document.querySelector('.sr').style.display = 'grid';
+  }
+  // ==========================================
+
+
+  const exs=getDayExs(d);
+  const doneMap=S.weekData[wk]?.[dk]||{};
 
   let totalSets=0,totalVol=0;
   exs.forEach(ex=>{
@@ -985,17 +1057,18 @@ function renderProgram(){
   document.getElementById('s-ex').textContent=exs.length;
   document.getElementById('s-sets').textContent=totalSets;
   document.getElementById('s-vol').textContent=(totalVol/1000).toFixed(1);
-  renderProgWeightTracker();
 
   const allDone=exs.every(ex=>doneMap[ex.id]);
   let html='';
   if(allDone&&exs.length>0){
-    html+=`<div class="done-banner"><div style="font-family:var(--fd);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div></div>`;
+    html+=`<div class="done-banner"><div style="font-family:var(--fa);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div></div>`;
   }
 
   exs.forEach((ex, exIdx)=>{
     const done=!!doneMap[ex.id];
-    const name=getDisplayName(ex);
+    // YENİ FONT VE BÜYÜK HARF UYGULAMASI BURADA
+    const name=normalizeUppercaseText(getDisplayName(ex));
+    
     let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
@@ -1118,7 +1191,7 @@ function renderProgram(){
 }
 
 function changeWeek(delta){
-  S.currentWeek=Math.max(0,Math.min(11,S.currentWeek+delta));
+  S.currentWeek=Math.max(0,Math.min(12,S.currentWeek+delta));
   saveS(); renderProgram();
 }
 
@@ -1193,7 +1266,7 @@ function renderProgress(){
     const ex=EX[id];
     if(!ex.hasWeight||seen.has(id)||!S.maxes[id]) return;
     seen.add(id);
-    const name=getDisplayName(ex);
+    const name=normalizeUppercaseText(getDisplayName(ex));
     const inc=S.maxes[id].inc;
     const weeks=Array.from({length:12},(_,i)=>({
       w:i, kg:getKgAt(id,i),
@@ -1220,7 +1293,7 @@ function renderProgress(){
     html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:18px 0 10px">Max Tekrar Takibi</div>`;
     maxExIds.forEach(id=>{
       const ex=EX[id];
-      const name=getDisplayName(ex);
+      const name=normalizeUppercaseText(getDisplayName(ex));
       const dayIdx=DAYS.findIndex(d=>d.includes(id));
       const dk='d'+dayIdx;
       const weeks=Array.from({length:12},(_,i)=>{
@@ -1248,14 +1321,14 @@ function renderProgress(){
               </div>
             </div>`).join('')}
         </div>
-        ${weeks[S.currentWeek].done?`<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets.join(' + ')} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>`:''}
+        ${(weeks[S.currentWeek] && weeks[S.currentWeek].done) ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets.join(' + ')} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>` : ''}
       </div>`;
     });
   }
 
   if(S.profile?.kg>0){
     if(!S.weeklyWeights||Object.keys(S.weeklyWeights).length===0){
-      for(let i=0;i<12;i++) S.weeklyWeights[i]=S.profile.kg;
+      for(let i=0;i<13;i++) S.weeklyWeights[i]=S.profile.kg;
     }
     const startKg=S.weeklyWeights[0]||S.profile.kg;
     const curKg=S.weeklyWeights[S.currentWeek]||S.profile.kg;
@@ -1270,7 +1343,7 @@ function renderProgress(){
         <div style="font-size:13px;font-weight:600;color:${diffColor}">${diffSign}${totalDiff} kg başlangıçtan</div>
       </div>
       <div class="wscroll">
-        ${Array.from({length:12},(_,i)=>{
+        ${Array.from({length:13},(_,i)=>{
           const kg=(S.weeklyWeights[i]||S.profile.kg).toFixed(2);
           const isCur=i===S.currentWeek;
           const hasDiff=i>0;
@@ -1397,7 +1470,7 @@ function saveProfile(){
   const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
   S.profile={...S.profile,kg,cm,age,gender,waist,neck,hip};
   if(kg>0 && Object.keys(S.weeklyWeights).length===0){
-    for(let i=0;i<12;i++) S.weeklyWeights[i]=kg;
+    for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
   }
   saveS();
   renderProfile();
@@ -1516,7 +1589,7 @@ function saveProfileSetup(){
   if(kg>0||cm>0||age>0||gender){
     S.profile={kg,cm,age,gender,waist,neck,hip};
     if(kg>0){
-      for(let i=0;i<12;i++) S.weeklyWeights[i]=kg;
+      for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
     }
     saveS();
   }
