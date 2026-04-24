@@ -165,10 +165,6 @@ select option{background:var(--bg3)}
       <div class="ps">Her hareket için başlangıç kg, haftalık artış ve alternatif seç</div>
       <div id="setup-list"></div>
       <button class="btn bp" onclick="saveAndStart()" style="margin-top:4px">Programı Oluştur →</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-        <button class="btn bo" onclick="exportData()">💾 Dışa Aktar</button>
-        <button class="btn bo" onclick="showImportPicker()">📁 İçe Aktar</button>
-      </div>
       <input type="file" id="import-file-setup" accept=".json" style="display:none" onchange="importData(event)"/>
       <div style="height:24px"></div>
     </div>
@@ -340,6 +336,10 @@ select option{background:var(--bg3)}
 
       <div style="margin-top:20px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Veri Yönetimi</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <button class="btn bo" onclick="exportData()">💾 Dışa Aktar</button>
+          <button class="btn bo" onclick="showImportPicker()">📁 İçe Aktar</button>
+        </div>
         <button class="btn bo" onclick="resetAllData()" style="width:100%;background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:var(--danger);font-weight:600">
           🗑️ Tüm Verileri Sıfırla
         </button>
@@ -552,6 +552,7 @@ let S = {
   profile:{kg:0,cm:0,age:0,gender:''},
   weeklyWeights:{},
   explanations:{},
+  setDrafts:{},
   theme:'dark'
 };
 
@@ -565,6 +566,15 @@ function saveS(){
   }
 }
 function loadS(){ try{ const d=localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
+
+function saveDraft(exId, w, d, setIdx, val){
+  if(!S.setDrafts) S.setDrafts={};
+  const key=`w${w}_d${d}_${exId}`;
+  if(!S.setDrafts[key]) S.setDrafts[key]={};
+  if(val===''||val===null) delete S.setDrafts[key][`s${setIdx}`];
+  else S.setDrafts[key][`s${setIdx}`]=val;
+  saveS();
+}
 
 function limitDecimals(v,d){
   if(!v) return v;
@@ -961,6 +971,76 @@ function saveDynamicDone(exId, w, d, numSets){
     S.weekData[wk][dk][exId] = setsData;
     
     saveS(); renderProgram(); renderProgress();
+
+    // Günün tüm egzersizleri tamamlandı mı kontrol et
+    const dayExIds = DAYS[d];
+    const doneMap = S.weekData['w'+w]?.['d'+d] || {};
+    const allDone = dayExIds.every(id => doneMap[id] !== undefined);
+    if(allDone) showDayCompleteDialog();
+}
+
+function showDayCompleteDialog(){
+  const existing = document.getElementById('day-complete-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'day-complete-modal';
+  modal.className = 'mo open';
+  modal.innerHTML = `
+    <div class="ms" style="text-align:center;width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+      <div style="font-size:48px;margin-bottom:8px">🏆</div>
+      <div class="mt2">GÜNÜ TAMAMLADIN!</div>
+      <div class="msub">Harika iş! Tüm egzersizleri bitirdin.<br/>Verilerini yedeklemek ister misin?</div>
+      <div class="mbtns">
+        <button class="btn bp" onclick="exportData();document.getElementById('day-complete-modal').remove()">💾 Yedek Al</button>
+        <button class="btn bo" onclick="document.getElementById('day-complete-modal').remove()">Hayır, Geç</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function autoSaveSets(exId, w, d, numSets){
+  const ex = EX[exId];
+  let setsData = {};
+  let allFilled = true;
+  let allTargetReached = true;
+  let total = 0;
+
+  let rangeMax = ex.reps;
+  if(ex.repType === 'range'){
+    const match = ex.scheme.match(/-(\d+)/);
+    if(match && match[1]) rangeMax = parseInt(match[1]);
+  }
+
+  for(let i=1; i<=numSets; i++){
+    const val = parseInt(document.getElementById(`s${i}-${exId}`)?.value) || 0;
+    setsData[`s${i}`] = val;
+    total += val;
+    if(val === 0) allFilled = false;
+    if(ex.repType === 'fixed' && val < ex.reps) allTargetReached = false;
+    else if(ex.repType === 'range' && val < rangeMax) allTargetReached = false;
+    else if(ex.repType === 'plus' && val < ex.reps) allTargetReached = false;
+  }
+
+  if(ex.repType === 'max'){
+    if(!allFilled) return;
+    allTargetReached = true;
+  } else {
+    if(!allFilled) return; // tüm setler dolmadan kaydetme
+  }
+
+  setsData.targetMet = allTargetReached;
+  const wk='w'+w, dk='d'+d;
+  if(!S.weekData[wk]) S.weekData[wk]={};
+  if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+  S.weekData[wk][dk][exId] = setsData;
+  if(S.setDrafts) delete S.setDrafts[`w${w}_d${d}_${exId}`];
+  saveS(); renderProgram(); renderProgress();
+
+  const dayExIds = DAYS[d];
+  const doneMap = S.weekData['w'+w]?.['d'+d] || {};
+  const allDone = dayExIds.every(id => doneMap[id] !== undefined);
+  if(allDone) showDayCompleteDialog();
 }
 
 function undoDone(exId,w,d){
@@ -1000,8 +1080,7 @@ function renderProgram(){
        <p style="font-family:var(--fb); line-height:1.6; font-size:15px; color:var(--text);">
          12 döngüyü tamamladın ve dinlenme haftasına ulaştın.<br>
          Bu hafta yalnızca 2 gün, hafif antrenmanlar yapacaksın ve bol bol dinleneceksin. 😴<br><br>
-         <small style="color:var(--muted)">Hafta 12'de yapabildiğin en son ağırlık ve tekrarları bir kenara not etmeyi unutma.</small><br><br>
-         <strong style="color:var(--accent)">Antrenmanlara nasıl devam etmen gerektiği hakkında bilgi almak için e-kitaptaki sayfa 37'yi kontrol et!</strong>
+         <small style="color:var(--muted)">Hafta 12'de yapabildiğin en son ağırlık ve tekrarları bir kenara not etmeyi unutma.</small>
        </p>
      </div>`;
 
@@ -1010,7 +1089,7 @@ function renderProgram(){
        { title: "GÜN 2", exercises: ["g3_sp", "g1_rdl", "g3_br"] }
      ];
 
-     deloadDays.forEach(day => {
+     deloadDays.forEach((day, dayIdx) => {
        html += `<h2 style="font-family:var(--fa); margin:24px 0 12px; color:var(--text); font-size:24px; letter-spacing:1px;">${day.title}</h2>`;
        
        day.exercises.forEach(exId => {
@@ -1033,6 +1112,29 @@ function renderProgram(){
            </div>
          </div>`;
        });
+
+       if(dayIdx === 1) {
+         html += `
+         <div style="margin-top:28px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+           <div style="font-family:var(--fa);font-size:22px;color:var(--accent);letter-spacing:1px;margin-bottom:14px">PROGRAMI TAMAMLADIKTAN SONRA NE YAPMALIYIM?</div>
+           <p style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:14px">Superhero programı 12 haftalık olarak tasarlanmış olsa da, çok daha uzun süreler verim alınarak yapılabilecek bir programdır. Progressive overload prensibini sağlayarak, ağırlık ve tekrar sayılarını optimize ederek kendi içinde sürekli yenilenen bir yapıya sahiptir.</p>
+           <p style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:14px">12 haftalık antrenman sürecine <strong style="color:var(--accent)">"cycle"</strong> denir. Cycle sonuna geldiğinde program sana bir aktif dinlenme haftası sunar. Bu haftada yalnızca 2 defa, normalde çalıştığın ağırlıkların çok daha hafifleriyle antrenman yapacaksın. Bu haftayı pas geçme — kaslarının onarımı için oldukça değerli!</p>
+
+           <div style="border-top:1px solid var(--border);margin:18px 0"></div>
+           <div style="font-family:var(--fa);font-size:18px;color:var(--text);letter-spacing:.5px;margin-bottom:12px">Dinlenme haftasını tamamladım, şimdi ne olacak?</div>
+           <p style="font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px">Önünde 2 seçenek var:</p>
+
+           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+             <div style="font-family:var(--fa);font-size:16px;color:var(--accent);margin-bottom:8px">SEÇENEK 1 — Temiz Başlangıç</div>
+             <p style="font-size:13px;color:var(--text);line-height:1.65">Son 2 haftası çok yorucu geçtiyse veya kaslarının iyi bir dinlenmeye ihtiyacı olduğunu hissediyorsan yeni döngüye temiz başla. <strong style="color:var(--text)">12. haftada ulaştığın maksimum ağırlık ve tekrar sayılarını</strong> Kurulum sekmesine gir — formülasyon gerisini halleder, daha yüksek ağırlıklarla devam edersin.</p>
+           </div>
+
+           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+             <div style="font-family:var(--fa);font-size:16px;color:var(--accent);margin-bottom:8px">SEÇENEK 2 — 10. Hafta Ağırlıklarıyla Başla</div>
+             <p style="font-size:13px;color:var(--text);line-height:1.65">Son 2 hafta çok yorucu geçmediyse ve ağırlıkların artmaya devam edebileceğini düşünüyorsan, <strong style="color:var(--text)">tamamladığın döngünün 10. haftasındaki ağırlıkları</strong> Kurulum sekmesine gir. Bu sayede yeni döngünün 3. haftasından itibaren üzerine koyarak devam edebilirsin.</p>
+           </div>
+         </div>`;
+       }
      });
 
      document.getElementById('ex-list').innerHTML = html;
@@ -1150,14 +1252,15 @@ function renderProgram(){
     } else {
       let inputsHtml = `<div class="set-inputs" id="sets-${ex.id}">`;
       for(let i=1; i<=ex.sets; i++){
+         const draftVal = (S.setDrafts?.[`w${w}_d${d}_${ex.id}`]?.[`s${i}`]) ?? '';
          inputsHtml += `
           <div class="set-inp-wrap">
             <div class="set-inp-lbl">Set ${i}</div>
-            <input class="set-inp" type="number" id="s${i}-${ex.id}" placeholder="${ex.reps>0 ? ex.reps : '—'}" min="0" max="999" step="1" oninput="updSetTotalDynamic('${ex.id}', ${ex.sets})"/>
+            <input class="set-inp" type="number" id="s${i}-${ex.id}" placeholder="${ex.reps>0 ? ex.reps : '—'}" min="0" max="999" step="1" value="${draftVal}" oninput="updSetTotalDynamic('${ex.id}', ${ex.sets});saveDraft('${ex.id}',${w},${d},${i},this.value)" onblur="autoSaveSets('${ex.id}',${w},${d},${ex.sets})"/>
           </div>`;
       }
       inputsHtml += `</div><div class="set-total" id="total-${ex.id}">Toplam: —</div>`;
-      bottomSection = inputsHtml + `<button class="btn bo" style="margin-top:10px" onclick="saveDynamicDone('${ex.id}',${w},${d},${ex.sets})">✓ Tamamlandı</button>`;
+      bottomSection = inputsHtml;
     }
 
     html+=`
@@ -1220,12 +1323,9 @@ function setPreset(s,btn){
 }
 function sendNotification() {
   if (Notification.permission === "granted") {
-    new Notification("FitTrack", {
-      body: "Dinlenme süresi doldu! Yeni sete hazır mısın?",
-      icon: "https://cdn-icons-png.flaticon.com/512/3616/3616215.png" // Örnek bir ikon
+    new Notification("FitTrack ⏱️", {
+      body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪"
     });
-  }else{
-    console.log("Bildirim izni verilmedi.");
   }
 }
 
@@ -1246,21 +1346,8 @@ function updTimer(){
   
   // Durum metnini güncelle (0 olduğunda "SÜRE BİTTİ!" yazacak şekilde ayarladım)
   document.getElementById('t-status').textContent = tRun 
-    ? (tRem===0 ? 'SÜRE BİTTİ!' : (tRem<=10 ? 'HAZIR OL!' : 'DİNLENİYORSUN')) 
+    ? (tRem<=10 ? 'HAZIR OL!' : 'DİNLENİYORSUN') 
     : 'HAZIR';
-
-  // --- BİLDİRİM VE SES KONTROLÜ ---
-  // Eğer timer çalışıyorsa (tRun) ve süre tam 0 olduysa:
-  if(tRun && tRem === 0) {
-    sendNotification();
-    playAlarmSound();
-    
-    // Telefonu titreştir (Eğer mobil cihaz destekliyorsa)
-    if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    
-    // Timer'ı durdur (Eğer clearInterval işlemini başka bir yerde yapmıyorsan bu tRun'ı false yapmak mantıklıdır)
-    tRun = false; 
-  }
 }
 
 async function toggleTimer(){
@@ -1276,7 +1363,9 @@ async function toggleTimer(){
       if(tRem<=0){
         clearInterval(tInt);tRun=false;
         document.getElementById('t-btn').textContent='BAŞLAT';
-        document.getElementById('t-status').textContent='HAZIR!';
+        document.getElementById('t-status').textContent='SÜRE BİTTİ! 💪';
+        sendNotification();
+        playAlarmSound();
         if(navigator.vibrate)navigator.vibrate([200,100,200]);
         tRem=tTot;
         updTimer();
