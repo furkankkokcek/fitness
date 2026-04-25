@@ -586,7 +586,7 @@ function limitDecimals(v,d){
 // DOĞRU TÜRKÇE BÜYÜK HARF FONKSİYONU
 function normalizeUppercaseText(text) {
   if (!text) return "";
-  return text.toLocaleUpperCase('tr-TR');
+  return text.toLocaleUpperCase('tr-TR').replace(/İ/g, 'I');
 }
 
 function updateProgWeekWeight(val){
