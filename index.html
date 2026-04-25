@@ -198,10 +198,10 @@ select option{background:var(--bg3)}
           <div id="prog-weight-diff" style="font-size:12px;font-weight:600;min-width:40px;text-align:right"></div>
         </div>
       </div>
-      <div class="dtabs">
-        <div class="dtab active" onclick="changeDay(0,this)">GÜN 1</div>
-        <div class="dtab" onclick="changeDay(1,this)">GÜN 2</div>
-        <div class="dtab" onclick="changeDay(2,this)">GÜN 3</div>
+      <div class="dtabs" id="day-tabs">
+        <div class="dtab active" onclick="changeDay(0,this)" id="dtab-0">GÜN 1</div>
+        <div class="dtab" onclick="changeDay(1,this)" id="dtab-1">GÜN 2</div>
+        <div class="dtab" onclick="changeDay(2,this)" id="dtab-2">GÜN 3</div>
       </div>
       <div id="ex-list"></div>
       <div style="height:16px"></div>
@@ -553,6 +553,9 @@ let S = {
   weeklyWeights:{},
   explanations:{},
   setDrafts:{},
+  streak:{count:0, lastDate:''},
+  prs:{},
+  workoutSessions:{},
   theme:'dark'
 };
 
@@ -575,6 +578,148 @@ function saveDraft(exId, w, d, setIdx, val){
   else S.setDrafts[key][`s${setIdx}`]=val;
   saveS();
 }
+
+// ── STREAK ──────────────────────────────────────────────
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function updateStreak(w, d){
+  if(!S.streak) S.streak={count:0, lastDate:'', completedSessions:[]};
+  if(!S.streak.completedSessions) S.streak.completedSessions=[];
+  const key=`w${w}_d${d}`;
+  if(S.streak.completedSessions.includes(key)) return; // bu gün zaten sayıldı
+  S.streak.completedSessions.push(key);
+  S.streak.count=(S.streak.count||0)+1;
+  S.streak.lastDate=todayStr();
+}
+
+// ── PR (KİŞİSEL REKOR) ──────────────────────────────────
+function checkAndUpdatePR(exId, w, d){
+  const ex=EX[exId]; if(!ex?.hasWeight) return false;
+  const kg=getKgAt(exId,w);
+  if(!S.prs) S.prs={};
+  const prev=S.prs[exId]?.kg||0;
+  if(kg>prev){
+    S.prs[exId]={kg, week:w, day:d, date:todayStr()};
+    return true;
+  }
+  return false;
+}
+function showPRToast(exId){
+  const ex=EX[exId];
+  const name=normalizeUppercaseText(getDisplayName(ex));
+  const kg=S.prs[exId]?.kg||0;
+  let toast=document.getElementById('pr-toast');
+  if(!toast){ toast=document.createElement('div'); toast.id='pr-toast'; document.body.appendChild(toast); }
+  toast.innerHTML=`🏆 KİŞİSEL REKOR! ${name} — ${kg} kg`;
+  toast.style.cssText=`position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-family:var(--fa);font-size:15px;letter-spacing:.5px;padding:10px 20px;border-radius:50px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .4s`;
+  toast.style.opacity='1';
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{toast.style.opacity='0';},3000);
+}
+
+// ── ANTRENMAN SÜRESİ ────────────────────────────────────
+function workoutKey(w,d){ return `w${w}_d${d}`; }
+function startWorkoutIfNeeded(w,d){
+  const key=workoutKey(w,d);
+  if(!S.workoutSessions) S.workoutSessions={};
+  if(!S.workoutSessions[key]?.start){
+    S.workoutSessions[key]={start:Date.now(), end:null};
+    saveS();
+  }
+}
+function finishWorkout(w,d){
+  const key=workoutKey(w,d);
+  if(!S.workoutSessions) S.workoutSessions={};
+  if(S.workoutSessions[key]?.start && !S.workoutSessions[key]?.end){
+    S.workoutSessions[key].end=Date.now();
+  }
+}
+function workoutDuration(w,d){
+  const s=S.workoutSessions?.[workoutKey(w,d)];
+  if(!s?.start) return null;
+  const ms=(s.end||Date.now())-s.start;
+  const min=Math.floor(ms/60000), sec=Math.floor((ms%60000)/1000);
+  return `${min}d ${sec}s`;
+}
+
+// ── HAFTALIK ÖZET ────────────────────────────────────────
+function allWeekDaysDone(w){
+  return [0,1,2].every(d=>{
+    const dk='d'+d;
+    return DAYS[d].every(id=> S.weekData['w'+w]?.[dk]?.[id] !== undefined);
+  });
+}
+function showWeeklySummary(w){
+  const existing=document.getElementById('weekly-summary-modal');
+  if(existing) existing.remove();
+
+  let totalVol=0, prList=[];
+  const dayNames=['Gün 1','Gün 2','Gün 3'];
+
+  let daysHtml='';
+  [0,1,2].forEach(d=>{
+    const dur=workoutDuration(w,d);
+    let dayVol=0;
+    DAYS[d].forEach(id=>{
+      const ex=EX[id]; if(!ex.hasWeight) return;
+      const kg=getKgAt(id,w);
+      const val=S.weekData['w'+w]?.['d'+d]?.[id];
+      if(!val) return;
+      let reps=0;
+      for(let i=1;i<=ex.sets;i++) reps+=parseInt(val['s'+i]||0);
+      dayVol+=Math.round(kg*reps);
+    });
+    totalVol+=dayVol;
+    daysHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--fa);font-size:14px;letter-spacing:.5px;color:var(--text)">${dayNames[d]}</span>
+      <span style="font-size:12px;color:var(--muted)">${dur?`⏱ ${dur}`:''}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--accent)">${dayVol.toLocaleString()} kg</span>
+    </div>`;
+  });
+
+  // PR'lar
+  Object.entries(S.prs||{}).forEach(([id,pr])=>{
+    if(pr.week===w) prList.push(`🏆 ${normalizeUppercaseText(getDisplayName(EX[id]))} — ${pr.kg} kg`);
+  });
+
+  const modal=document.createElement('div');
+  modal.id='weekly-summary-modal';
+  modal.className='mo open';
+  modal.innerHTML=`
+    <div class="ms" style="width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+      <div style="text-align:center;font-size:40px;margin-bottom:4px">🎯</div>
+      <div class="mt2" style="text-align:center">HAFTA ${w+1} TAMAMLANDI!</div>
+      <div class="msub" style="text-align:center">Haftanın özeti</div>
+      <div style="margin:16px 0">${daysHtml}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:10px;padding:12px 16px;margin-bottom:${prList.length?'12px':'16px'}">
+        <span style="font-size:13px;color:var(--muted)">Toplam Hacim</span>
+        <span style="font-family:var(--fa);font-size:22px;color:var(--accent)">${totalVol.toLocaleString()} kg</span>
+      </div>
+      ${prList.length?`<div style="background:rgba(232,255,71,.08);border:1px solid rgba(232,255,71,.2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;line-height:1.8">${prList.join('<br>')}</div>`:''}
+      <div style="display:flex;gap:8px">
+        <button class="btn bp" style="flex:1" onclick="exportData();document.getElementById('weekly-summary-modal').remove()">💾 Yedek Al</button>
+        <button class="btn bo" style="flex:1" onclick="document.getElementById('weekly-summary-modal').remove()">Kapat</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+// ── PWA SERVİS WORKER ────────────────────────────────────
+(function initPWA(){
+  if(!('serviceWorker' in navigator)) return;
+  const swCode=`
+const CACHE='fittrack-v1';
+const URLS=['/'];
+self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS))); self.skipWaiting(); });
+self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
+self.addEventListener('fetch',e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/')))); });
+  `;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).catch(()=>{});
+})();
 
 function limitDecimals(v,d){
   if(!v) return v;
@@ -976,12 +1121,24 @@ function saveDynamicDone(exId, w, d, numSets){
     const dayExIds = DAYS[d];
     const doneMap = S.weekData['w'+w]?.['d'+d] || {};
     const allDone = dayExIds.every(id => doneMap[id] !== undefined);
-    if(allDone) showDayCompleteDialog();
+    if(allDone) showDayCompleteDialog(w, d);
 }
 
-function showDayCompleteDialog(){
+function showDayCompleteDialog(w, d){
   const existing = document.getElementById('day-complete-modal');
   if(existing) existing.remove();
+
+  const sess = S.workoutSessions?.[workoutKey(w,d)];
+  let timeInfo = '';
+  if(sess?.start){
+    const startTime = new Date(sess.start);
+    const hh = String(startTime.getHours()).padStart(2,'0');
+    const mm = String(startTime.getMinutes()).padStart(2,'0');
+    const dur = workoutDuration(w,d);
+    const sc = S.streak?.count || 0;
+    const streakTxt = sc >= 1 ? `&nbsp;·&nbsp; 🔥 <b style="color:var(--accent)">${sc} antrenman serisi</b>` : '';
+    timeInfo = `<div style="margin:10px 0 4px;font-size:13px;color:var(--muted)">⏰ <b style="color:var(--text)">${hh}:${mm}</b> başladı &nbsp;·&nbsp; ⏱ <b style="color:var(--accent)">${dur||'—'}</b>${streakTxt}</div>`;
+  }
 
   const modal = document.createElement('div');
   modal.id = 'day-complete-modal';
@@ -990,8 +1147,9 @@ function showDayCompleteDialog(){
     <div class="ms" style="text-align:center;width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
       <div style="font-size:48px;margin-bottom:8px">🏆</div>
       <div class="mt2">GÜNÜ TAMAMLADIN!</div>
-      <div class="msub">Harika iş! Tüm egzersizleri bitirdin.<br/>Verilerini yedeklemek ister misin?</div>
-      <div class="mbtns">
+      <div class="msub">Harika iş! Tüm egzersizleri bitirdin.</div>
+      ${timeInfo}
+      <div class="mbtns" style="margin-top:14px">
         <button class="btn bp" onclick="exportData();document.getElementById('day-complete-modal').remove()">💾 Yedek Al</button>
         <button class="btn bo" onclick="document.getElementById('day-complete-modal').remove()">Hayır, Geç</button>
       </div>
@@ -1000,6 +1158,7 @@ function showDayCompleteDialog(){
 }
 
 function autoSaveSets(exId, w, d, numSets){
+  startWorkoutIfNeeded(w,d);
   const ex = EX[exId];
   let setsData = {};
   let allFilled = true;
@@ -1035,17 +1194,48 @@ function autoSaveSets(exId, w, d, numSets){
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
   S.weekData[wk][dk][exId] = setsData;
   if(S.setDrafts) delete S.setDrafts[`w${w}_d${d}_${exId}`];
+
+  // PR kontrolü — sadece hedef tam karşılandıysa
+  const isPR = allTargetReached ? checkAndUpdatePR(exId, w, d) : false;
+
   saveS(); renderProgram(); renderProgress();
+
+  if(isPR) showPRToast(exId);
 
   const dayExIds = DAYS[d];
   const doneMap = S.weekData['w'+w]?.['d'+d] || {};
   const allDone = dayExIds.every(id => doneMap[id] !== undefined);
-  if(allDone) showDayCompleteDialog();
+  if(allDone){
+    updateStreak(w,d);
+    finishWorkout(w,d);
+    saveS();
+    renderProgram(); // done-banner'ı güncelle
+    if(allWeekDaysDone(w)){
+      setTimeout(()=>showWeeklySummary(w), 300);
+    } else {
+      showDayCompleteDialog(w, d);
+    }
+  }
 }
 
 function undoDone(exId,w,d){
   const wk='w'+w,dk='d'+d;
+  // Geri almadan önce gün tamam mıydı kontrol et
+  const wasDayDone = DAYS[d].every(id => S.weekData[wk]?.[dk]?.[id] !== undefined);
   if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
+  // Gün tamamlanmışsa streak'i düzelt
+  if(wasDayDone){
+    if(!S.streak) S.streak={count:0,completedSessions:[]};
+    if(!S.streak.completedSessions) S.streak.completedSessions=[];
+    const undoIdx = w*3+d;
+    // Bu seansı ve sonrasındakileri sil (zincir kırıldı)
+    S.streak.completedSessions = S.streak.completedSessions.filter(k=>{
+      const m=k.match(/w(\d+)_d(\d+)/);
+      if(!m) return false;
+      return parseInt(m[1])*3+parseInt(m[2]) < undoIdx;
+    });
+    S.streak.count = S.streak.completedSessions.length;
+  }
   saveS(); renderProgram(); renderProgress();
 }
 
@@ -1065,6 +1255,16 @@ function renderProgram(){
   document.getElementById('prog-fill').style.width=pct+'%';
 
   renderProgWeightTracker();
+
+  // ── GÜN sekmelerine tamamlanma ikonu ekle ──
+  const dayNames = ['GÜN 1','GÜN 2','GÜN 3'];
+  [0,1,2].forEach(di=>{
+    const tab = document.getElementById('dtab-'+di);
+    if(!tab) return;
+    const dayDone = w<12 && DAYS[di].every(id=> S.weekData['w'+w]?.['d'+di]?.[id] !== undefined);
+    tab.innerHTML = dayDone ? `✅ ${dayNames[di]}` : dayNames[di];
+    tab.style.color = dayDone ? 'var(--success)' : '';
+  });
 
   // ==========================================
   // 13. HAFTA (DELOAD / DİNLENME HAFTASI)
@@ -1163,7 +1363,20 @@ function renderProgram(){
   const allDone=exs.every(ex=>doneMap[ex.id]);
   let html='';
   if(allDone&&exs.length>0){
-    html+=`<div class="done-banner"><div style="font-family:var(--fa);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div></div>`;
+    const dur=workoutDuration(w,d);
+    const sc=S.streak?.count||0;
+    const sess=S.workoutSessions?.[workoutKey(w,d)];
+    let startTxt='';
+    if(sess?.start){
+      const st=new Date(sess.start);
+      startTxt=`${String(st.getHours()).padStart(2,'0')}:${String(st.getMinutes()).padStart(2,'0')}`;
+    }
+    const metaItems=[
+      startTxt?`⏰ ${startTxt}`:'',
+      dur?`⏱ ${dur}`:'',
+      sc>=1?`🔥 ${sc} seri`:''
+    ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+    html+=`<div class="done-banner"><div style="font-family:var(--fa);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div>${metaItems?`<div style="font-size:12px;color:var(--accent);margin-top:8px;font-weight:600">${metaItems}</div>`:''}</div>`;
   }
 
   exs.forEach((ex, exIdx)=>{
@@ -1396,6 +1609,31 @@ function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getEleme
 // ============================================================
 // PROGRESS PAGE
 // ============================================================
+function buildExChart(weeks){
+  const W=320, H=72, PAD=8;
+  const doneWks=weeks.filter(w=>w.done);
+  if(doneWks.length<2) return '';
+  const kgs=doneWks.map(w=>w.kg);
+  const minKg=Math.min(...kgs), maxKg=Math.max(...kgs);
+  const range=maxKg-minKg||1;
+  const xStep=(W-PAD*2)/(weeks.length-1);
+  const pts=weeks.map((wk,i)=>{
+    const x=PAD+i*xStep;
+    const y=wk.done ? H-PAD-((wk.kg-minKg)/range)*(H-PAD*2) : null;
+    return {x,y,wk};
+  });
+  // polyline only through done points
+  const donePts=pts.filter(p=>p.y!==null);
+  const polyline=donePts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const dots=donePts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${p.wk.cur?'#e8ff47':'#4ade80'}"/>`).join('');
+  const labels=`<text x="${donePts[0].x.toFixed(1)}" y="${H}" fill="#666" font-size="9" text-anchor="middle">${minKg}kg</text>
+    <text x="${donePts[donePts.length-1].x.toFixed(1)}" y="${(donePts[donePts.length-1].y-6).toFixed(1)}" fill="#e8ff47" font-size="9" text-anchor="middle">${donePts[donePts.length-1].wk.kg}kg</text>`;
+  return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="margin-top:10px;overflow:visible">
+    <polyline points="${polyline}" fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+
 function renderProgress(){
   const el=document.getElementById('progress-content');
   if(!S.setupDone||!Object.keys(S.maxes).length){
@@ -1429,6 +1667,7 @@ function renderProgress(){
             </div>
           </div>`).join('')}
       </div>
+      ${buildExChart(weeks)}
     </div>`;
   });
 
