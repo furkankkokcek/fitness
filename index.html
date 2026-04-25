@@ -595,24 +595,27 @@ function updateStreak(w, d){
 }
 
 // ── PR (KİŞİSEL REKOR) ──────────────────────────────────
-function checkAndUpdatePR(exId, w, d){
-  const ex=EX[exId]; if(!ex?.hasWeight) return false;
-  const kg=getKgAt(exId,w);
+function checkAndUpdatePR(exId, w, d, totalReps){
+  const ex=EX[exId];
   if(!S.prs) S.prs={};
-  const prev=S.prs[exId]?.kg||0;
-  if(kg>prev){
-    S.prs[exId]={kg, week:w, day:d, date:todayStr()};
-    return true;
+  if(ex.hasWeight){
+    const kg=getKgAt(exId,w);
+    const prev=S.prs[exId]?.kg||0;
+    if(kg>prev){ S.prs[exId]={kg, week:w, day:d, date:todayStr()}; return true; }
+  } else if(ex.repType==='max' && totalReps>0){
+    const prev=S.prs[exId]?.reps||0;
+    if(totalReps>prev){ S.prs[exId]={reps:totalReps, week:w, day:d, date:todayStr()}; return true; }
   }
   return false;
 }
 function showPRToast(exId){
   const ex=EX[exId];
   const name=normalizeUppercaseText(getDisplayName(ex));
-  const kg=S.prs[exId]?.kg||0;
+  const pr=S.prs[exId];
+  const val=ex.hasWeight ? `${pr?.kg} kg` : (ex.id==='g3_pl'||ex.name==='Plank') ? `${pr?.reps} sn` : `${pr?.reps} tekrar`;
   let toast=document.getElementById('pr-toast');
   if(!toast){ toast=document.createElement('div'); toast.id='pr-toast'; document.body.appendChild(toast); }
-  toast.innerHTML=`🏆 KİŞİSEL REKOR! ${name} — ${kg} kg`;
+  toast.innerHTML=`🏆 KİŞİSEL REKOR! ${name} — ${val}`;
   toast.style.cssText=`position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-family:var(--fa);font-size:15px;letter-spacing:.5px;padding:10px 20px;border-radius:50px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .4s`;
   toast.style.opacity='1';
   clearTimeout(toast._t);
@@ -1063,8 +1066,10 @@ function updSetTotalDynamic(exId, numSets){
     for(let i=1; i<=numSets; i++){
         total += parseInt(document.getElementById(`s${i}-${exId}`)?.value) || 0;
     }
+    const ex=EX[exId];
+    const unit = ex?.repType==='max' ? (exId==='g3_pl' ? 'sn' : 'top') : 'tekrar';
     const el=document.getElementById('total-'+exId);
-    if(el) el.textContent=total>0?`Toplam: ${total} tekrar`:'Toplam: —';
+    if(el) el.textContent=total>0?`Toplam: ${total} ${unit}`:'Toplam: —';
 }
 
 function saveDynamicDone(exId, w, d, numSets){
@@ -1196,7 +1201,7 @@ function autoSaveSets(exId, w, d, numSets){
   if(S.setDrafts) delete S.setDrafts[`w${w}_d${d}_${exId}`];
 
   // PR kontrolü — sadece hedef tam karşılandıysa
-  const isPR = allTargetReached ? checkAndUpdatePR(exId, w, d) : false;
+  const isPR = allTargetReached ? checkAndUpdatePR(exId, w, d, total) : false;
 
   saveS(); renderProgram(); renderProgress();
 
@@ -1454,11 +1459,14 @@ function renderProgram(){
           ? `<div style="font-size:13px;color:var(--warn);font-weight:600">✓ Kaydedildi (Ağırlık sabit)</div>`
           : `<div style="font-size:13px;color:var(--success);font-weight:600">✓ Hedef Tamamlandı</div>`;
 
+      const unit = ex.repType==='max'
+        ? (ex.id==='g3_pl' ? 'sn' : 'top')
+        : 'tekrar';
       bottomSection=`
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             ${statusHtml}
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">${setDisplays.join(' + ')} = <b style="color:var(--text)">${totalReps} tekrar</b></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${setDisplays.join(' + ')} = <b style="color:var(--text)">${totalReps} ${unit}</b></div>
           </div>
           <button class="btn-undo" onclick="undoDone('${ex.id}',${w},${d})">↩ Geri al</button>
         </div>`;
@@ -1473,6 +1481,7 @@ function renderProgram(){
           </div>`;
       }
       inputsHtml += `</div><div class="set-total" id="total-${ex.id}">Toplam: —</div>`;
+      if(ex.id==='g3_pl') inputsHtml+=`<div style="font-size:11px;color:var(--muted);margin-top:2px">saniye olarak gir</div>`;
       bottomSection = inputsHtml;
     }
 
@@ -1692,19 +1701,20 @@ function renderProgress(){
         }
         return {w:i, total, sets, done:!!val, cur:i===S.currentWeek};
       });
+      const isPlank = ex.id==='g3_pl';
+      const unit = isPlank ? 'saniye' : 'tekrar';
       html+=`<div class="pec">
-        <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">toplam tekrar</span></div>
+        <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">toplam ${unit}</span></div>
         <div class="wscroll">
           ${weeks.map(wk=>`
             <div class="wkcell">
               <div style="font-size:9px;color:${wk.cur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${wk.cur?700:400}">${wk.w+1}</div>
               <div class="wkbox" style="background:${wk.done?'rgba(74,222,128,.12)':wk.cur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${wk.done?'rgba(74,222,128,.3)':wk.cur?'rgba(232,255,71,.3)':'var(--border)'}">
                 <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.done?wk.total:'—'}</div>
-                <div style="font-size:9px;color:var(--muted)">${wk.done?'top':'tek'}</div>
               </div>
             </div>`).join('')}
         </div>
-        ${(weeks[S.currentWeek] && weeks[S.currentWeek].done) ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets.join(' + ')} = <b style="color:var(--text)">${weeks[S.currentWeek].total} tekrar</b></div>` : ''}
+        ${(weeks[S.currentWeek] && weeks[S.currentWeek].done) ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">Bu hafta: ${weeks[S.currentWeek].sets.join(' + ')} = <b style="color:var(--text)">${weeks[S.currentWeek].total} ${unit}</b></div>` : ''}
       </div>`;
     });
   }
