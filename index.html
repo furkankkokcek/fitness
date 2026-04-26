@@ -2118,8 +2118,8 @@ function kalTotals(dateKey){
   return {kcal:Math.round(kcal),protein:Math.round(protein),carb:Math.round(carb),fat:Math.round(fat)};
 }
 
-const MEAL_NAMES={sabah:'☀️ Sabah Öğünü',ogle:'🌤 Öğle Öğünü',aksam:'🌙 Akşam Öğünü',ara:'🍎 Ara Öğün'};
-const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜN EKLE',ogle:'ÖĞLE ÖĞÜN EKLE',aksam:'AKŞAM ÖĞÜN EKLE',ara:'ARA ÖĞÜN EKLE'};
+const MEAL_NAMES={sabah:'☀️ Sabah',ogle:'🌤 Öğle',aksam:'🌙 Akşam',ara:'🍎 Ara Öğün'};
+const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜNÜ EKLE',ogle:'ÖĞLE ÖĞÜNÜ EKLE',aksam:'AKŞAM ÖĞÜNÜ EKLE',ara:'ARA ÖĞÜN EKLE'};
 
 function renderKalori(){
   if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
