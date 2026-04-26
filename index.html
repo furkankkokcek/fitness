@@ -130,6 +130,38 @@ select option{background:var(--bg3)}
 .ostx{font-size:13px;color:var(--muted);line-height:1.4}
 .ostx b{color:var(--text);font-weight:500}
 ::-webkit-scrollbar{width:0}
+/* ── KALORİ / NUTRITION ── */
+.kal-ring{display:flex;flex-direction:column;align-items:center;padding:16px 0 8px}
+.kal-macro-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.kal-macro{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
+.kal-macro-val{font-family:var(--fa);font-size:22px;letter-spacing:.5px}
+.kal-macro-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.meal-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.meal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
+.meal-title{font-family:var(--fa);font-size:18px;letter-spacing:.5px}
+.meal-kcal{font-size:12px;color:var(--muted)}
+.meal-add-btn{background:var(--accent);color:#000;border:none;border-radius:8px;width:28px;height:28px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.meal-body{display:none;padding:0 12px 12px}
+.meal-body.open{display:block}
+.food-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.food-item:last-child{border:none}
+.food-item-name{font-size:13px;font-weight:600;flex:1}
+.food-item-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.food-item-kcal{font-size:14px;font-weight:700;color:var(--accent);margin-left:8px}
+.food-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:4px;line-height:1}
+.add-food-modal .ms{max-height:88vh}
+.food-tab{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.food-tab-btn{padding:9px 4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s}
+.food-tab-btn.active{background:var(--accent);border-color:var(--accent);color:#000}
+.search-result-item{padding:10px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid var(--border);transition:background .15s}
+.search-result-item:active{background:var(--bg2)}
+.search-result-name{font-size:13px;font-weight:600}
+.search-result-macros{font-size:11px;color:var(--muted);margin-top:3px}
+.saved-food-item{padding:10px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.photo-upload-area{border:2px dashed var(--border);border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color .2s}
+.photo-upload-area:hover{border-color:var(--accent)}
+.kal-goal-bar{background:var(--bg3);border-radius:99px;height:8px;margin:8px 0;overflow:hidden}
+.kal-goal-fill{height:100%;border-radius:99px;transition:width .5s}
 </style>
 </head>
 <body>
@@ -351,9 +383,16 @@ select option{background:var(--bg3)}
       <div style="height:24px"></div>
       <div style="text-align:center;padding-bottom:4px">
         <div style="font-family:var(--fa);font-size:13px;color:var(--accent);letter-spacing:1px">FITTRACK</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">v1.0.1</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">v1.0.3</div>
       </div>
 
+      <div style="height:16px"></div>
+    </div>
+
+    <div class="page" id="page-kalori">
+      <div class="pt">KALORİ</div>
+      <div class="ps">Günlük besin takibi</div>
+      <div id="kalori-content"></div>
       <div style="height:16px"></div>
     </div>
 
@@ -375,6 +414,10 @@ select option{background:var(--bg3)}
     <button class="nb" onclick="showPage('progress',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
       <span>İlerleme</span>
+    </button>
+    <button class="nb" onclick="showPage('kalori',this);renderKalori()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="8"/><line x1="10" y1="2" x2="10" y2="8"/><line x1="14" y1="2" x2="14" y2="8"/></svg>
+      <span>Kalori</span>
     </button>
     <button class="nb" onclick="showPage('profile',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
@@ -562,6 +605,7 @@ let S = {
   streak:{count:0, lastDate:''},
   prs:{},
   workoutSessions:{},
+  nutrition:{ customFoods:{}, dailyLog:{}, goal:2000 },
   theme:'dark'
 };
 
@@ -2054,6 +2098,573 @@ if(!hasData){
 }
 
 document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===S.currentDay));
+
+// ═══════════════════════════════════════════════
+// KALORİ TAKİBİ
+// ═══════════════════════════════════════════════
+
+function kalDateKey(){ return todayStr(); }
+function getKalDay(dateKey){
+  if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
+  if(!S.nutrition.dailyLog[dateKey]) S.nutrition.dailyLog[dateKey]={meals:{sabah:[],ogle:[],aksam:[],ara:[]},date:dateKey};
+  return S.nutrition.dailyLog[dateKey];
+}
+function kalTotals(dateKey){
+  const day=getKalDay(dateKey);
+  let kcal=0,protein=0,carb=0,fat=0;
+  Object.values(day.meals).forEach(items=>items.forEach(f=>{
+    kcal+=f.kcal||0; protein+=f.protein||0; carb+=f.carb||0; fat+=f.fat||0;
+  }));
+  return {kcal:Math.round(kcal),protein:Math.round(protein),carb:Math.round(carb),fat:Math.round(fat)};
+}
+
+const MEAL_NAMES={sabah:'☀️ Sabah Öğünü',ogle:'🌤 Öğle Öğünü',aksam:'🌙 Akşam Öğünü',ara:'🍎 Ara Öğün'};
+const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜN EKLE',ogle:'ÖĞLE ÖĞÜN EKLE',aksam:'AKŞAM ÖĞÜN EKLE',ara:'ARA ÖĞÜN EKLE'};
+
+function renderKalori(){
+  if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
+  const dk=kalDateKey();
+  const day=getKalDay(dk);
+  const tot=kalTotals(dk);
+  const goal=S.nutrition.goal||2000;
+  const pct=Math.min(100,Math.round((tot.kcal/goal)*100));
+  const fillColor=pct>100?'var(--danger)':pct>80?'var(--warn)':'var(--accent)';
+
+  let html=`
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div>
+        <div style="font-family:var(--fa);font-size:32px;color:${fillColor};letter-spacing:1px;line-height:1">${tot.kcal}</div>
+        <div style="font-size:11px;color:var(--muted)">/ ${goal} kcal hedef</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted)">kalan</div>
+        <div style="font-family:var(--fa);font-size:26px;color:var(--text)">${Math.max(0,goal-tot.kcal)}</div>
+      </div>
+    </div>
+    <div class="kal-goal-bar"><div class="kal-goal-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+    <div class="kal-macro-bar" style="margin-top:12px;margin-bottom:0">
+      <div class="kal-macro"><div class="kal-macro-val" style="color:#60a5fa">${tot.protein}g</div><div class="kal-macro-lbl">Protein</div></div>
+      <div class="kal-macro"><div class="kal-macro-val" style="color:#fb923c">${tot.carb}g</div><div class="kal-macro-lbl">Karbonhidrat</div></div>
+      <div class="kal-macro"><div class="kal-macro-val" style="color:#a78bfa">${tot.fat}g</div><div class="kal-macro-lbl">Yağ</div></div>
+    </div>
+  </div>
+  <button class="btn bo" style="margin-bottom:12px;font-size:13px" onclick="openKalGoalEditor()">🎯 Hedef: ${goal} kcal · Değiştir</button>`;
+
+  // Öğün bölümleri
+  Object.entries(MEAL_NAMES).forEach(([key,label])=>{
+    const items=day.meals[key]||[];
+    const mKcal=Math.round(items.reduce((s,f)=>s+(f.kcal||0),0));
+    html+=`<div class="meal-section">
+      <div class="meal-header" onclick="toggleMeal('${key}')">
+        <div>
+          <div class="meal-title">${label}</div>
+          ${mKcal>0?`<div class="meal-kcal">${mKcal} kcal</div>`:'<div class="meal-kcal">Boş</div>'}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="meal-add-btn" onclick="event.stopPropagation();openAddFood('${key}','${dk}')">+</button>
+          <span id="meal-arrow-${key}" style="color:var(--muted);font-size:18px;transition:transform .2s">›</span>
+        </div>
+      </div>
+      <div class="meal-body" id="meal-body-${key}">
+        ${items.length===0?`<div style="font-size:12px;color:var(--muted);padding:4px 0">Henüz besin eklenmedi</div>`:
+          items.map((f,i)=>`
+          <div class="food-item">
+            <div style="flex:1">
+              <div class="food-item-name">${f.name}</div>
+              <div class="food-item-detail">${f.amount}${f.unit} · P:${f.protein||0}g · K:${f.carb||0}g · Y:${f.fat||0}g</div>
+            </div>
+            <div class="food-item-kcal">${Math.round(f.kcal)} kcal</div>
+            <button class="food-del" onclick="deleteFoodItem('${key}','${dk}',${i})">✕</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  // Geçmiş günler
+  const logKeys=Object.keys(S.nutrition.dailyLog).sort().reverse().filter(k=>k!==dk).slice(0,7);
+  if(logKeys.length>0){
+    html+=`<div style="margin-top:16px;font-family:var(--fa);font-size:18px;letter-spacing:.5px;margin-bottom:8px">GEÇMİŞ GÜNLER</div>`;
+    logKeys.forEach(k=>{
+      const t=kalTotals(k);
+      const [y,m,d]=k.split('-');
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--text)">${d}/${m}/${y}</span>
+        <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
+        <span style="font-family:var(--fa);font-size:16px;color:var(--accent)">${t.kcal} kcal</span>
+      </div>`;
+    });
+  }
+
+  document.getElementById('kalori-content').innerHTML=html;
+}
+
+function toggleMeal(key){
+  const body=document.getElementById('meal-body-'+key);
+  const arrow=document.getElementById('meal-arrow-'+key);
+  const open=body.classList.toggle('open');
+  if(arrow) arrow.style.transform=open?'rotate(90deg)':'';
+}
+
+function deleteFoodItem(mealKey,dateKey,idx){
+  const day=getKalDay(dateKey);
+  day.meals[mealKey].splice(idx,1);
+  saveS(); renderKalori();
+}
+
+function openKalGoalEditor(){
+  const g=prompt('Günlük kalori hedefiniz (kcal):',S.nutrition.goal||2000);
+  if(g && !isNaN(parseInt(g))){ S.nutrition.goal=parseInt(g); saveS(); renderKalori(); }
+}
+
+// ── BESIN EKLEME MODALİ ────────────────────────
+let _addFoodMeal='', _addFoodDate='', _activeFoodTab='search', _searchResults=[], _pendingFood=null;
+
+function openAddFood(mealKey,dateKey){
+  _addFoodMeal=mealKey; _addFoodDate=dateKey; _activeFoodTab='search'; _searchResultsHTML='';
+  let modal=document.getElementById('add-food-modal');
+  if(!modal){ modal=document.createElement('div'); modal.id='add-food-modal'; modal.className='mo add-food-modal'; document.body.appendChild(modal); }
+  modal.innerHTML=`
+    <div class="ms" style="width:calc(100% - 24px);max-width:420px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-family:var(--fa);font-size:20px">${MEAL_ADD_LABELS[mealKey]||mealKey}</div>
+        <button onclick="document.getElementById('add-food-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <div class="food-tab" style="grid-template-columns:repeat(5,1fr)">
+        <div class="food-tab-btn active" id="ftab-search" onclick="switchFoodTab('search')">🔍 Ara</div>
+        <div class="food-tab-btn" id="ftab-recent" onclick="switchFoodTab('recent')">🕐 Önceki</div>
+        <div class="food-tab-btn" id="ftab-saved" onclick="switchFoodTab('saved')">💾 Kayıtlı</div>
+        <div class="food-tab-btn" id="ftab-tarif" onclick="switchFoodTab('tarif')">🍲 Tarif</div>
+        <div class="food-tab-btn" id="ftab-photo" onclick="switchFoodTab('photo')">📷 Foto</div>
+      </div>
+      <div id="food-tab-content"></div>
+    </div>`;
+  modal.style.display='flex';
+  renderFoodTab('search');
+}
+
+function switchFoodTab(tab){
+  _activeFoodTab=tab;
+  ['search','recent','saved','tarif','photo'].forEach(t=>{
+    document.getElementById('ftab-'+t)?.classList.toggle('active',t===tab);
+  });
+  renderFoodTab(tab);
+}
+
+function renderFoodTab(tab){
+  const el=document.getElementById('food-tab-content');
+  if(!el) return;
+  if(tab==='search') renderSearchTab(el);
+  else if(tab==='recent') renderRecentTab(el);
+  else if(tab==='saved') renderSavedTab(el);
+  else if(tab==='tarif') renderTarifTab(el);
+  else renderPhotoTab(el);
+}
+
+// ── TARİF / PORSİYONLAMA SEKMESİ ──
+function renderTarifTab(el){
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tarif veya yemeğin toplam makrolarını gir, kaç porsiyon yediğini belirt.</div>
+    <div>
+      <div class="lbl">Yemek Adı</div>
+      <input id="tarif-name" type="text" placeholder="örn: Mercimek Çorbası" style="margin-bottom:8px"/>
+      <div class="lbl">Toplam Makrolar (tüm tarif)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="lbl">Kalori (kcal)</div><input id="tarif-kcal" type="number" placeholder="1200" oninput="updateTarifPreview()"/></div>
+        <div><div class="lbl">Protein (g)</div><input id="tarif-protein" type="number" placeholder="60" oninput="updateTarifPreview()"/></div>
+        <div><div class="lbl">Karbonhidrat (g)</div><input id="tarif-carb" type="number" placeholder="140" oninput="updateTarifPreview()"/></div>
+        <div><div class="lbl">Yağ (g)</div><input id="tarif-fat" type="number" placeholder="30" oninput="updateTarifPreview()"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div><div class="lbl">Toplam Porsiyon</div><input id="tarif-total" type="number" value="4" min="1" oninput="updateTarifPreview()"/></div>
+        <div><div class="lbl">Yediğim Porsiyon</div><input id="tarif-eaten" type="number" value="1" min="0.25" step="0.25" oninput="updateTarifPreview()"/></div>
+      </div>
+      <div id="tarif-preview" style="display:none;background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:10px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">1 porsiyon</div>
+        <div style="font-family:var(--fa);font-size:28px;color:var(--accent)" id="tarif-prev-kcal">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="tarif-prev-macros"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn bp" onclick="addTarifFood()">✓ Ekle</button>
+        <button class="btn bo" onclick="saveTarifAndAdd()">💾 Kaydet & Ekle</button>
+      </div>
+    </div>`;
+}
+
+function updateTarifPreview(){
+  const kcal=parseFloat(document.getElementById('tarif-kcal')?.value)||0;
+  const protein=parseFloat(document.getElementById('tarif-protein')?.value)||0;
+  const carb=parseFloat(document.getElementById('tarif-carb')?.value)||0;
+  const fat=parseFloat(document.getElementById('tarif-fat')?.value)||0;
+  const total=parseFloat(document.getElementById('tarif-total')?.value)||1;
+  const eaten=parseFloat(document.getElementById('tarif-eaten')?.value)||1;
+  if(!kcal) return;
+  const ratio=eaten/total;
+  const prev=document.getElementById('tarif-preview');
+  if(prev) prev.style.display='block';
+  const pk=document.getElementById('tarif-prev-kcal');
+  const pm=document.getElementById('tarif-prev-macros');
+  if(pk) pk.textContent=`${Math.round(kcal*ratio)} kcal`;
+  if(pm) pm.textContent=`P:${Math.round(protein*ratio*10)/10}g · K:${Math.round(carb*ratio*10)/10}g · Y:${Math.round(fat*ratio*10)/10}g`;
+}
+
+function buildTarifFood(){
+  const name=document.getElementById('tarif-name')?.value?.trim()||'Ev Yemeği';
+  const kcal=parseFloat(document.getElementById('tarif-kcal')?.value)||0;
+  const protein=parseFloat(document.getElementById('tarif-protein')?.value)||0;
+  const carb=parseFloat(document.getElementById('tarif-carb')?.value)||0;
+  const fat=parseFloat(document.getElementById('tarif-fat')?.value)||0;
+  const total=parseFloat(document.getElementById('tarif-total')?.value)||1;
+  const eaten=parseFloat(document.getElementById('tarif-eaten')?.value)||1;
+  if(!kcal){ alert('Kalori zorunlu'); return null; }
+  const ratio=eaten/total;
+  const label=eaten===1?'1 porsiyon':`${eaten} porsiyon`;
+  return {name:`${name} (${label})`,amount:eaten,unit:'porsiyon',
+    kcal:Math.round(kcal*ratio),
+    protein:Math.round(protein*ratio*10)/10,
+    carb:Math.round(carb*ratio*10)/10,
+    fat:Math.round(fat*ratio*10)/10,
+    addedAt:Date.now()};
+}
+
+function addTarifFood(){
+  const f=buildTarifFood(); if(!f) return;
+  addFoodToMeal(_addFoodMeal,_addFoodDate,f);
+}
+
+function saveTarifAndAdd(){
+  const f=buildTarifFood(); if(!f) return;
+  const name=document.getElementById('tarif-name')?.value?.trim()||'Ev Yemeği';
+  const kcal=parseFloat(document.getElementById('tarif-kcal')?.value)||0;
+  const protein=parseFloat(document.getElementById('tarif-protein')?.value)||0;
+  const carb=parseFloat(document.getElementById('tarif-carb')?.value)||0;
+  const fat=parseFloat(document.getElementById('tarif-fat')?.value)||0;
+  const id='cf_'+Date.now();
+  S.nutrition.customFoods[id]={name,amount:1,unit:'porsiyon',
+    kcal,protein,carb,fat,
+    kcal100:kcal,protein100:protein,carb100:carb,fat100:fat};
+  saveS();
+  addFoodToMeal(_addFoodMeal,_addFoodDate,f);
+}
+
+
+function renderRecentTab(el){
+  const seen=new Set(), items=[];
+  Object.values(S.nutrition?.dailyLog||{}).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(day=>{
+    Object.values(day.meals||{}).forEach(mealItems=>{
+      [...mealItems].reverse().forEach(f=>{
+        const key=f.name.toLowerCase();
+        if(!seen.has(key)){ seen.add(key); items.push(f); }
+      });
+    });
+  });
+  if(!items.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Daha önce eklenen besin yok</div>`;
+    return;
+  }
+  window._recentFoods=items.slice(0,30);
+  el.innerHTML=window._recentFoods.map((f,i)=>`
+    <div class="search-result-item" onclick="selectRecentFood(${i})">
+      <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
+      <div class="search-result-macros">🔥 ${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+    </div>`).join('');
+}
+function selectRecentFood(i){ showFoodConfirm({...window._recentFoods[i]}, false); }
+
+// ── ARAMA: OpenFoodFacts ──
+let _searchResultsHTML='';
+
+function renderSearchTab(el){
+  el.innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input id="food-search-input" type="text" placeholder="örn: ayran, tavuk göğsü, yumurta" style="flex:1" onkeydown="if(event.key==='Enter')doFoodSearch()"/>
+      <button class="btn bp" style="width:auto;padding:0 16px;flex-shrink:0" onclick="doFoodSearch()">Ara</button>
+    </div>
+    <div id="food-search-results">${_searchResultsHTML||'<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Arama yapın</div>'}</div>`;
+}
+
+async function fetchWithRetry(url, retries=3, delayMs=800){
+  for(let i=0;i<retries;i++){
+    try{
+      const resp=await fetch(url);
+      if(resp.status===503){
+        if(i<retries-1){ await new Promise(r=>setTimeout(r,delayMs*(i+1))); continue; }
+        throw new Error('503');
+      }
+      return resp;
+    }catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r,delayMs*(i+1)));
+    }
+  }
+}
+
+async function doFoodSearch(){
+  const q=document.getElementById('food-search-input')?.value?.trim();
+  if(!q) return;
+  const res=document.getElementById('food-search-results');
+  res.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">⏳ Aranıyor...</div>`;
+  try{
+    // İlk deneme: world.openfoodfacts.org
+    const endpoints=[
+      `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,nutriments,serving_size,serving_quantity,brands`,
+      `https://world.openfoodfacts.net/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,nutriments,serving_size,serving_quantity,brands`
+    ];
+    let data=null;
+    for(const url of endpoints){
+      try{
+        const resp=await fetchWithRetry(url,3,600);
+        data=await resp.json();
+        break;
+      }catch(e){ continue; }
+    }
+    if(!data) throw new Error('Tüm sunucular meşgul');
+
+    const products=(data.products||[]).filter(p=>{
+      const n=p.nutriments;
+      return p.product_name && (n?.['energy-kcal_100g']>0||n?.['energy-kcal']>0) && n?.proteins_100g>=0;
+    });
+    if(!products.length){
+      res.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:10px 0;text-align:center">Sonuç bulunamadı. Farklı bir kelime veya İngilizce deneyin (örn: chicken breast).</div>`;
+      return;
+    }
+    _searchResults=products.map(p=>{
+      const n=p.nutriments;
+      const rawName=p.product_name_tr||p.product_name||'Bilinmeyen';
+      const brand=p.brands?` (${p.brands.split(',')[0].trim()})` :'';
+      const name=rawName+brand;
+      const servingQty=parseFloat(p.serving_quantity)||100;
+      const unit=(p.serving_size||'').match(/ml|mL/i)?'ml':'g';
+      const ratio=servingQty/100;
+      const kcal100=n['energy-kcal_100g']||Math.round((n['energy-kcal']||0)/ratio)||0;
+      return {name,amount:servingQty,unit,
+        kcal:Math.round(kcal100*ratio),
+        protein:Math.round((n.proteins_100g||0)*ratio*10)/10,
+        carb:Math.round((n.carbohydrates_100g||0)*ratio*10)/10,
+        fat:Math.round((n.fat_100g||0)*ratio*10)/10,
+        kcal100,protein100:n.proteins_100g||0,carb100:n.carbohydrates_100g||0,fat100:n.fat_100g||0
+      };
+    });
+    const html=_searchResults.map((f,i)=>`
+      <div class="search-result-item" onclick="selectSearchResult(${i})">
+        <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
+        <div class="search-result-macros">🔥 ${f.kcal} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+      </div>`).join('');
+    _searchResultsHTML=html;
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML=`<div style="text-align:center;padding:12px 0">
+      <div style="color:var(--danger);font-size:13px;margin-bottom:8px">⚠️ ${e.message==='Tüm sunucular meşgul'?'Sunucu şu an meşgul (503). Birkaç saniye bekleyip tekrar deneyin.':'Bağlantı hatası. İnternet bağlantınızı kontrol edin.'}</div>
+      <button class="btn bo" style="font-size:12px" onclick="doFoodSearch()">🔄 Tekrar Dene</button>
+    </div>`;
+  }
+}
+
+function selectSearchResult(i){
+  const f=_searchResults[i];
+  showFoodConfirm(f, false);
+}
+
+// ── KAYITLI BESINLER SEKMESİ ──
+function renderSavedTab(el){
+  const foods=Object.entries(S.nutrition?.customFoods||{});
+  el.innerHTML=`
+    <button class="btn bo" style="margin-bottom:10px;font-size:13px" onclick="openManualFoodForm()">+ Yeni Besin Kaydet</button>
+    ${foods.length===0?`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Kayıtlı besin yok</div>`:
+      foods.map(([id,f],i)=>`
+        <div class="saved-food-item">
+          <div style="flex:1;cursor:pointer" onclick="selectSavedFood('${id}')">
+            <div style="font-size:13px;font-weight:600">${f.name}</div>
+            <div style="font-size:11px;color:var(--muted)">100${f.unit||'g'} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g</div>
+          </div>
+          <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer" onclick="deleteSavedFood('${id}')">🗑</button>
+        </div>`).join('')}`;
+}
+
+function selectSavedFood(id){
+  const f=S.nutrition?.customFoods?.[id];
+  if(f) showFoodConfirm({...f}, false);
+}
+
+function deleteSavedFood(id){
+  if(confirm('Bu besini kayıtlardan silmek istiyor musunuz?')){ delete S.nutrition.customFoods[id]; saveS(); renderSavedTab(document.getElementById('food-tab-content')); }
+}
+
+function openManualFoodForm(){
+  const el=document.getElementById('food-tab-content');
+  el.innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="lbl">Besin Adı</div>
+      <input id="mf-name" type="text" placeholder="örn: Sütaş Ayran 200ml"/>
+      <div class="lbl">100g/100ml başına değerler</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="lbl">Kalori (kcal)</div><input id="mf-kcal" type="number" placeholder="örn: 45"/></div>
+        <div><div class="lbl">Protein (g)</div><input id="mf-protein" type="number" placeholder="örn: 3.5"/></div>
+        <div><div class="lbl">Karbonhidrat (g)</div><input id="mf-carb" type="number" placeholder="örn: 4.5"/></div>
+        <div><div class="lbl">Yağ (g)</div><input id="mf-fat" type="number" placeholder="örn: 1.5"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="lbl">Birim</div>
+          <select id="mf-unit"><option value="g">gram (g)</option><option value="ml">mililitre (ml)</option><option value="adet">adet</option></select></div>
+        <div><div class="lbl">Miktar</div><input id="mf-amount" type="number" placeholder="örn: 200"/></div>
+      </div>
+      <button class="btn bp" style="margin-top:4px" onclick="saveManualFood()">💾 Kaydet ve Ekle</button>
+      <button class="btn bo" style="margin-top:0" onclick="switchFoodTab('saved')">İptal</button>
+    </div>`;
+}
+
+function saveManualFood(){
+  const name=document.getElementById('mf-name')?.value?.trim();
+  const kcal100=parseFloat(document.getElementById('mf-kcal')?.value)||0;
+  const protein100=parseFloat(document.getElementById('mf-protein')?.value)||0;
+  const carb100=parseFloat(document.getElementById('mf-carb')?.value)||0;
+  const fat100=parseFloat(document.getElementById('mf-fat')?.value)||0;
+  const unit=document.getElementById('mf-unit')?.value||'g';
+  const amount=parseFloat(document.getElementById('mf-amount')?.value)||100;
+  if(!name||!kcal100){ alert('İsim ve kalori zorunlu'); return; }
+  const ratio=amount/100;
+  const food={name,amount,unit,kcal:Math.round(kcal100*ratio),protein:Math.round(protein100*ratio*10)/10,carb:Math.round(carb100*ratio*10)/10,fat:Math.round(fat100*ratio*10)/10,kcal100,protein100,carb100,fat100};
+  const id='cf_'+Date.now();
+  S.nutrition.customFoods[id]=food;
+  saveS();
+  showFoodConfirm(food, true);
+}
+
+// ── FOTOĞRAF SEKMESİ ──
+function renderPhotoTab(el){
+  el.innerHTML=`
+    <div class="photo-upload-area" onclick="document.getElementById('food-photo-input').click()">
+      <div style="font-size:40px;margin-bottom:8px">📷</div>
+      <div style="font-size:14px;font-weight:600">Besin fotoğrafı yükle</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Etiket, tabak veya ürün fotoğrafı</div>
+    </div>
+    <input type="file" id="food-photo-input" accept="image/*" style="display:none" onchange="analyzePhoto(this)"/>
+    <div id="photo-result"></div>`;
+}
+
+async function analyzePhoto(input){
+  const file=input.files[0]; if(!file) return;
+  const res=document.getElementById('photo-result');
+  res.innerHTML=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🔍 Analiz ediliyor...</div>`;
+  const b64=await new Promise((resolve,reject)=>{
+    const r=new FileReader(); r.onload=()=>resolve(r.result.split(',')[1]); r.onerror=reject; r.readAsDataURL(file);
+  });
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        system:`Besin etiketlerini veya yiyecekleri görüp makro değerlerini analiz eden uzmansın.
+SADECE JSON döndür:
+{"name":"Ürün Adı","amount":100,"unit":"g","kcal":250,"protein":10,"carb":30,"fat":8}
+Etiket varsa etiketteki değerleri kullan. Etiket yoksa görsel analiz yap. unit g veya ml olsun.`,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
+          {type:'text',text:'Bu görseldeki besinin makro değerlerini çıkar.'}
+        ]}]
+      })
+    });
+    const data=await resp.json();
+    const text=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const food=JSON.parse(text.replace(/```json|```/g,'').trim());
+    _pendingFood=food;
+    res.innerHTML=`
+      <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">${food.name}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
+          <div><div style="font-family:var(--fa);font-size:18px;color:var(--accent)">${Math.round(food.kcal)}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div>
+          <div><div style="font-family:var(--fa);font-size:18px;color:#60a5fa">${food.protein}g</div><div style="font-size:10px;color:var(--muted)">protein</div></div>
+          <div><div style="font-family:var(--fa);font-size:18px;color:#fb923c">${food.carb}g</div><div style="font-size:10px;color:var(--muted)">karb</div></div>
+          <div><div style="font-family:var(--fa);font-size:18px;color:#a78bfa">${food.fat}g</div><div style="font-size:10px;color:var(--muted)">yağ</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">${food.amount}${food.unit}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn bp" onclick="addPendingPhotoFood()">✓ Ekle</button>
+        <button class="btn bo" onclick="savePendingAndAdd()">💾 Kaydet & Ekle</button>
+      </div>`;
+  }catch(e){
+    res.innerHTML=`<div style="color:var(--danger);font-size:13px;padding:10px 0">Analiz başarısız. Tekrar deneyin.</div>`;
+  }
+}
+
+function addPendingPhotoFood(){
+  if(!_pendingFood) return;
+  addFoodToMeal(_addFoodMeal,_addFoodDate,{..._pendingFood});
+}
+function savePendingAndAdd(){
+  if(!_pendingFood) return;
+  const f=_pendingFood;
+  const id='cf_'+Date.now();
+  const ratio=f.amount/100;
+  S.nutrition.customFoods[id]={...f,kcal100:Math.round(f.kcal/ratio),protein100:Math.round(f.protein/ratio*10)/10,carb100:Math.round(f.carb/ratio*10)/10,fat100:Math.round(f.fat/ratio*10)/10};
+  saveS();
+  addFoodToMeal(_addFoodMeal,_addFoodDate,{..._pendingFood});
+}
+
+// ── BESIN ONAY / MİKTAR SEÇME ──
+let _confirmFood=null;
+function showFoodConfirm(food, fromManual){
+  _confirmFood=food;
+  const el=document.getElementById('food-tab-content');
+  el.innerHTML=`
+    <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">${food.name}</div>
+      <div style="font-size:12px;color:var(--muted)">🔥 ${Math.round(food.kcal)} kcal · P:${food.protein}g · K:${food.carb}g · Y:${food.fat}g (${food.amount}${food.unit})</div>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:6px">
+      <div>
+        <div class="lbl">Miktar (${food.unit})</div>
+        <input id="confirm-amount" type="number" value="${food.amount}" oninput="updateConfirmKcal(${food.kcal},${food.amount})"/>
+      </div>
+      <div>
+        <div class="lbl">Adet</div>
+        <input id="confirm-adet" type="number" value="1" min="1" oninput="updateConfirmKcal(${food.kcal},${food.amount})"/>
+      </div>
+    </div>
+    <div id="confirm-kcal-preview" style="text-align:center;font-family:var(--fa);font-size:24px;color:var(--accent);margin-bottom:12px">${Math.round(food.kcal)} kcal</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn bp" onclick="confirmAddFood()">✓ Ekle</button>
+      <button class="btn bo" onclick="renderFoodTab(_activeFoodTab)">‹ Geri</button>
+    </div>`;
+}
+
+function updateConfirmKcal(baseKcal,baseAmount){
+  const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||0;
+  const adet=parseFloat(document.getElementById('confirm-adet')?.value)||1;
+  const newKcal=Math.round(baseKcal*(newAmount/baseAmount)*adet);
+  const el=document.getElementById('confirm-kcal-preview');
+  if(el) el.textContent=newKcal+' kcal';
+}
+
+function confirmAddFood(){
+  const food=_confirmFood; if(!food) return;
+  const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||food.amount;
+  const adet=Math.max(1,parseFloat(document.getElementById('confirm-adet')?.value)||1);
+  const ratio=(newAmount/food.amount)*adet;
+  const f={
+    name: adet>1 ? `${food.name} ×${adet}` : food.name,
+    amount:Math.round(newAmount*adet*10)/10, unit:food.unit,
+    kcal:Math.round(food.kcal*ratio),
+    protein:Math.round(food.protein*ratio*10)/10,
+    carb:Math.round(food.carb*ratio*10)/10,
+    fat:Math.round(food.fat*ratio*10)/10,
+    addedAt:Date.now()
+  };
+  addFoodToMeal(_addFoodMeal,_addFoodDate,f);
+}
+
+function addFoodToMeal(mealKey,dateKey,food){
+  const day=getKalDay(dateKey);
+  day.meals[mealKey].push(food);
+  saveS();
+  document.getElementById('add-food-modal').style.display='none';
+  renderKalori();
+  // İlgili öğünü aç
+  setTimeout(()=>{ const b=document.getElementById('meal-body-'+mealKey); if(b&&!b.classList.contains('open')) toggleMeal(mealKey); },100);
+}
 </script>
 
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
