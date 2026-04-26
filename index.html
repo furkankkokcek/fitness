@@ -1261,7 +1261,9 @@ function renderProgram(){
 
   renderProgWeightTracker();
 
-  // ── GÜN sekmelerine tamamlanma ikonu ekle ──
+  // ── GÜN sekmelerine tamamlanma ikonu + streak senkronizasyonu ──
+  if(!S.streak) S.streak={count:0,completedSessions:[]};
+  if(!S.streak.completedSessions) S.streak.completedSessions=[];
   const dayNames = ['GÜN 1','GÜN 2','GÜN 3'];
   [0,1,2].forEach(di=>{
     const tab = document.getElementById('dtab-'+di);
@@ -1269,6 +1271,15 @@ function renderProgram(){
     const dayDone = w<12 && DAYS[di].every(id=> S.weekData['w'+w]?.['d'+di]?.[id] !== undefined);
     tab.innerHTML = dayDone ? `✅ ${dayNames[di]}` : dayNames[di];
     tab.style.color = dayDone ? 'var(--success)' : '';
+    // weekData'da tamamlanmış ama completedSessions'ta yoksa ekle
+    if(dayDone){
+      const key=`w${w}_d${di}`;
+      if(!S.streak.completedSessions.includes(key)){
+        S.streak.completedSessions.push(key);
+        S.streak.count=S.streak.completedSessions.length;
+        saveS();
+      }
+    }
   });
 
   // ==========================================
@@ -2031,6 +2042,7 @@ if(!hasData){
   document.getElementById('first-choice').style.display='none';
   renderProgram();
   renderProgress();
+  showPage('program', document.querySelectorAll('.nb')[1]);
 } else {
   document.getElementById('first-choice').style.display='none';
 }
