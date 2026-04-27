@@ -2285,8 +2285,8 @@ function renderTarifTab(el){
         <div style="font-size:11px;color:var(--muted);margin-top:4px" id="tarif-prev-macros"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn bp" onclick="addTarifFood()">✓ Ekle</button>
-        <button class="btn bo" onclick="saveTarifAndAdd()">💾 Kaydet & Ekle</button>
+        <button class="btn bo" onclick="saveTarifFood(false)">💾 Kaydet</button>
+        <button class="btn bp" onclick="saveTarifFood(true)">✅ Kaydet ve Ekle</button>
       </div>
     </div>`;
 }
@@ -2332,7 +2332,7 @@ function addTarifFood(){
   addFoodToMeal(_addFoodMeal,_addFoodDate,f);
 }
 
-function saveTarifAndAdd(){
+function saveTarifFood(andAdd=false){
   const f=buildTarifFood(); if(!f) return;
   const name=document.getElementById('tarif-name')?.value?.trim()||'Ev Yemeği';
   const kcal=parseFloat(document.getElementById('tarif-kcal')?.value)||0;
@@ -2342,9 +2342,10 @@ function saveTarifAndAdd(){
   const id='cf_'+Date.now();
   S.nutrition.customFoods[id]={name,amount:1,unit:'porsiyon',
     kcal,protein,carb,fat,
-    kcal100:kcal,protein100:protein,carb100:carb,fat100:fat};
+    kcal100:kcal,protein100:protein,carb100:carb,fat100:fat,baseLabel:'1 porsiyon'};
   saveS();
-  addFoodToMeal(_addFoodMeal,_addFoodDate,f);
+  if(andAdd) addFoodToMeal(_addFoodMeal,_addFoodDate,f);
+  else { alert('✅ Tarif kaydedildi!'); switchFoodTab('saved'); }
 }
 
 
@@ -2471,14 +2472,60 @@ function renderSavedTab(el){
   el.innerHTML=`
     <button class="btn bo" style="margin-bottom:10px;font-size:13px" onclick="openManualFoodForm()">+ Yeni Besin Kaydet</button>
     ${foods.length===0?`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Kayıtlı besin yok</div>`:
-      foods.map(([id,f],i)=>`
+      foods.map(([id,f])=>`
         <div class="saved-food-item">
           <div style="flex:1;cursor:pointer" onclick="selectSavedFood('${id}')">
             <div style="font-size:13px;font-weight:600">${f.name}</div>
-            <div style="font-size:11px;color:var(--muted)">100${f.unit||'g'} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g</div>
+            <div style="font-size:11px;color:var(--muted)">${f.baseLabel||'100'+(f.unit||'g')} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g</div>
           </div>
-          <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer" onclick="deleteSavedFood('${id}')">🗑</button>
+          <button style="background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:4px 6px" onclick="openEditSavedFood('${id}')">✏️</button>
+          <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:4px 6px" onclick="deleteSavedFood('${id}')">🗑</button>
         </div>`).join('')}`;
+}
+
+function openEditSavedFood(id){
+  const f=S.nutrition?.customFoods?.[id]; if(!f) return;
+  const el=document.getElementById('food-tab-content');
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Kayıtlı besini güncelle</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="lbl">Besin Adı</div>
+      <input id="ef-name" type="text" value="${f.name}"/>
+      <div class="lbl">Değerler (g/ml → 100 başına · adet/porsiyon → 1 adet başına)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="lbl">Kalori (kcal)</div><input id="ef-kcal" type="number" value="${f.kcal100||f.kcal}"/></div>
+        <div><div class="lbl">Protein (g)</div><input id="ef-protein" type="number" value="${f.protein100||f.protein}"/></div>
+        <div><div class="lbl">Karbonhidrat (g)</div><input id="ef-carb" type="number" value="${f.carb100||f.carb}"/></div>
+        <div><div class="lbl">Yağ (g)</div><input id="ef-fat" type="number" value="${f.fat100||f.fat}"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="lbl">Birim</div>
+          <select id="ef-unit"><option value="g" ${f.unit==='g'?'selected':''}>gram (g)</option><option value="ml" ${f.unit==='ml'?'selected':''}>mililitre (ml)</option><option value="adet" ${f.unit==='adet'?'selected':''}>adet</option><option value="porsiyon" ${f.unit==='porsiyon'?'selected':''}>porsiyon</option></select></div>
+        <div><div class="lbl">Varsayılan Miktar</div><input id="ef-amount" type="number" value="${f.amount}"/></div>
+      </div>
+      <button class="btn bp" style="margin-top:4px" onclick="saveEditedFood('${id}')">💾 Güncelle</button>
+      <button class="btn bo" style="margin-top:0" onclick="switchFoodTab('saved')">İptal</button>
+    </div>`;
+}
+
+function saveEditedFood(id){
+  const name=document.getElementById('ef-name')?.value?.trim();
+  const kcal100=parseFloat(document.getElementById('ef-kcal')?.value)||0;
+  const protein100=parseFloat(document.getElementById('ef-protein')?.value)||0;
+  const carb100=parseFloat(document.getElementById('ef-carb')?.value)||0;
+  const fat100=parseFloat(document.getElementById('ef-fat')?.value)||0;
+  const unit=document.getElementById('ef-unit')?.value||'g';
+  const amount=parseFloat(document.getElementById('ef-amount')?.value)||100;
+  if(!name||!kcal100){ alert('İsim ve kalori zorunlu'); return; }
+  const isCountUnit = unit==='adet'||unit==='porsiyon';
+  const ratio = isCountUnit ? amount : amount/100;
+  const baseLabel = isCountUnit ? '1 '+unit : '100'+unit;
+  S.nutrition.customFoods[id]={name,amount,unit,
+    kcal:Math.round(kcal100*ratio),protein:Math.round(protein100*ratio*10)/10,
+    carb:Math.round(carb100*ratio*10)/10,fat:Math.round(fat100*ratio*10)/10,
+    kcal100,protein100,carb100,fat100,baseLabel};
+  saveS();
+  switchFoodTab('saved');
 }
 
 function selectSavedFood(id){
@@ -2496,7 +2543,7 @@ function openManualFoodForm(){
     <div style="display:flex;flex-direction:column;gap:8px">
       <div class="lbl">Besin Adı</div>
       <input id="mf-name" type="text" placeholder="örn: Sütaş Ayran 200ml"/>
-      <div class="lbl">100g/100ml başına değerler</div>
+      <div class="lbl">Değerler (g/ml → 100 başına · adet/porsiyon → 1 adet başına)</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div><div class="lbl">Kalori (kcal)</div><input id="mf-kcal" type="number" placeholder="örn: 45"/></div>
         <div><div class="lbl">Protein (g)</div><input id="mf-protein" type="number" placeholder="örn: 3.5"/></div>
@@ -2508,12 +2555,15 @@ function openManualFoodForm(){
           <select id="mf-unit"><option value="g">gram (g)</option><option value="ml">mililitre (ml)</option><option value="adet">adet</option></select></div>
         <div><div class="lbl">Miktar</div><input id="mf-amount" type="number" placeholder="örn: 200"/></div>
       </div>
-      <button class="btn bp" style="margin-top:4px" onclick="saveManualFood()">💾 Kaydet ve Ekle</button>
-      <button class="btn bo" style="margin-top:0" onclick="switchFoodTab('saved')">İptal</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+        <button class="btn bp" onclick="saveManualFood(false)">💾 Kaydet</button>
+        <button class="btn bp" onclick="saveManualFood(true)">✅ Kaydet ve Ekle</button>
+      </div>
+      <button class="btn bo" style="margin-top:8px" onclick="switchFoodTab('saved')">İptal</button>
     </div>`;
 }
 
-function saveManualFood(){
+function saveManualFood(andAdd=false){
   const name=document.getElementById('mf-name')?.value?.trim();
   const kcal100=parseFloat(document.getElementById('mf-kcal')?.value)||0;
   const protein100=parseFloat(document.getElementById('mf-protein')?.value)||0;
@@ -2522,12 +2572,16 @@ function saveManualFood(){
   const unit=document.getElementById('mf-unit')?.value||'g';
   const amount=parseFloat(document.getElementById('mf-amount')?.value)||100;
   if(!name||!kcal100){ alert('İsim ve kalori zorunlu'); return; }
-  const ratio=amount/100;
-  const food={name,amount,unit,kcal:Math.round(kcal100*ratio),protein:Math.round(protein100*ratio*10)/10,carb:Math.round(carb100*ratio*10)/10,fat:Math.round(fat100*ratio*10)/10,kcal100,protein100,carb100,fat100};
+  const isCountUnit = unit==='adet'||unit==='porsiyon';
+  const ratio = isCountUnit ? amount : amount/100;
+  const baseLabel = isCountUnit ? '1 '+unit : '100'+unit;
+  const food={name,amount,unit,kcal:Math.round(kcal100*ratio),protein:Math.round(protein100*ratio*10)/10,carb:Math.round(carb100*ratio*10)/10,fat:Math.round(fat100*ratio*10)/10,
+    kcal100,protein100,carb100,fat100,baseLabel};
   const id='cf_'+Date.now();
   S.nutrition.customFoods[id]=food;
   saveS();
-  showFoodConfirm(food, true);
+  if(andAdd) showFoodConfirm(food, true);
+  else { alert('✅ Besin kaydedildi!'); switchFoodTab('saved'); }
 }
 
 // ── FOTOĞRAF SEKMESİ ──
@@ -2583,7 +2637,7 @@ Etiket varsa etiketteki değerleri kullan. Etiket yoksa görsel analiz yap. unit
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn bp" onclick="addPendingPhotoFood()">✓ Ekle</button>
-        <button class="btn bo" onclick="savePendingAndAdd()">💾 Kaydet & Ekle</button>
+        <button class="btn bp" onclick="savePendingAndAdd()">✅ Kaydet ve Ekle</button>
       </div>`;
   }catch(e){
     res.innerHTML=`<div style="color:var(--danger);font-size:13px;padding:10px 0">Analiz başarısız. Tekrar deneyin.</div>`;
@@ -2605,9 +2659,11 @@ function savePendingAndAdd(){
 }
 
 // ── BESIN ONAY / MİKTAR SEÇME ──
-let _confirmFood=null;
+let _confirmFood=null, _confirmBaseKcal=0, _confirmBaseAmount=1;
 function showFoodConfirm(food, fromManual){
   _confirmFood=food;
+  _confirmBaseKcal=food.kcal;
+  _confirmBaseAmount=food.amount||1;
   const el=document.getElementById('food-tab-content');
   el.innerHTML=`
     <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:12px">
@@ -2617,11 +2673,11 @@ function showFoodConfirm(food, fromManual){
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:6px">
       <div>
         <div class="lbl">Miktar (${food.unit})</div>
-        <input id="confirm-amount" type="number" value="${food.amount}" oninput="updateConfirmKcal(${food.kcal},${food.amount})"/>
+        <input id="confirm-amount" type="number" value="${food.amount}" oninput="updateConfirmKcal()"/>
       </div>
       <div>
         <div class="lbl">Adet</div>
-        <input id="confirm-adet" type="number" value="1" min="1" oninput="updateConfirmKcal(${food.kcal},${food.amount})"/>
+        <input id="confirm-adet" type="number" value="1" min="1" step="0.5" oninput="updateConfirmKcal()"/>
       </div>
     </div>
     <div id="confirm-kcal-preview" style="text-align:center;font-family:var(--fa);font-size:24px;color:var(--accent);margin-bottom:12px">${Math.round(food.kcal)} kcal</div>
@@ -2631,10 +2687,10 @@ function showFoodConfirm(food, fromManual){
     </div>`;
 }
 
-function updateConfirmKcal(baseKcal,baseAmount){
+function updateConfirmKcal(){
   const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||0;
   const adet=parseFloat(document.getElementById('confirm-adet')?.value)||1;
-  const newKcal=Math.round(baseKcal*(newAmount/baseAmount)*adet);
+  const newKcal=Math.round(_confirmBaseKcal*(newAmount/_confirmBaseAmount)*adet);
   const el=document.getElementById('confirm-kcal-preview');
   if(el) el.textContent=newKcal+' kcal';
 }
@@ -2642,8 +2698,8 @@ function updateConfirmKcal(baseKcal,baseAmount){
 function confirmAddFood(){
   const food=_confirmFood; if(!food) return;
   const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||food.amount;
-  const adet=Math.max(1,parseFloat(document.getElementById('confirm-adet')?.value)||1);
-  const ratio=(newAmount/food.amount)*adet;
+  const adet=Math.max(0.5,parseFloat(document.getElementById('confirm-adet')?.value)||1);
+  const ratio=(newAmount/_confirmBaseAmount)*adet;
   const f={
     name: adet>1 ? `${food.name} ×${adet}` : food.name,
     amount:Math.round(newAmount*adet*10)/10, unit:food.unit,
