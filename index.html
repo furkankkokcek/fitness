@@ -264,6 +264,7 @@ select option{background:var(--bg3)}
           <button class="btn bp" id="t-btn" onclick="toggleTimer()">BAŞLAT</button>
           <button class="btn bo" onclick="resetTimer()">SIFIRLA</button>
         </div>
+        <button class="btn bo" id="notify-btn" style="margin-top:10px">🔔 Bildirimi Aç</button>
       </div>
     </div>
 
@@ -1604,18 +1605,86 @@ function setPreset(s,btn){
     tTot=s;
   }
 }
+// Service Worker üzerinden bildirim gönder (Android'de daha güvenilir)
 function sendNotification() {
-  if (Notification.permission === "granted") {
-    new Notification("FitTrack ⏱️", {
-      body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪"
-    });
+  try {
+    if (!("Notification" in window)) {
+      console.warn("⚠️ Notification API desteklenmiyor");
+      return;
+    }
+    
+    if (Notification.permission === "granted") {
+      // Service Worker var ve aktifse, bundan gönder
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification("FitTrack ⏱️", {
+            body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪",
+            icon: "/fitness/icons/icon-192.png",
+            badge: "/fitness/icons/icon-192.png",
+            tag: "timer-complete",
+            requireInteraction: false,
+            vibrate: [200, 100, 200, 100, 200]
+          }).catch(err => {
+            console.error("SW Notification hatası:", err);
+            // Fallback: doğrudan göster
+            new Notification("FitTrack ⏱️", {
+              body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪"
+            });
+          });
+        }).catch(err => {
+          console.error("SW ready hatası:", err);
+          // Fallback: doğrudan göster
+          new Notification("FitTrack ⏱️", {
+            body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪"
+          });
+        });
+      } else {
+        // Fallback: Service Worker yoksa doğrudan göster
+        new Notification("FitTrack ⏱️", {
+          body: "Dinlenme süresi doldu! Yeni sete hazır mısın? 💪"
+        });
+      }
+    } else {
+      console.log("Bildirim izni yok");
+    }
+  } catch(e) {
+    console.error("Bildirim gönderme hatası:", e);
   }
 }
 
+// Web Audio API ile lokal beep sesi üret (mobilde güvenilir)
 function playAlarmSound() {
-  // Standart bir bildirim sesi (Mixkit'ten kısa bir bip sesi)
-  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-  audio.play().catch(e => console.log("Ses çalma engellendi: ", e));
+  try {
+    const audioContext = window.audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    window.audioContext = audioContext;
+    
+    const now = audioContext.currentTime;
+    const beepPattern = [
+      { start: now, duration: 0.2 },
+      { start: now + 0.3, duration: 0.2 },
+      { start: now + 0.6, duration: 0.3 }
+    ];
+    
+    beepPattern.forEach(beep => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.value = 1000;
+      osc.type = 'sine';
+      
+      gain.gain.setValueAtTime(0.3, beep.start);
+      gain.gain.exponentialRampToValueAtTime(0.01, beep.start + beep.duration);
+      
+      osc.start(beep.start);
+      osc.stop(beep.start + beep.duration);
+    });
+    console.log("✅ Ses çalındı");
+  } catch(e) {
+    console.error("Ses çalma hatası:", e);
+  }
 }
 function updTimer(){
   const m = Math.floor(tRem/60), s = tRem%60;
@@ -1633,10 +1702,7 @@ function updTimer(){
     : 'HAZIR';
 }
 
-async function toggleTimer(){
-  const ok = await ensureNotificationPermission();
-  if (!ok) return;
-
+function toggleTimer(){
   if(tRun){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='DEVAM';}
   else{
     if(tRem<=0){ tRem=tTot; }
@@ -1647,9 +1713,16 @@ async function toggleTimer(){
         clearInterval(tInt);tRun=false;
         document.getElementById('t-btn').textContent='BAŞLAT';
         document.getElementById('t-status').textContent='SÜRE BİTTİ! 💪';
-        sendNotification();
+        
+        // Vibrasyon
+        if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);
+        
+        // Ses çal
         playAlarmSound();
-        if(navigator.vibrate)navigator.vibrate([200,100,200]);
+        
+        // Bildirim gönder
+        sendNotification();
+        
         tRem=tTot;
         updTimer();
       }
@@ -1657,24 +1730,50 @@ async function toggleTimer(){
   }
   updTimer();
 }
-async function ensureNotificationPermission() {
-  if (!("Notification" in window)) {
-    alert("Tarayıcı bildirim desteklemiyor");
-    return false;
-  }
+function ensureNotificationPermission() {
+  return new Promise((resolve) => {
+    if (!("Notification" in window)) {
+      console.warn("⚠️ Notification API desteklenmiyor");
+      resolve(false);
+      return;
+    }
 
-  if (Notification.permission === "granted") return true;
+    if (Notification.permission === "granted") {
+      resolve(true);
+      return;
+    }
 
-  if (Notification.permission === "denied") {
-    alert("Bildirim izni reddedilmiş");
-    return false;
-  }
+    if (Notification.permission === "denied") {
+      console.log("Bildirim izni reddedilmiş");
+      resolve(false);
+      return;
+    }
 
-  const permission = await Notification.requestPermission();
-  return permission === "granted";
+    // İzin iste
+    Notification.requestPermission().then(permission => {
+      resolve(permission === "granted");
+    }).catch(e => {
+      console.error("Bildirim izni istenemedi:", e);
+      resolve(false);
+    });
+  });
 }
 
 function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
+
+// Bildirim izni iste
+if(document.getElementById('notify-btn')){
+  document.getElementById('notify-btn').addEventListener('click', () => {
+    ensureNotificationPermission().then(granted => {
+      if(granted) {
+        console.log('✅ Bildirim izni verildi');
+        alert('✅ Bildirimler açıldı!');
+      } else {
+        console.log('❌ Bildirim izni reddedildi');
+      }
+    });
+  });
+}
 
 // ============================================================
 // PROGRESS PAGE
@@ -2785,6 +2884,44 @@ function addFoodToMeal(mealKey,dateKey,food){
 }
 </script>
 
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<script>
+// ============================================================
+// Service Worker Registration (Android & Desktop Compatible)
+// ============================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register('sw.js', { scope: '/' })
+    .then(reg => {
+      console.log('✅ Service Worker başarıyla kaydedildi:', reg.scope);
+      // Güncellemeleri kontrol et
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'activated') {
+            console.log('✅ Service Worker güncellendi');
+          }
+        };
+      };
+      // Düzenli olarak güncellemeleri kontrol et
+      setInterval(() => reg.update(), 60000);
+    })
+    .catch(err => {
+      console.error('❌ Service Worker kaydedilemedi:', err);
+    });
+  
+  // Kontrol: Service Worker aktif mi?
+  navigator.serviceWorker.ready.then(() => {
+    console.log('✅ Service Worker hazır');
+    // Bildirim izni kontrol et
+    if ('Notification' in window) {
+      console.log('Bildirim durumu:', Notification.permission);
+    }
+  }).catch(err => {
+    console.error('❌ Service Worker hazır olmadı:', err);
+  });
+} else {
+  console.warn('⚠️  Bu tarayıcı Service Worker desteklemiyor');
+}
+</script>
 </body>
 </html>
