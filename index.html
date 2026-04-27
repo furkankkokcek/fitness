@@ -151,7 +151,7 @@ select option{background:var(--bg3)}
 .food-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:4px;line-height:1}
 .add-food-modal .ms{max-height:88vh}
 .food-tab{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-.food-tab-btn{padding:9px 4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s}
+.food-tab-btn{padding:7px 2px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--muted);transition:all .2s;line-height:1.2}
 .food-tab-btn.active{background:var(--accent);border-color:var(--accent);color:#000}
 .search-result-item{padding:10px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid var(--border);transition:background .15s}
 .search-result-item:active{background:var(--bg2)}
@@ -383,7 +383,7 @@ select option{background:var(--bg3)}
       <div style="height:24px"></div>
       <div style="text-align:center;padding-bottom:4px">
         <div style="font-family:var(--fa);font-size:13px;color:var(--accent);letter-spacing:1px">FITTRACK</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">v1.0.3</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">v1.0.4</div>
       </div>
 
       <div style="height:16px"></div>
@@ -2231,11 +2231,21 @@ function openAddFood(mealKey,dateKey){
         <button onclick="document.getElementById('add-food-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
       <div class="food-tab" style="grid-template-columns:repeat(5,1fr)">
-        <div class="food-tab-btn active" id="ftab-search" onclick="switchFoodTab('search')">🔍 Ara</div>
-        <div class="food-tab-btn" id="ftab-recent" onclick="switchFoodTab('recent')">🕐 Önceki</div>
-        <div class="food-tab-btn" id="ftab-saved" onclick="switchFoodTab('saved')">💾 Kayıtlı</div>
-        <div class="food-tab-btn" id="ftab-tarif" onclick="switchFoodTab('tarif')">🍲 Tarif</div>
-        <div class="food-tab-btn" id="ftab-photo" onclick="switchFoodTab('photo')">📷 Foto</div>
+        <div class="food-tab-btn active" id="ftab-search" onclick="switchFoodTab('search')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Ara
+        </div>
+        <div class="food-tab-btn" id="ftab-recent" onclick="switchFoodTab('recent')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Önceki
+        </div>
+        <div class="food-tab-btn" id="ftab-saved" onclick="switchFoodTab('saved')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v14a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Kayıtlı
+        </div>
+        <div class="food-tab-btn" id="ftab-tarif" onclick="switchFoodTab('tarif')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Tarif
+        </div>
+        <div class="food-tab-btn" id="ftab-photo" onclick="switchFoodTab('photo')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Foto
+        </div>
       </div>
       <div id="food-tab-content"></div>
     </div>`;
@@ -2595,43 +2605,75 @@ function renderPhotoTab(el){
     <input type="file" id="food-photo-input" accept="image/*" style="display:none" onchange="analyzePhoto(this)"/>
     <div id="photo-result"></div>`;
 }
+function saveFood(food){
+  const db = JSON.parse(localStorage.getItem("foods") || "[]");
+  db.push(food);
+  localStorage.setItem("foods", JSON.stringify(db));
+}
+function manualAddFood(){
+  const food = {
+    name: document.getElementById('f_name').value,
+    amount: 100,
+    unit: "g",
+    kcal: Number(document.getElementById('f_kcal').value),
+    protein: Number(document.getElementById('f_protein').value),
+    carb: Number(document.getElementById('f_carb').value),
+    fat: Number(document.getElementById('f_fat').value),
+  };
+
+  _pendingFood = food;
+  addPendingPhotoFood();
+}
 
 async function analyzePhoto(input){
-  const file=input.files[0]; if(!file) return;
-  const res=document.getElementById('photo-result');
-  res.innerHTML=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🔍 Analiz ediliyor...</div>`;
-  const b64=await new Promise((resolve,reject)=>{
-    const r=new FileReader(); r.onload=()=>resolve(r.result.split(',')[1]); r.onerror=reject; r.readAsDataURL(file);
-  });
+  const file = input.files[0];
+  if(!file) return;
+
+  const res = document.getElementById('photo-result');
+  res.innerHTML = `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🔍 Analiz ediliyor...</div>`;
+
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:800,
-        system:`Besin etiketlerini veya yiyecekleri görüp makro değerlerini analiz eden uzmansın.
-SADECE JSON döndür:
-{"name":"Ürün Adı","amount":100,"unit":"g","kcal":250,"protein":10,"carb":30,"fat":8}
-Etiket varsa etiketteki değerleri kullan. Etiket yoksa görsel analiz yap. unit g veya ml olsun.`,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
-          {type:'text',text:'Bu görseldeki besinin makro değerlerini çıkar.'}
-        ]}]
-      })
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const resp = await fetch('https://api.calorieninjas.com/v1/imagetextnutrition', {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': 'WhqzUJab0B7ugI+QqMQ4pQ==9FpXn3H9ZBmz6dko'
+      },
+      body: formData
     });
-    const data=await resp.json();
-    const text=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-    const food=JSON.parse(text.replace(/```json|```/g,'').trim());
-    _pendingFood=food;
-    res.innerHTML=`
+
+    const data = await resp.json();
+
+    // 👇 API bazen boş dönebiliyor
+    if(!data.items || data.items.length === 0){
+      throw new Error("Yiyecek bulunamadı");
+    }
+
+    // 👇 ilk item alıyoruz
+    const item = data.items[0];
+
+    const food = {
+      name: item.name || "Bilinmeyen",
+      amount: item.serving_size_g || 100,
+      unit: "g",
+      kcal: item.calories || 0,
+      protein: item.protein_g || 0,
+      carb: item.carbohydrates_total_g || 0,
+      fat: item.fat_total_g || 0
+    };
+
+    _pendingFood = food;
+
+    res.innerHTML = `
       <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px">
         <div style="font-size:14px;font-weight:600;margin-bottom:6px">${food.name}</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
-          <div><div style="font-family:var(--fa);font-size:18px;color:var(--accent)">${Math.round(food.kcal)}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div>
-          <div><div style="font-family:var(--fa);font-size:18px;color:#60a5fa">${food.protein}g</div><div style="font-size:10px;color:var(--muted)">protein</div></div>
-          <div><div style="font-family:var(--fa);font-size:18px;color:#fb923c">${food.carb}g</div><div style="font-size:10px;color:var(--muted)">karb</div></div>
-          <div><div style="font-family:var(--fa);font-size:18px;color:#a78bfa">${food.fat}g</div><div style="font-size:10px;color:var(--muted)">yağ</div></div>
+          <div><div style="font-size:18px;color:var(--accent)">${Math.round(food.kcal)}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div>
+          <div><div style="font-size:18px;color:#60a5fa">${food.protein}g</div><div style="font-size:10px;color:var(--muted)">protein</div></div>
+          <div><div style="font-size:18px;color:#fb923c">${food.carb}g</div><div style="font-size:10px;color:var(--muted)">karb</div></div>
+          <div><div style="font-size:18px;color:#a78bfa">${food.fat}g</div><div style="font-size:10px;color:var(--muted)">yağ</div></div>
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:8px">${food.amount}${food.unit}</div>
       </div>
@@ -2639,9 +2681,27 @@ Etiket varsa etiketteki değerleri kullan. Etiket yoksa görsel analiz yap. unit
         <button class="btn bp" onclick="addPendingPhotoFood()">✓ Ekle</button>
         <button class="btn bp" onclick="savePendingAndAdd()">✅ Kaydet ve Ekle</button>
       </div>`;
+
   }catch(e){
-    res.innerHTML=`<div style="color:var(--danger);font-size:13px;padding:10px 0">Analiz başarısız. Tekrar deneyin.</div>`;
-  }
+  console.error(e);
+
+  res.innerHTML = `
+    <div style="background:var(--bg3);border-radius:12px;padding:12px;margin-bottom:10px">
+      <div style="font-size:13px;color:var(--danger);margin-bottom:8px">
+        ⚠️ Otomatik analiz başarısız (limit doldu)
+      </div>
+
+      <input id="f_name" placeholder="Ürün adı" class="inp">
+      <input id="f_kcal" placeholder="Kalori" class="inp">
+      <input id="f_protein" placeholder="Protein" class="inp">
+      <input id="f_carb" placeholder="Karbonhidrat" class="inp">
+      <input id="f_fat" placeholder="Yağ" class="inp">
+
+      <button class="btn bp" onclick="manualAddFood()">Ekle</button>
+    </div>
+  `;
+}
+
 }
 
 function addPendingPhotoFood(){
@@ -2673,11 +2733,11 @@ function showFoodConfirm(food, fromManual){
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:6px">
       <div>
         <div class="lbl">Miktar (${food.unit})</div>
-        <input id="confirm-amount" type="number" value="${food.amount}" oninput="updateConfirmKcal()"/>
+        <input id="confirm-amount" type="number" value="${food.amount}" step="any" min="0" oninput="updateConfirmKcal()"/>
       </div>
       <div>
         <div class="lbl">Adet</div>
-        <input id="confirm-adet" type="number" value="1" min="1" step="0.5" oninput="updateConfirmKcal()"/>
+        <input id="confirm-adet" type="number" value="1" min="0" step="any" oninput="updateConfirmKcal()"/>
       </div>
     </div>
     <div id="confirm-kcal-preview" style="text-align:center;font-family:var(--fa);font-size:24px;color:var(--accent);margin-bottom:12px">${Math.round(food.kcal)} kcal</div>
@@ -2688,8 +2748,8 @@ function showFoodConfirm(food, fromManual){
 }
 
 function updateConfirmKcal(){
-  const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||0;
-  const adet=parseFloat(document.getElementById('confirm-adet')?.value)||1;
+  const newAmount=parseFloat(document.getElementById('confirm-amount')?.value ?? '') || 0;
+  const adet=parseFloat(document.getElementById('confirm-adet')?.value ?? '') || 1;
   const newKcal=Math.round(_confirmBaseKcal*(newAmount/_confirmBaseAmount)*adet);
   const el=document.getElementById('confirm-kcal-preview');
   if(el) el.textContent=newKcal+' kcal';
@@ -2697,8 +2757,10 @@ function updateConfirmKcal(){
 
 function confirmAddFood(){
   const food=_confirmFood; if(!food) return;
-  const newAmount=parseFloat(document.getElementById('confirm-amount')?.value)||food.amount;
-  const adet=Math.max(0.5,parseFloat(document.getElementById('confirm-adet')?.value)||1);
+  const amountEl=document.getElementById('confirm-amount');
+  const adetEl=document.getElementById('confirm-adet');
+  const newAmount=parseFloat(amountEl?.value ?? '') || _confirmBaseAmount;
+  const adet=Math.max(0.01, parseFloat(adetEl?.value ?? '') || 1);
   const ratio=(newAmount/_confirmBaseAmount)*adet;
   const f={
     name: adet>1 ? `${food.name} ×${adet}` : food.name,
