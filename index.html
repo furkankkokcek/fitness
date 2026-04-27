@@ -2890,7 +2890,7 @@ function addFoodToMeal(mealKey,dateKey,food){
 // ============================================================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker
-    .register('sw.js', { scope: '/' })
+    .register('sw.js', { scope: '/fitness/' })
     .then(reg => {
       console.log('✅ Service Worker başarıyla kaydedildi:', reg.scope);
       // Güncellemeleri kontrol et
