@@ -240,7 +240,7 @@ select option{background:var(--bg3)}
     </div>
 
     <div class="page" id="page-timer">
-      <div class="pt">TIMER</div>
+      <div class="pt">ZAMANLAYICI</div>
       <div class="ps">Set arası dinlenme</div>
       <div class="tw">
         <div class="pr">
@@ -263,6 +263,22 @@ select option{background:var(--bg3)}
         <div class="ta">
           <button class="btn bp" id="t-btn" onclick="toggleTimer()">BAŞLAT</button>
           <button class="btn bo" onclick="resetTimer()">SIFIRLA</button>
+        </div>
+      </div>
+
+      <!-- KRONOMETRE -->
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+        <div style="font-family:var(--fd);font-size:22px;letter-spacing:1px;margin-bottom:4px">KRONOMETRE</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">5'ten geri sayar, sonra süreyi ölçer</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <div id="plank-display" style="font-family:var(--fd);font-size:72px;color:var(--accent);line-height:1;letter-spacing:3px;min-width:180px;text-align:center">5</div>
+          <div id="plank-status" style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">HAZIR</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
+            <button class="btn bp" id="plank-btn" onclick="togglePlank()">BAŞLAT</button>
+            <button class="btn bo" onclick="resetPlank()">SIFIRLA</button>
+          </div>
+        <button class="btn bo" id="notify-btn" style="margin-top:10px">🔔 Bildirimi Aç</button>
+
         </div>
       </div>
     </div>
@@ -383,7 +399,7 @@ select option{background:var(--bg3)}
       <div style="height:24px"></div>
       <div style="text-align:center;padding-bottom:4px">
         <div style="font-family:var(--fa);font-size:13px;color:var(--accent);letter-spacing:1px">FITTRACK</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">v1.0.4</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">v2.0.0</div>
       </div>
 
       <div style="height:16px"></div>
@@ -611,14 +627,14 @@ let S = {
 
 let changeCount=0;
 function saveS(){
-  localStorage.setItem('ft_v9', JSON.stringify(S));
+  localStorage.setItem('ft_v10', JSON.stringify(S));
   changeCount++;
   if(changeCount>=50){
     changeCount=0;
     setTimeout(()=>{ if(confirm('💾 50 değişiklik yapıldı. Yedek almak ister misin?')) exportData(); },200);
   }
 }
-function loadS(){ try{ const d=localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
+function loadS(){ try{ const d=localStorage.getItem('ft_v10')||localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
 
 function saveDraft(exId, w, d, setIdx, val){
   if(!S.setDrafts) S.setDrafts={};
@@ -763,7 +779,7 @@ function showWeeklySummary(w){
 (function initPWA(){
   if(!('serviceWorker' in navigator)) return;
   const swCode=`
-const CACHE='fittrack-v1';
+const CACHE='fittrack-v2';
 const URLS=['/'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS))); self.skipWaiting(); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
@@ -1168,7 +1184,10 @@ function saveDynamicDone(exId, w, d, numSets){
     const wk='w'+w,dk='d'+d;
     if(!S.weekData[wk]) S.weekData[wk]={};
     if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+    // İlk hareket kaydediliyorsa antrenmanı başlat
+    const wasEmpty2 = Object.keys(S.weekData[wk][dk]).length === 0;
     S.weekData[wk][dk][exId] = setsData;
+    if(wasEmpty2) startWorkoutIfNeeded(w,d);
     
     saveS(); renderProgram(); renderProgress();
 
@@ -1213,7 +1232,6 @@ function showDayCompleteDialog(w, d){
 }
 
 function autoSaveSets(exId, w, d, numSets){
-  startWorkoutIfNeeded(w,d);
   const ex = EX[exId];
   let setsData = {};
   let allFilled = true;
@@ -1247,7 +1265,10 @@ function autoSaveSets(exId, w, d, numSets){
   const wk='w'+w, dk='d'+d;
   if(!S.weekData[wk]) S.weekData[wk]={};
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
+  // İlk hareket kaydediliyorsa antrenmanı başlat
+  const wasEmpty = Object.keys(S.weekData[wk][dk]).length === 0;
   S.weekData[wk][dk][exId] = setsData;
+  if(wasEmpty) startWorkoutIfNeeded(w,d);
   if(S.setDrafts) delete S.setDrafts[`w${w}_d${d}_${exId}`];
 
   // PR kontrolü — sadece hedef tam karşılandıysa
@@ -1677,6 +1698,81 @@ async function ensureNotificationPermission() {
 function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
 
 // ============================================================
+// PLANK KRONOMETRESİ — 5'ten geri say, sonra say
+// ============================================================
+let plankPhase='idle'; // idle | countdown | running
+let plankCount=5, plankSec=0, plankInt=null;
+
+function togglePlank(){
+  if(plankPhase==='idle'){
+    // Geri sayım başlat
+    plankPhase='countdown';
+    plankCount=5;
+    document.getElementById('plank-display').textContent=plankCount;
+    document.getElementById('plank-display').style.color='var(--warn)';
+    document.getElementById('plank-status').textContent='HAZIRLAN!';
+    document.getElementById('plank-btn').textContent='DURDUR';
+    plankInt=setInterval(()=>{
+      plankCount--;
+      if(plankCount>0){
+        document.getElementById('plank-display').textContent=plankCount;
+        if(navigator.vibrate) navigator.vibrate(50);
+      } else {
+        // Geri sayım bitti — asıl kronometre başla
+        clearInterval(plankInt);
+        plankPhase='running';
+        plankSec=0;
+        document.getElementById('plank-display').style.color='var(--accent)';
+        document.getElementById('plank-status').textContent='PLANK!';
+        document.getElementById('plank-display').textContent='0:00';
+        if(navigator.vibrate) navigator.vibrate([200,100,200]);
+        plankInt=setInterval(()=>{
+          plankSec++;
+          const m=Math.floor(plankSec/60), s=plankSec%60;
+          document.getElementById('plank-display').textContent=m+':'+(s<10?'0':'')+s;
+        },1000);
+      }
+    },1000);
+  } else {
+    // Durdur
+    clearInterval(plankInt);
+    const wasSec=plankSec;
+    plankPhase='idle';
+    if(wasSec>0){
+      document.getElementById('plank-status').textContent='TAMAMLANDI! 💪';
+      document.getElementById('plank-btn').textContent='TEKRAR';
+      if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
+      playAlarmSound();
+    } else {
+      resetPlank();
+    }
+  }
+}
+
+function resetPlank(){
+  clearInterval(plankInt);
+  plankPhase='idle'; plankCount=5; plankSec=0;
+  document.getElementById('plank-display').textContent='5';
+  document.getElementById('plank-display').style.color='var(--accent)';
+  document.getElementById('plank-status').textContent='HAZIR';
+  document.getElementById('plank-btn').textContent='BAŞLAT';
+}
+
+// Bildirim izni iste
+if(document.getElementById('notify-btn')){
+  document.getElementById('notify-btn').addEventListener('click', () => {
+    ensureNotificationPermission().then(granted => {
+      if(granted) {
+        console.log('✅ Bildirim izni verildi');
+        alert('✅ Bildirimler açıldı!');
+      } else {
+        console.log('❌ Bildirim izni reddedildi');
+      }
+    });
+  });
+}
+
+// ============================================================
 // PROGRESS PAGE
 // ============================================================
 function buildExChart(weeks){
@@ -1977,12 +2073,15 @@ function removePhoto(){
 }
 
 function exportData(){
-  const data={version:9,state:S,timestamp:Date.now()};
+  const data={version:10,state:S,timestamp:Date.now()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=`fittrack-backup-${new Date().toISOString().split('T')[0]}.json`;
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const timeStr=`${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
+  a.download=`fittrack-backup-${dateStr}_${timeStr}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
