@@ -120,6 +120,18 @@ select option{background:var(--bg3)}
 .mt2{font-family:var(--fd);font-size:28px;margin-bottom:8px}
 .msub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.swap-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.swap-opt{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:var(--fb);font-size:14px;font-weight:600;color:var(--text);text-align:left;transition:all .15s}
+.swap-opt:active{transform:scale(.98)}
+.swap-opt.active{background:var(--accent);border-color:var(--accent);color:#0a0a0a}
+.swap-opt-name{flex:1}
+.swap-opt-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:99px;background:rgba(232,255,71,.15);color:var(--accent)}
+.swap-opt.active .swap-opt-tag{background:rgba(0,0,0,.15);color:#0a0a0a}
+.xact{display:flex;gap:14px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.xact-btn{cursor:pointer;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;display:flex;align-items:center;gap:4px;background:none;border:none;padding:0;font-family:var(--fb)}
+.xact-btn.swapped{color:var(--accent)}
+.xorig{font-size:12px;color:var(--muted);margin-top:2px;font-style:italic}
+.bswap{background:rgba(232,255,71,.18);color:var(--accent)}
 .ob{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
 .obl{font-family:var(--fd);font-size:60px;color:var(--accent);letter-spacing:4px;margin-bottom:8px}
 .obs{font-size:15px;color:var(--muted);margin-bottom:36px;line-height:1.6}
@@ -621,6 +633,7 @@ let S = {
   streak:{count:0, lastDate:''},
   prs:{},
   workoutSessions:{},
+  exerciseSwaps:{},
   nutrition:{ customFoods:{}, dailyLog:{}, goal:2000 },
   theme:'dark'
 };
@@ -634,7 +647,7 @@ function saveS(){
     setTimeout(()=>{ if(confirm('💾 50 değişiklik yapıldı. Yedek almak ister misin?')) exportData(); },200);
   }
 }
-function loadS(){ try{ const d=localStorage.getItem('ft_v10')||localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d);return true;}}catch(e){} return false; }
+function loadS(){ try{ const d=localStorage.getItem('ft_v10')||localStorage.getItem('ft_v9')||localStorage.getItem('ft_v8'); if(d){S=JSON.parse(d); if(!S.exerciseSwaps) S.exerciseSwaps={}; return true;}}catch(e){} return false; }
 
 function saveDraft(exId, w, d, setIdx, val){
   if(!S.setDrafts) S.setDrafts={};
@@ -1112,6 +1125,133 @@ function getDisplayName(ex){
   return ex.alts[m.altIdx]||ex.name;
 }
 
+// ── PROGRAM-ÖZEL HAREKET DEĞİŞTİRME (sadece o hafta+gün için) ──
+function getSwap(exId, w, d){
+  return S.exerciseSwaps?.['w'+w]?.['d'+d]?.[exId] || null;
+}
+function getSwapName(ex, w, d){
+  const sw=getSwap(ex.id, w, d);
+  if(!sw) return null;
+  if(sw.altIdx==='custom') return (sw.customName||'').trim()||null;
+  if(typeof sw.altIdx==='number' && ex.alts && ex.alts[sw.altIdx]) return ex.alts[sw.altIdx];
+  return null;
+}
+function setSwap(exId, w, d, altIdx, customName){
+  if(!S.exerciseSwaps) S.exerciseSwaps={};
+  const wk='w'+w, dk='d'+d;
+  if(!S.exerciseSwaps[wk]) S.exerciseSwaps[wk]={};
+  if(!S.exerciseSwaps[wk][dk]) S.exerciseSwaps[wk][dk]={};
+  if(altIdx==='custom'){
+    S.exerciseSwaps[wk][dk][exId]={altIdx:'custom', customName:(customName||'').trim()};
+  } else {
+    S.exerciseSwaps[wk][dk][exId]={altIdx:Number(altIdx)};
+  }
+  saveS();
+}
+function clearSwap(exId, w, d){
+  const wk='w'+w, dk='d'+d;
+  if(S.exerciseSwaps?.[wk]?.[dk]){
+    delete S.exerciseSwaps[wk][dk][exId];
+    if(Object.keys(S.exerciseSwaps[wk][dk]).length===0) delete S.exerciseSwaps[wk][dk];
+    if(Object.keys(S.exerciseSwaps[wk]||{}).length===0) delete S.exerciseSwaps[wk];
+  }
+  saveS();
+}
+function openSwapModal(exId, w, d){
+  const ex=EX[exId];
+  if(!ex) return;
+  const cur=getSwap(exId, w, d);
+  const existing=document.getElementById('swap-modal');
+  if(existing) existing.remove();
+
+  const setupName=getDisplayName(ex); // kurulum seçimi (setup alt veya ex.name)
+  const isCustomActive=cur && cur.altIdx==='custom';
+
+  // "orijinal" aktiflik: cur yoksa, ya da cur'ın sonucu setupName ile aynıysa
+  function isOrigActive(){
+    if(!cur) return true;
+    if(cur.altIdx==='custom') return (cur.customName||'')=== setupName;
+    if(typeof cur.altIdx==='number') return ex.alts?.[cur.altIdx]===setupName;
+    return false;
+  }
+
+  // Benzersiz seçenek listesi oluştur
+  const seen=new Set([setupName]);
+  let optsHtml=`<button type="button" class="swap-opt${isOrigActive()?' active':''}" data-alt="orig">
+    <span class="swap-opt-name">${normalizeUppercaseText(setupName)}</span>
+    <span class="swap-opt-tag">kurulum seçimi</span>
+  </button>`;
+
+  // ex.name setupName'den farklıysa ayrıca göster
+  if(ex.name!==setupName && !seen.has(ex.name)){
+    seen.add(ex.name);
+    const isBaseActive=cur && cur.altIdx==='custom' && (cur.customName||'')=== ex.name;
+    optsHtml+=`<button type="button" class="swap-opt${isBaseActive?' active':''}" data-alt="base">
+      <span class="swap-opt-name">${normalizeUppercaseText(ex.name)}</span>
+      <span class="swap-opt-tag">asıl hareket</span>
+    </button>`;
+  }
+
+  // Alt listesi — kurulum seçimiyle çakışanları atla
+  (ex.alts||[]).forEach((altName, i)=>{
+    if(seen.has(altName)) return;
+    seen.add(altName);
+    const isActive=cur && cur.altIdx===i;
+    optsHtml+=`<button type="button" class="swap-opt${isActive?' active':''}" data-alt="${i}">
+      <span class="swap-opt-name">${normalizeUppercaseText(altName)}</span>
+    </button>`;
+  });
+
+  const customInputVal=isCustomActive ? (cur.customName||'').replace(/"/g,'&quot;') : '';
+
+  const modal=document.createElement('div');
+  modal.id='swap-modal';
+  modal.className='mo open';
+  modal.innerHTML=`
+    <div class="ms" style="width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+      <div class="mt2">HAREKETI DEGISTIR</div>
+      <div class="msub">Sadece <b>Hafta ${w+1} · Gün ${d+1}</b> için geçerli. Sonraki haftalarda kurulum seçimine döner.</div>
+      <div class="swap-list">${optsHtml}</div>
+      <div class="lbl" style="margin-top:14px">Diğer (kendin yaz)</div>
+      <input id="swap-custom-input" type="text" placeholder="ör. Incline Hammer Press" value="${customInputVal}" style="margin-bottom:14px"/>
+      <div class="mbtns">
+        <button class="btn bo" onclick="document.getElementById('swap-modal').remove()">İptal</button>
+        <button class="btn bp" onclick="confirmSwap('${exId}',${w},${d})">Kaydet</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll('.swap-opt').forEach(b=>{
+    b.addEventListener('click',()=>{
+      modal.querySelectorAll('.swap-opt').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const inp=document.getElementById('swap-custom-input');
+      if(inp) inp.value='';
+    });
+  });
+  document.getElementById('swap-custom-input')?.addEventListener('input',()=>{
+    modal.querySelectorAll('.swap-opt').forEach(x=>x.classList.remove('active'));
+  });
+}
+function confirmSwap(exId, w, d){
+  const modal=document.getElementById('swap-modal');
+  if(!modal) return;
+  const sel=modal.querySelector('.swap-opt.active');
+  const customVal=(document.getElementById('swap-custom-input')?.value||'').trim();
+  if(customVal){
+    setSwap(exId, w, d, 'custom', customVal);
+  } else if(sel){
+    const v=sel.getAttribute('data-alt');
+    if(v==='orig'){ clearSwap(exId, w, d); }
+    else if(v==='base'){ setSwap(exId, w, d, 'custom', EX[exId]?.name||''); }
+    else { setSwap(exId, w, d, parseInt(v,10)); }
+  } else {
+    clearSwap(exId, w, d);
+  }
+  modal.remove();
+  renderProgram();
+}
+
 function toggleExpl(exId,el){
   const content=document.getElementById('expl-content-'+exId);
   const arrow=document.getElementById('expl-arrow-'+exId);
@@ -1121,10 +1261,15 @@ function toggleExpl(exId,el){
   }
 }
 
-function saveExplanation(exId,text){
+function saveExplanation(exId, w, d, text){
   if(!S.explanations) S.explanations={};
-  S.explanations[exId]=text.trim();
+  S.explanations['w'+w+'_d'+d+'_'+exId]=(text||'').trim();
   saveS();
+}
+function getExplanation(exId, w, d){
+  if(!S.explanations) return '';
+  // Yeni format önce, yoksa eski global format (geriye dönük uyum)
+  return S.explanations['w'+w+'_d'+d+'_'+exId] ?? S.explanations[exId] ?? '';
 }
 
 // ============================================================
@@ -1470,8 +1615,12 @@ function renderProgram(){
   exs.forEach((ex, exIdx)=>{
     const done=!!doneMap[ex.id];
     // YENİ FONT VE BÜYÜK HARF UYGULAMASI BURADA
-    const name=normalizeUppercaseText(getDisplayName(ex));
-    
+    const swapName=getSwapName(ex, w, d);
+    const isSwapped=!!swapName;
+    const displayName=swapName||getDisplayName(ex);
+    const name=normalizeUppercaseText(displayName);
+    const origName=normalizeUppercaseText(getDisplayName(ex));
+
     let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
@@ -1570,10 +1719,14 @@ function renderProgram(){
 
     html+=`
       <div class="xc${done?' done':''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px">
           <div class="xname">${name}</div>
-          <span class="badge ${bcls}">${badge}</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span class="badge ${bcls}">${badge}</span>
+            ${isSwapped?`<span class="badge bswap">DEGISTIRILDI</span>`:''}
+          </div>
         </div>
+        ${isSwapped?`<div class="xorig">↳ Yerine: ${origName}</div>`:''}
         <div class="xw">${wtxt}</div>
         <div class="xsch">
           ${ex.scheme}${
@@ -1581,14 +1734,17 @@ function renderProgram(){
               ? (['g1_lpd','g3_cf'].includes(ex.id) ? ' (RPE 8)' : ' (RPE 9)')
               : ''
           }
-        </div>        
-        <div style="margin-top:8px;cursor:pointer" onclick="toggleExpl('${ex.id}',this)">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;display:flex;align-items:center;gap:4px">
+        </div>
+        <div class="xact">
+          <button type="button" class="xact-btn" onclick="toggleExpl('${ex.id}',this)">
             <span id="expl-arrow-${ex.id}">▸</span> Açıklama
-          </div>
+          </button>
+          <button type="button" class="xact-btn${isSwapped?' swapped':''}" onclick="openSwapModal('${ex.id}',${w},${d})">
+            🔄 ${isSwapped?'Değiştirildi':'Değiştir'}
+          </button>
         </div>
         <div id="expl-content-${ex.id}" style="display:none;margin-top:8px;margin-bottom:8px">
-          <textarea id="expl-text-${ex.id}" placeholder="Bu hareket hakkında not..." style="width:100%;min-height:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:13px;padding:10px;border-radius:8px;outline:none;resize:none;-webkit-appearance:none" oninput="saveExplanation('${ex.id}',this.value)">${S.explanations?.[ex.id]||''}</textarea>
+          <textarea id="expl-text-${ex.id}" placeholder="Bu hareket hakkında not..." style="width:100%;min-height:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:13px;padding:10px;border-radius:8px;outline:none;resize:none;-webkit-appearance:none" oninput="saveExplanation('${ex.id}',${w},${d},this.value)">${getExplanation(ex.id,w,d)}</textarea>
         </div>
         ${warmupHtml}
         ${bottomSection}
@@ -2172,7 +2328,7 @@ function removePhoto(){
 }
 
 function exportData(){
-  const data={version:10,state:S,timestamp:Date.now()};
+  const data={version:11,state:S,timestamp:Date.now()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -2202,6 +2358,18 @@ function importData(e){
         return;
       }
       S=data.state;
+      // Eski yedeklerden eksik olabilecek alanları garantiye al
+      if(!S.exerciseSwaps) S.exerciseSwaps={};
+      if(!S.explanations) S.explanations={};
+      if(!S.setDrafts) S.setDrafts={};
+      if(!S.prs) S.prs={};
+      if(!S.streak) S.streak={count:0,lastDate:''};
+      if(!S.workoutSessions) S.workoutSessions={};
+      if(!S.weeklyWeights) S.weeklyWeights={};
+      if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
+      if(!S.nutrition.customFoods) S.nutrition.customFoods={};
+      if(!S.nutrition.dailyLog) S.nutrition.dailyLog={};
+      applyTheme();
       saveS();
       buildSetup();
       if(S.setupDone){
@@ -2266,8 +2434,9 @@ function resetAllData(){
   S = {
     maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
     profile:profile,
-    weeklyWeights:{},  
-    explanations:{},   
+    weeklyWeights:{},
+    explanations:{},
+    exerciseSwaps:{},
     theme:theme
   };
   saveS();
