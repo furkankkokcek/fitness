@@ -641,7 +641,10 @@ function saveDraft(exId, w, d, setIdx, val){
   const key=`w${w}_d${d}_${exId}`;
   if(!S.setDrafts[key]) S.setDrafts[key]={};
   if(val===''||val===null) delete S.setDrafts[key][`s${setIdx}`];
-  else S.setDrafts[key][`s${setIdx}`]=val;
+  else {
+    S.setDrafts[key][`s${setIdx}`]=val;
+    startWorkoutIfNeeded(w, d);
+  }
   saveS();
 }
 
@@ -1265,10 +1268,8 @@ function autoSaveSets(exId, w, d, numSets){
   const wk='w'+w, dk='d'+d;
   if(!S.weekData[wk]) S.weekData[wk]={};
   if(!S.weekData[wk][dk]) S.weekData[wk][dk]={};
-  // İlk hareket kaydediliyorsa antrenmanı başlat
-  const wasEmpty = Object.keys(S.weekData[wk][dk]).length === 0;
   S.weekData[wk][dk][exId] = setsData;
-  if(wasEmpty) startWorkoutIfNeeded(w,d);
+  startWorkoutIfNeeded(w,d);
   if(S.setDrafts) delete S.setDrafts[`w${w}_d${d}_${exId}`];
 
   // PR kontrolü — sadece hedef tam karşılandıysa
