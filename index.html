@@ -96,6 +96,33 @@ select option{background:var(--bg3)}
 .set-inp{-moz-appearance:textfield}
 .set-total{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
 .btn-undo{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--danger);font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:var(--fb);font-weight:600;width:auto}
+/* SETTINGS MODAL */
+#settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:150;display:none;align-items:center;justify-content:center}
+#settings-overlay.open{display:flex}
+.settings-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:calc(100% - 32px);max-width:380px;max-height:90vh;overflow-y:auto;box-sizing:border-box}
+.settings-handle{display:none}
+.settings-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.settings-title{font-size:17px;font-weight:700;color:var(--text);font-family:var(--fb)}
+.settings-close{background:var(--bg3);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.settings-body{padding:16px 20px 24px}
+.settings-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px;margin-top:16px}
+.settings-section-title:first-child{margin-top:0}
+.settings-group{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:0 16px;margin-bottom:4px}
+/* Gear icon button */
+.gear-btn{background:none;border:none;color:var(--muted);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* SETTINGS TOGGLES */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:500;color:var(--text)}
+.setting-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sw-toggle{position:relative;width:44px;height:26px;flex-shrink:0}
+.sw-toggle input{opacity:0;width:0;height:0;position:absolute}
+.sw-slider{position:absolute;inset:0;background:var(--bg3);border:1px solid var(--border);border-radius:99px;cursor:pointer;transition:.2s}
+.sw-slider:before{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.2s}
+.sw-toggle input:checked+.sw-slider{background:var(--accent);border-color:var(--accent)}
+.sw-toggle input:checked+.sw-slider:before{transform:translateX(18px);background:#0a0a0a}
+[data-theme="light"] .sw-slider{background:#e0e0e0}
+[data-theme="light"] .sw-toggle input:checked+.sw-slider:before{background:#fff}
 .tw{display:flex;flex-direction:column;align-items:center;padding:6px 0}
 .pr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-bottom:26px}
 .pb{padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:var(--fb);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
@@ -303,12 +330,17 @@ select option{background:var(--bg3)}
     </div>
 
     <div class="page" id="page-profile">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div>
           <div class="pt">PROFİL</div>
           <div class="ps">Kişisel bilgiler ve kalori hedefleri</div>
         </div>
-        <button class="btn-undo" onclick="toggleTheme()" id="theme-btn" style="margin-top:2px;white-space:nowrap">🌙 Koyu</button>
+        <button class="gear-btn" onclick="openSettingsModal()" title="Ayarlar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
       </div>
 
       <div class="card" style="margin-bottom:12px">
@@ -321,39 +353,6 @@ select option{background:var(--bg3)}
           <button class="btn bo" onclick="document.getElementById('photo-input').click()" style="width:100%;max-width:200px">📷 Fotoğraf Yükle</button>
           <button class="btn bo" onclick="removePhoto()" style="width:100%;max-width:200px;font-size:13px;padding:10px;display:none;background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:var(--danger)" id="remove-photo-btn">✕ Fotoğrafı Sil</button>
         </div>
-      </div>
-
-      <div class="card" style="margin-bottom:12px">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Kişisel Bilgiler (Opsiyonel)</div>
-        <div class="g2" style="margin-bottom:8px">
-          <div><div class="lbl">Kilo (kg)</div>
-            <input type="number" id="prof-kg" class="no-spin" placeholder="ör. 80" min="0" step="0.1" oninput="calcCalories()"/></div>
-          <div><div class="lbl">Boy (cm)</div>
-            <input type="number" id="prof-cm" class="no-spin" placeholder="ör. 175" min="0" step="1" oninput="calcCalories()"/></div>
-        </div>
-        <div class="g2" style="margin-bottom:8px">
-          <div><div class="lbl">Yaş</div>
-            <input type="number" id="prof-age" class="no-spin" placeholder="ör. 25" min="0" max="120" step="1" oninput="calcCalories()"/></div>
-          <div><div class="lbl">Cinsiyet</div>
-            <select id="prof-gender" onchange="onGenderChange()">
-              <option value="">Seç</option>
-              <option value="male">Erkek</option>
-              <option value="female">Kadın</option>
-            </select></div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Vücut Ölçüleri (Opsiyonel)</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bel + boyun girersen yağ oranın US Navy formülüyle hesaplanır.</div>
-        <div class="g2" style="margin-bottom:8px">
-          <div><div class="lbl">Bel çevresi (cm)</div>
-            <input type="number" id="prof-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5" oninput="calcCalories()"/></div>
-          <div><div class="lbl">Boyun çevresi (cm)</div>
-            <input type="number" id="prof-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5" oninput="calcCalories()"/></div>
-        </div>
-        <div id="hip-row" style="display:none;margin-bottom:8px">
-          <div class="lbl">Kalça çevresi (cm) — Kadınlar için</div>
-          <input type="number" id="prof-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5" oninput="calcCalories()"/>
-        </div>
-        <button class="btn bp" onclick="saveProfile()">Kaydet</button>
       </div>
 
       <div id="calorie-display" style="display:none;margin-bottom:12px">
@@ -394,18 +393,37 @@ select option{background:var(--bg3)}
         </div>
       </div>
 
-      <div style="margin-top:20px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Veri Yönetimi</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <button class="btn bo" onclick="exportData()">💾 Dışa Aktar</button>
-          <button class="btn bo" onclick="showImportPicker()">📁 İçe Aktar</button>
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:12px">Kişisel Bilgiler (Opsiyonel)</div>
+        <div class="g2" style="margin-bottom:8px">
+          <div><div class="lbl">Kilo (kg)</div>
+            <input type="number" id="prof-kg" class="no-spin" placeholder="ör. 80" min="0" step="0.1" oninput="calcCalories()"/></div>
+          <div><div class="lbl">Boy (cm)</div>
+            <input type="number" id="prof-cm" class="no-spin" placeholder="ör. 175" min="0" step="1" oninput="calcCalories()"/></div>
         </div>
-        <button class="btn bo" onclick="resetAllData()" style="width:100%;background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:var(--danger);font-weight:600">
-          🗑️ Tüm Verileri Sıfırla
-        </button>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center">
-          Bu işlem tüm antrenman verilerini, ağırlıkları ve açıklamaları siler. Profil bilgileriniz korunur.
+        <div class="g2" style="margin-bottom:8px">
+          <div><div class="lbl">Yaş</div>
+            <input type="number" id="prof-age" class="no-spin" placeholder="ör. 25" min="0" max="120" step="1" oninput="calcCalories()"/></div>
+          <div><div class="lbl">Cinsiyet</div>
+            <select id="prof-gender" onchange="onGenderChange()">
+              <option value="">Seç</option>
+              <option value="male">Erkek</option>
+              <option value="female">Kadın</option>
+            </select></div>
         </div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Vücut Ölçüleri (Opsiyonel)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bel + boyun girersen yağ oranın US Navy formülüyle hesaplanır.</div>
+        <div class="g2" style="margin-bottom:8px">
+          <div><div class="lbl">Bel çevresi (cm)</div>
+            <input type="number" id="prof-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5" oninput="calcCalories()"/></div>
+          <div><div class="lbl">Boyun çevresi (cm)</div>
+            <input type="number" id="prof-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5" oninput="calcCalories()"/></div>
+        </div>
+        <div id="hip-row" style="display:none;margin-bottom:8px">
+          <div class="lbl">Kalça çevresi (cm) — Kadınlar için</div>
+          <input type="number" id="prof-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5" oninput="calcCalories()"/>
+        </div>
+        <button class="btn bp" onclick="saveProfile()">Kaydet</button>
       </div>
 
       <div style="height:24px"></div>
@@ -424,6 +442,67 @@ select option{background:var(--bg3)}
       <div style="height:16px"></div>
     </div>
 
+  </div>
+
+  <!-- AYARLAR MODAL -->
+  <div id="settings-overlay" onclick="closeSettingsModal()">
+    <div class="settings-sheet" onclick="event.stopPropagation()">
+      <div class="settings-handle"></div>
+      <div class="settings-hdr">
+        <div class="settings-title">Ayarlar</div>
+        <button class="settings-close" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <div class="settings-body">
+
+        <!-- Görünüm -->
+        <div class="settings-section-title">Görünüm</div>
+        <div class="settings-group">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Açık Tema</div>
+              <div class="setting-sub">Açık / Koyu modu seç</div>
+            </div>
+            <label class="sw-toggle">
+              <input type="checkbox" id="cfg-theme-toggle" onchange="toggleThemeFromToggle(this)">
+              <span class="sw-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Bildirimler -->
+        <div class="settings-section-title">Bildirimler</div>
+        <div class="settings-group">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Bildirimleri Aç</div>
+              <div class="setting-sub">Dinlenme süresi bitince bildir</div>
+            </div>
+            <label class="sw-toggle">
+              <input type="checkbox" id="cfg-notif-toggle" onchange="toggleNotifSetting(this)">
+              <span class="sw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div id="notif-info" style="display:none;margin-top:6px;margin-bottom:4px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6">
+          🔔 Dinlenme zamanlayıcısı bittiğinde bildirim gönderilir.<br>
+          ⚙️ Bildirimlerin çalışması için sayfanın açık olması gerekir.
+        </div>
+
+        <!-- Veri Yönetimi -->
+        <div class="settings-section-title">Veri Yönetimi</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <button class="btn bo" onclick="exportData()">💾 Dışa Aktar</button>
+          <button class="btn bo" onclick="showImportPicker()">📁 İçe Aktar</button>
+        </div>
+        <button class="btn bo" onclick="resetAllData()" style="width:100%;background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.4);color:var(--danger);font-weight:600">
+          🗑️ Tüm Verileri Sıfırla
+        </button>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.5">
+          Sıfırlama tüm antrenman verilerini siler.<br>Profil bilgilerin korunur.
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <nav class="nav">
@@ -635,7 +714,8 @@ let S = {
   workoutSessions:{},
   exerciseSwaps:{},
   nutrition:{ customFoods:{}, dailyLog:{}, goal:2000 },
-  theme:'dark'
+  theme:'dark',
+  notifEnabled: false
 };
 
 let changeCount=0;
@@ -2187,14 +2267,53 @@ function hideOb(){ document.getElementById('ob').style.display='none'; }
 function toggleTheme(){
   S.theme = S.theme==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme', S.theme);
-  document.getElementById('theme-btn').textContent = S.theme==='dark'?'🌙 Koyu':'☀️ Açık';
+  const tog = document.getElementById('cfg-theme-toggle');
+  if(tog) tog.checked = S.theme==='light';
+  saveS();
+}
+
+function openSettingsModal(){
+  const tog = document.getElementById('cfg-theme-toggle');
+  if(tog) tog.checked = S.theme === 'light';
+  const notifTog = document.getElementById('cfg-notif-toggle');
+  if(notifTog) notifTog.checked = !!(S.notifEnabled && Notification.permission === 'granted');
+  const notifInfo = document.getElementById('notif-info');
+  if(notifInfo) notifInfo.style.display = notifTog?.checked ? 'block' : 'none';
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettingsModal(){
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+function toggleThemeFromToggle(el){
+  S.theme = el.checked ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', S.theme);
+  saveS();
+}
+
+async function toggleNotifSetting(el){
+  const info = document.getElementById('notif-info');
+  if(el.checked){
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){
+      el.checked = false;
+      if(info) info.style.display='none';
+      return;
+    }
+    S.notifEnabled = true;
+    if(info) info.style.display='block';
+  } else {
+    S.notifEnabled = false;
+    if(info) info.style.display='none';
+  }
   saveS();
 }
 
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', S.theme||'dark');
-  const btn=document.getElementById('theme-btn');
-  if(btn) btn.textContent = (S.theme||'dark')==='dark'?'🌙 Koyu':'☀️ Açık';
+  const tog=document.getElementById('cfg-theme-toggle');
+  if(tog) tog.checked = (S.theme||'dark')==='light';
 }
 
 function onGenderChange(){
