@@ -2874,7 +2874,7 @@ function openAddFood(mealKey,dateKey){
         <div style="font-family:var(--fa);font-size:20px">${MEAL_ADD_LABELS[mealKey]||mealKey}</div>
         <button onclick="document.getElementById('add-food-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
-      <div class="food-tab" style="grid-template-columns:repeat(5,1fr)">
+      <div class="food-tab" style="grid-template-columns:repeat(6,1fr)">
         <div class="food-tab-btn active" id="ftab-search" onclick="switchFoodTab('search')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Ara
         </div>
@@ -2890,6 +2890,9 @@ function openAddFood(mealKey,dateKey){
         <div class="food-tab-btn" id="ftab-photo" onclick="switchFoodTab('photo')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Foto
         </div>
+        <div class="food-tab-btn" id="ftab-ai" onclick="switchFoodTab('ai')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Yapıştır
+        </div>
       </div>
       <div id="food-tab-content"></div>
     </div>`;
@@ -2899,7 +2902,7 @@ function openAddFood(mealKey,dateKey){
 
 function switchFoodTab(tab){
   _activeFoodTab=tab;
-  ['search','recent','saved','tarif','photo'].forEach(t=>{
+  ['search','recent','saved','tarif','photo','ai'].forEach(t=>{
     document.getElementById('ftab-'+t)?.classList.toggle('active',t===tab);
   });
   renderFoodTab(tab);
@@ -2912,6 +2915,7 @@ function renderFoodTab(tab){
   else if(tab==='recent') renderRecentTab(el);
   else if(tab==='saved') renderSavedTab(el);
   else if(tab==='tarif') renderTarifTab(el);
+  else if(tab==='ai') renderAiPasteTab(el);
   else renderPhotoTab(el);
 }
 
@@ -3249,6 +3253,113 @@ function renderPhotoTab(el){
     <input type="file" id="food-photo-input" accept="image/*" style="display:none" onchange="analyzePhoto(this)"/>
     <div id="photo-result"></div>`;
 }
+// ── AI YAPISTIR SEKMESİ ──
+function renderAiPasteTab(el){
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">ChatGPT veya Claude yanıtını yapıştır — besin değerleri otomatik ayrıştırılır.</div>
+    <textarea id="ai-paste-input"
+      placeholder="Örn:\nTavuk göğsü 100g\nKalori: 165 kcal\nProtein: 31g\nKarbonhidrat: 0g\nYağ: 3.6g"
+      style="width:100%;min-height:130px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:var(--fb);line-height:1.5;outline:none;box-sizing:border-box"
+      oninput="parseAiPaste()"></textarea>
+    <div id="ai-parse-result" style="display:none;margin-top:10px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">Ayrıştırılan bilgiler — düzenleyebilirsin</div>
+      <div style="margin-bottom:8px">
+        <div class="lbl">Yemek Adı</div>
+        <input id="ai-name" type="text" placeholder="Yemek adı"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div><div class="lbl">Kalori (kcal)</div><input id="ai-kcal" type="number" placeholder="0"/></div>
+        <div><div class="lbl">Protein (g)</div><input id="ai-protein" type="number" placeholder="0"/></div>
+        <div><div class="lbl">Karbonhidrat (g)</div><input id="ai-carb" type="number" placeholder="0"/></div>
+        <div><div class="lbl">Yağ (g)</div><input id="ai-fat" type="number" placeholder="0"/></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn bo" onclick="saveAiFood(false)">💾 Kaydet</button>
+        <button class="btn bp" onclick="saveAiFood(true)">✅ Ekle</button>
+      </div>
+    </div>
+    <div id="ai-parse-empty" style="display:none;margin-top:10px;color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px">
+      ⚠️ Besin değeri bulunamadı — farklı bir format dene
+    </div>`;
+}
+
+function parseAiPaste(){
+  const text=document.getElementById('ai-paste-input')?.value||'';
+  const resEl=document.getElementById('ai-parse-result');
+  const emptyEl=document.getElementById('ai-parse-empty');
+  if(!text.trim()){ resEl.style.display='none'; emptyEl.style.display='none'; return; }
+
+  function findNum(patterns){
+    for(const re of patterns){
+      const m=text.match(re);
+      if(m){ const n=parseFloat(m[1].replace(',','.')); if(!isNaN(n)) return n; }
+    }
+    return null;
+  }
+
+  const kcal=findNum([
+    /(?:kalori|enerji|energy|calories?)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*(?:kcal)?/i,
+    /([\d]+(?:[.,][\d]+)?)\s*kcal/i,
+  ]);
+  const protein=findNum([
+    /protein\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
+    /protein\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+  ]);
+  const carb=findNum([
+    /(?:karbonhidrat|toplam karbonhidrat|karb|carbohydrates?|kh)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
+    /(?:karbonhidrat|karb|carb|kh)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+  ]);
+  const fat=findNum([
+    /(?:ya[gğ]|fat|lipid|toplam ya[gğ])\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
+    /(?:ya[gğ]|fat)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+  ]);
+
+  let name='';
+  const skipRe=/kalori|enerji|protein|karbonhidrat|karb\b|ya[gğ]\b|kcal|lif|fiber|sodyum|sodium|şeker|sugar|kalsiyum|demir|toplam/i;
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>1);
+  for(const line of lines){
+    const clean=line.replace(/^[*#>\-•|]+\s*/,'').replace(/[*_`]+/g,'').trim();
+    if(!clean||clean.length<2||clean.length>100) continue;
+    if(/^\d/.test(clean)) continue;
+    if(skipRe.test(clean)) continue;
+    name=clean;
+    break;
+  }
+
+  const found=kcal!==null||protein!==null||carb!==null||fat!==null;
+  resEl.style.display=found?'block':'none';
+  emptyEl.style.display=!found?'block':'none';
+  if(found){
+    document.getElementById('ai-name').value=name;
+    document.getElementById('ai-kcal').value=kcal!==null?kcal:'';
+    document.getElementById('ai-protein').value=protein!==null?protein:'';
+    document.getElementById('ai-carb').value=carb!==null?carb:'';
+    document.getElementById('ai-fat').value=fat!==null?fat:'';
+  }
+}
+
+function saveAiFood(andAdd){
+  const name=document.getElementById('ai-name').value.trim();
+  const kcal=parseFloat(document.getElementById('ai-kcal').value)||0;
+  const protein=parseFloat(document.getElementById('ai-protein').value)||0;
+  const carb=parseFloat(document.getElementById('ai-carb').value)||0;
+  const fat=parseFloat(document.getElementById('ai-fat').value)||0;
+  if(!name){alert('Yemek adı girin');return;}
+  if(!kcal){alert('Kalori değeri girin');return;}
+  const food={name,amount:100,unit:'g',kcal,protein,carb,fat,addedAt:Date.now()};
+  if(andAdd){
+    addFoodToMeal(_addFoodMeal,_addFoodDate,food);
+  } else {
+    const id='cf_'+Date.now();
+    if(!S.nutrition) S.nutrition={};
+    if(!S.nutrition.customFoods) S.nutrition.customFoods={};
+    S.nutrition.customFoods[id]={name,kcal100:kcal,protein100:protein,carb100:carb,fat100:fat};
+    saveS();
+    alert('✅ Kaydedildi!');
+    switchFoodTab('saved');
+  }
+}
+
 function saveFood(food){
   const db = JSON.parse(localStorage.getItem("foods") || "[]");
   db.push(food);
