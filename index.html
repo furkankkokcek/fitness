@@ -196,6 +196,7 @@ select option{background:var(--bg3)}
 .search-result-item:active{background:var(--bg2)}
 .search-result-name{font-size:13px;font-weight:600}
 .search-result-macros{font-size:11px;color:var(--muted);margin-top:3px}
+.search-section-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;margin-top:4px}
 .saved-food-item{padding:10px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
 .photo-upload-area{border:2px dashed var(--border);border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color .2s}
 .photo-upload-area:hover{border-color:var(--accent)}
@@ -3062,30 +3063,75 @@ async function doFoodSearch(){
   const q=document.getElementById('food-search-input')?.value?.trim();
   if(!q) return;
   const res=document.getElementById('food-search-results');
-  res.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">⏳ Aranıyor...</div>`;
+  const ql=q.toLowerCase();
+
+  // Kayıtlı besinlerde ara
+  const savedMatches=Object.entries(S.nutrition?.customFoods||{})
+    .filter(([,f])=>f.name.toLowerCase().includes(ql)).slice(0,5);
+
+  // Önceki besinlerde ara
+  const seen=new Set(), recentItems=[];
+  Object.values(S.nutrition?.dailyLog||{})
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+    .forEach(day=>{
+      Object.values(day.meals||{}).forEach(mealItems=>{
+        [...mealItems].reverse().forEach(f=>{
+          const key=f.name.toLowerCase();
+          if(!seen.has(key)&&key.includes(ql)){ seen.add(key); recentItems.push(f); }
+        });
+      });
+    });
+  const recentMatches=recentItems.slice(0,5);
+  window._localRecentSearchResults=recentMatches;
+
+  // Lokal sonuçlar HTML
+  let localHTML='';
+  if(savedMatches.length){
+    localHTML+=`<div class="search-section-hdr">💾 Kayıtlı</div>`;
+    localHTML+=savedMatches.map(([id,f])=>`
+      <div class="search-result-item" onclick="selectSavedFoodForSearch('${id}')">
+        <div class="search-result-name">${f.name}</div>
+        <div class="search-result-macros">🔥 ${f.kcal100} kcal &nbsp;·&nbsp; P:${f.protein100}g &nbsp;·&nbsp; K:${f.carb100}g &nbsp;·&nbsp; Y:${f.fat100}g <span style="color:var(--muted2)">/100g</span></div>
+      </div>`).join('');
+  }
+  if(recentMatches.length){
+    localHTML+=`<div class="search-section-hdr"${savedMatches.length?' style="margin-top:10px"':''}>🕐 Önceki</div>`;
+    localHTML+=recentMatches.map((f,i)=>`
+      <div class="search-result-item" onclick="selectLocalRecentForSearch(${i})">
+        <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
+        <div class="search-result-macros">🔥 ${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+      </div>`).join('');
+  }
+
+  const hasLocal=savedMatches.length||recentMatches.length;
+  res.innerHTML=(hasLocal?localHTML:'')+
+    `<div${hasLocal?' style="margin-top:10px"':''}>`+
+    `<div class="search-section-hdr">🌐 Besin Veritabanı</div>`+
+    `<div id="api-search-section"><div style="text-align:center;padding:12px 0;color:var(--muted);font-size:13px">⏳ Aranıyor...</div></div>`+
+    `</div>`;
+
   try{
-    // İlk deneme: world.openfoodfacts.org
     const endpoints=[
       `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,nutriments,serving_size,serving_quantity,brands`,
       `https://world.openfoodfacts.net/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,product_name_tr,nutriments,serving_size,serving_quantity,brands`
     ];
     let data=null;
     for(const url of endpoints){
-      try{
-        const resp=await fetchWithRetry(url,3,600);
-        data=await resp.json();
-        break;
-      }catch(e){ continue; }
+      try{ const resp=await fetchWithRetry(url,3,600); data=await resp.json(); break; }catch(e){ continue; }
     }
     if(!data) throw new Error('Tüm sunucular meşgul');
 
     const products=(data.products||[]).filter(p=>{
       const n=p.nutriments;
-      return p.product_name && (n?.['energy-kcal_100g']>0||n?.['energy-kcal']>0) && n?.proteins_100g>=0;
+      return p.product_name&&(n?.['energy-kcal_100g']>0||n?.['energy-kcal']>0)&&n?.proteins_100g>=0;
     });
+
+    const apiEl=document.getElementById('api-search-section');
+    if(!apiEl) return;
+
     if(!products.length){
-      res.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:10px 0;text-align:center">Sonuç bulunamadı. Farklı bir kelime veya İngilizce deneyin (örn: chicken breast).</div>`;
-      return;
+      apiEl.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:10px 0;text-align:center">Sonuç bulunamadı. Farklı bir kelime veya İngilizce deneyin (örn: chicken breast).</div>`;
+      _searchResultsHTML=res.innerHTML; return;
     }
     _searchResults=products.map(p=>{
       const n=p.nutriments;
@@ -3104,19 +3150,28 @@ async function doFoodSearch(){
         kcal100,protein100:n.proteins_100g||0,carb100:n.carbohydrates_100g||0,fat100:n.fat_100g||0
       };
     });
-    const html=_searchResults.map((f,i)=>`
+    apiEl.innerHTML=_searchResults.map((f,i)=>`
       <div class="search-result-item" onclick="selectSearchResult(${i})">
         <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
         <div class="search-result-macros">🔥 ${f.kcal} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
       </div>`).join('');
-    _searchResultsHTML=html;
-    res.innerHTML=html;
+    _searchResultsHTML=res.innerHTML;
   }catch(e){
-    res.innerHTML=`<div style="text-align:center;padding:12px 0">
+    const apiEl=document.getElementById('api-search-section');
+    if(apiEl) apiEl.innerHTML=`<div style="text-align:center;padding:12px 0">
       <div style="color:var(--danger);font-size:13px;margin-bottom:8px">⚠️ ${e.message==='Tüm sunucular meşgul'?'Sunucu şu an meşgul (503). Birkaç saniye bekleyip tekrar deneyin.':'Bağlantı hatası. İnternet bağlantınızı kontrol edin.'}</div>
       <button class="btn bo" style="font-size:12px" onclick="doFoodSearch()">🔄 Tekrar Dene</button>
     </div>`;
+    _searchResultsHTML=res.innerHTML;
   }
+}
+
+function selectSavedFoodForSearch(id){
+  const f=S.nutrition?.customFoods?.[id]; if(!f) return;
+  showFoodConfirm({name:f.name,amount:100,unit:'g',kcal:f.kcal100,protein:f.protein100,carb:f.carb100,fat:f.fat100},false);
+}
+function selectLocalRecentForSearch(i){
+  const f=window._localRecentSearchResults?.[i]; if(f) showFoodConfirm({...f},false);
 }
 
 function selectSearchResult(i){
@@ -3275,7 +3330,7 @@ function renderAiPasteTab(el){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn bo" onclick="saveAiFood(false)">💾 Kaydet</button>
-        <button class="btn bp" onclick="saveAiFood(true)">✅ Ekle</button>
+        <button class="btn bp" onclick="saveAiFood(true)">✅ Kaydet ve Ekle</button>
       </div>
     </div>
     <div id="ai-parse-empty" style="display:none;margin-top:10px;color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px">
