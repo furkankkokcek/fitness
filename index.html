@@ -99,7 +99,7 @@ select option{background:var(--bg3)}
 /* SETTINGS MODAL */
 #settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:150;display:none;align-items:center;justify-content:center}
 #settings-overlay.open{display:flex}
-.settings-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:calc(100% - 32px);max-width:380px;max-height:90vh;overflow-y:auto;box-sizing:border-box}
+.settings-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box}
 .settings-handle{display:none}
 .settings-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
 .settings-title{font-size:17px;font-weight:700;color:var(--text);font-family:var(--fb)}
@@ -143,7 +143,7 @@ select option{background:var(--bg3)}
 .wkkg{font-size:11px;font-weight:700}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center}
 .mo.open{display:flex}
-.ms{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:430px;max-height:90vh;overflow-y:auto}
+.ms{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-height:90vh;overflow-y:auto}
 .mt2{font-family:var(--fd);font-size:28px;margin-bottom:8px}
 .msub{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -540,7 +540,7 @@ select option{background:var(--bg3)}
 </div>
 
 <div class="mo" id="gif-modal">
-  <div class="ms" style="max-width:500px;width:90%">
+  <div class="ms">
     <div class="mt2" id="gif-title">Hareket Nasıl Yapılır?</div>
     <div style="margin:20px 0;background:var(--bg3);border-radius:12px;overflow:hidden">
       <img id="gif-img" src="" alt="Exercise GIF" style="width:100%;display:block"/>
@@ -859,7 +859,7 @@ function showWeeklySummary(w){
   modal.id='weekly-summary-modal';
   modal.className='mo open';
   modal.innerHTML=`
-    <div class="ms" style="width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+    <div class="ms">
       <div style="text-align:center;font-size:40px;margin-bottom:4px">🎯</div>
       <div class="mt2" style="text-align:center">HAFTA ${w+1} TAMAMLANDI!</div>
       <div class="msub" style="text-align:center">Haftanın özeti</div>
@@ -985,7 +985,7 @@ function openWeeklyReport(){
   modal.className='mo open';
   modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
   modal.innerHTML=`
-    <div class="ms" style="width:calc(100% - 32px);max-width:400px;box-sizing:border-box;padding:20px">
+    <div class="ms" style="padding:20px">
 
       <!-- Başlık -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -1447,7 +1447,7 @@ function openSwapModal(exId, w, d){
   modal.id='swap-modal';
   modal.className='mo open';
   modal.innerHTML=`
-    <div class="ms" style="width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+    <div class="ms">
       <div class="mt2">HAREKETI DEGISTIR</div>
       <div class="msub">Sadece <b>Hafta ${w+1} · Gün ${d+1}</b> için geçerli. Sonraki haftalarda kurulum seçimine döner.</div>
       <div class="swap-list">${optsHtml}</div>
@@ -1605,7 +1605,7 @@ function showDayCompleteDialog(w, d){
   modal.id = 'day-complete-modal';
   modal.className = 'mo open';
   modal.innerHTML = `
-    <div class="ms" style="text-align:center;width:calc(100% - 32px);max-width:380px;box-sizing:border-box">
+    <div class="ms" style="text-align:center">
       <div style="font-size:48px;margin-bottom:8px">🏆</div>
       <div class="mt2">GÜNÜ TAMAMLADIN!</div>
       <div class="msub">Harika iş! Tüm egzersizleri bitirdin.</div>
@@ -2837,42 +2837,14 @@ function renderKalori(){
     logKeys.forEach(k=>{
       const t=kalTotals(k);
       const [y,m,d]=k.split('-');
-      const isOpen=_openPastDays.has(k);
-      const pastDay=S.nutrition.dailyLog[k];
-      html+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer" onclick="togglePastDay('${k}')">
-          <span style="font-size:13px;font-weight:600;color:var(--text)">${d}/${m}/${y}</span>
-          <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-family:var(--fa);font-size:16px;color:var(--accent)">${t.kcal} kcal</span>
-            <span style="color:var(--muted);font-size:18px;display:inline-block;transition:transform .2s;transform:${isOpen?'rotate(90deg)':'none'}">›</span>
-          </div>
-        </div>`;
-      if(isOpen&&pastDay){
-        html+=`<div style="border-top:1px solid var(--border);padding:10px 14px">`;
-        let hasAny=false;
-        Object.entries(MEAL_NAMES).forEach(([mk,label])=>{
-          const items=pastDay.meals?.[mk]||[];
-          if(!items.length) return;
-          hasAny=true;
-          const mKcal=Math.round(items.reduce((s,f)=>s+(f.kcal||0),0));
-          html+=`<div style="margin-bottom:10px">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${label} · ${mKcal} kcal</div>`;
-          items.forEach(f=>{
-            html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
-              <div>
-                <div style="font-size:13px;font-weight:500">${f.name}</div>
-                <div style="font-size:11px;color:var(--muted)">${f.amount}${f.unit} · P:${f.protein||0}g · K:${f.carb||0}g · Y:${f.fat||0}g</div>
-              </div>
-              <div style="font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0;margin-left:8px">${Math.round(f.kcal)} kcal</div>
-            </div>`;
-          });
-          html+=`</div>`;
-        });
-        if(!hasAny) html+=`<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px 0">Besin kaydı yok</div>`;
-        html+=`</div>`;
-      }
-      html+=`</div>`;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" onclick="openPastDayDetail('${k}')">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${d}/${m}/${y}</span>
+        <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:var(--fa);font-size:16px;color:var(--accent)">${t.kcal} kcal</span>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+      </div>`;
     });
   }
 
@@ -2897,10 +2869,49 @@ function openKalGoalEditor(){
   if(g && !isNaN(parseInt(g))){ S.nutrition.goal=parseInt(g); saveS(); renderKalori(); }
 }
 
-const _openPastDays=new Set();
-function togglePastDay(k){
-  _openPastDays.has(k)?_openPastDays.delete(k):_openPastDays.add(k);
-  renderKalori();
+function openPastDayDetail(k){
+  const existing=document.getElementById('past-day-modal');
+  if(existing) existing.remove();
+  const [y,m,d]=k.split('-');
+  const t=kalTotals(k);
+  const pastDay=S.nutrition.dailyLog[k];
+  let mealsHtml=''; let hasAny=false;
+  Object.entries(MEAL_NAMES).forEach(([mk,label])=>{
+    const items=pastDay?.meals?.[mk]||[];
+    if(!items.length) return;
+    hasAny=true;
+    const mKcal=Math.round(items.reduce((s,f)=>s+(f.kcal||0),0));
+    mealsHtml+=`<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${label} · ${mKcal} kcal</div>`;
+    items.forEach(f=>{
+      mealsHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:13px;font-weight:500">${f.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${f.amount}${f.unit} · P:${f.protein||0}g · K:${f.carb||0}g · Y:${f.fat||0}g</div></div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0;margin-left:8px">${Math.round(f.kcal)} kcal</div>
+      </div>`;
+    });
+    mealsHtml+=`</div>`;
+  });
+  if(!hasAny) mealsHtml=`<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px 0">Besin kaydı yok</div>`;
+  const modal=document.createElement('div');
+  modal.id='past-day-modal';
+  modal.className='mo open';
+  modal.innerHTML=`
+    <div class="ms">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="mt2" style="margin:0">${d}/${m}/${y}</div>
+        <button onclick="document.getElementById('past-day-modal').remove()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:16px;padding:12px;background:var(--bg3);border-radius:10px">
+        <div><div style="font-size:20px;font-weight:700;color:var(--accent)">${t.kcal}</div><div style="font-size:10px;color:var(--muted)">kcal</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:#60a5fa">${t.protein}g</div><div style="font-size:10px;color:var(--muted)">Protein</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:#fb923c">${t.carb}g</div><div style="font-size:10px;color:var(--muted)">Karb</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:#a78bfa">${t.fat}g</div><div style="font-size:10px;color:var(--muted)">Yağ</div></div>
+      </div>
+      <div style="overflow-y:auto;max-height:55vh">${mealsHtml}</div>
+    </div>`;
+  modal.addEventListener('click',e=>{if(e.target===modal) modal.remove();});
+  document.body.appendChild(modal);
 }
 
 // ── BESIN EKLEME MODALİ ────────────────────────
@@ -2911,7 +2922,7 @@ function openAddFood(mealKey,dateKey){
   let modal=document.getElementById('add-food-modal');
   if(!modal){ modal=document.createElement('div'); modal.id='add-food-modal'; modal.className='mo add-food-modal'; document.body.appendChild(modal); }
   modal.innerHTML=`
-    <div class="ms" style="width:calc(100% - 24px);max-width:420px;box-sizing:border-box">
+    <div class="ms">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div style="font-family:var(--fa);font-size:20px">${MEAL_ADD_LABELS[mealKey]||mealKey}</div>
         <button onclick="document.getElementById('add-food-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
