@@ -3289,13 +3289,18 @@ function parseAiPaste(){
   const emptyEl=document.getElementById('ai-parse-empty');
   if(!text.trim()){ resEl.style.display='none'; emptyEl.style.display='none'; return; }
 
-  // ~45g, ≈33g, 33–35g gibi formatları da yakala: tilde/yaklaşık işareti ve aralıkların ilk değeri
-  const NUM='[~≈]?\\s*([\\d]+(?:[.,][\\d]+)?)';
+  // ~45g, ≈33g, 33–35g, 33-35g: tilde/yaklaşık + aralık ortası
+  const NUM='[~≈]?\\s*([\\d]+(?:[.,][\\d]+)?)(?:\\s*[–—\\-]\\s*([\\d]+(?:[.,][\\d]+)?))?';
 
   function findNum(patterns){
     for(const re of patterns){
       const m=text.match(re);
-      if(m){ const n=parseFloat(m[1].replace(',','.')); if(!isNaN(n)) return n; }
+      if(m){
+        const n1=parseFloat(m[1].replace(',','.'));
+        if(isNaN(n1)) continue;
+        if(m[2]){ const n2=parseFloat(m[2].replace(',','.')); if(!isNaN(n2)) return Math.round((n1+n2)/2*10)/10; }
+        return n1;
+      }
     }
     return null;
   }
