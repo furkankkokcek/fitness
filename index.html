@@ -2647,6 +2647,10 @@ function importData(e){
       if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
       if(!S.nutrition.customFoods) S.nutrition.customFoods={};
       if(!S.nutrition.dailyLog) S.nutrition.dailyLog={};
+      if(!S.nutrition.goal) S.nutrition.goal=2000;
+      if(!S.profile) S.profile={kg:0,cm:0,age:0,gender:''};
+      if(!S.theme) S.theme='dark';
+      if(S.notifEnabled===undefined) S.notifEnabled=false;
       applyTheme();
       saveS();
       buildSetup();
@@ -2827,17 +2831,48 @@ function renderKalori(){
   });
 
   // Geçmiş günler
-  const logKeys=Object.keys(S.nutrition.dailyLog).sort().reverse().filter(k=>k!==dk).slice(0,7);
+  const logKeys=Object.keys(S.nutrition.dailyLog).sort().reverse().filter(k=>k!==dk).slice(0,14);
   if(logKeys.length>0){
     html+=`<div style="margin-top:16px;font-family:var(--fa);font-size:18px;letter-spacing:.5px;margin-bottom:8px">GEÇMİŞ GÜNLER</div>`;
     logKeys.forEach(k=>{
       const t=kalTotals(k);
       const [y,m,d]=k.split('-');
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
-        <span style="font-size:13px;color:var(--text)">${d}/${m}/${y}</span>
-        <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
-        <span style="font-family:var(--fa);font-size:16px;color:var(--accent)">${t.kcal} kcal</span>
-      </div>`;
+      const isOpen=_openPastDays.has(k);
+      const pastDay=S.nutrition.dailyLog[k];
+      html+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer" onclick="togglePastDay('${k}')">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${d}/${m}/${y}</span>
+          <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:var(--fa);font-size:16px;color:var(--accent)">${t.kcal} kcal</span>
+            <span style="color:var(--muted);font-size:18px;display:inline-block;transition:transform .2s;transform:${isOpen?'rotate(90deg)':'none'}">›</span>
+          </div>
+        </div>`;
+      if(isOpen&&pastDay){
+        html+=`<div style="border-top:1px solid var(--border);padding:10px 14px">`;
+        let hasAny=false;
+        Object.entries(MEAL_NAMES).forEach(([mk,label])=>{
+          const items=pastDay.meals?.[mk]||[];
+          if(!items.length) return;
+          hasAny=true;
+          const mKcal=Math.round(items.reduce((s,f)=>s+(f.kcal||0),0));
+          html+=`<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${label} · ${mKcal} kcal</div>`;
+          items.forEach(f=>{
+            html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:13px;font-weight:500">${f.name}</div>
+                <div style="font-size:11px;color:var(--muted)">${f.amount}${f.unit} · P:${f.protein||0}g · K:${f.carb||0}g · Y:${f.fat||0}g</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0;margin-left:8px">${Math.round(f.kcal)} kcal</div>
+            </div>`;
+          });
+          html+=`</div>`;
+        });
+        if(!hasAny) html+=`<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px 0">Besin kaydı yok</div>`;
+        html+=`</div>`;
+      }
+      html+=`</div>`;
     });
   }
 
@@ -2860,6 +2895,12 @@ function deleteFoodItem(mealKey,dateKey,idx){
 function openKalGoalEditor(){
   const g=prompt('Günlük kalori hedefiniz (kcal):',S.nutrition.goal||2000);
   if(g && !isNaN(parseInt(g))){ S.nutrition.goal=parseInt(g); saveS(); renderKalori(); }
+}
+
+const _openPastDays=new Set();
+function togglePastDay(k){
+  _openPastDays.has(k)?_openPastDays.delete(k):_openPastDays.add(k);
+  renderKalori();
 }
 
 // ── BESIN EKLEME MODALİ ────────────────────────
