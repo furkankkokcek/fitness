@@ -317,7 +317,7 @@ select option{background:var(--bg3)}
             <button class="btn bp" id="plank-btn" onclick="togglePlank()">BAŞLAT</button>
             <button class="btn bo" onclick="resetPlank()">SIFIRLA</button>
           </div>
-        <button class="btn bo" id="notify-btn" style="margin-top:10px">🔔 Bildirimi Aç</button>
+        <button class="btn bo" id="notify-btn" onclick="notifyBtnClick()" style="margin-top:10px">🔔 Bildirimi Aç</button>
 
         </div>
       </div>
@@ -2071,36 +2071,41 @@ function sendNotification() {
 // Web Audio API ile lokal beep sesi üret (mobilde güvenilir)
 function playAlarmSound() {
   try {
-    const audioContext = window.audioContext || new (window.AudioContext || window.webkitAudioContext)();
-    window.audioContext = audioContext;
-    
-    const now = audioContext.currentTime;
-    const beepPattern = [
-      { start: now, duration: 0.2 },
-      { start: now + 0.3, duration: 0.2 },
-      { start: now + 0.6, duration: 0.3 }
-    ];
-    
-    beepPattern.forEach(beep => {
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-      
-      osc.frequency.value = 1000;
-      osc.type = 'sine';
-      
-      gain.gain.setValueAtTime(0.3, beep.start);
-      gain.gain.exponentialRampToValueAtTime(0.01, beep.start + beep.duration);
-      
-      osc.start(beep.start);
-      osc.stop(beep.start + beep.duration);
-    });
-    console.log("✅ Ses çalındı");
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window.audioContext) window.audioContext = new AudioCtx();
+    const ctx = window.audioContext;
+
+    const doPlay = () => {
+      const now = ctx.currentTime;
+      const beepPattern = [
+        { start: now,       duration: 0.2 },
+        { start: now + 0.3, duration: 0.2 },
+        { start: now + 0.6, duration: 0.3 }
+      ];
+      beepPattern.forEach(beep => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 1000;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, beep.start);
+        gain.gain.exponentialRampToValueAtTime(0.01, beep.start + beep.duration);
+        osc.start(beep.start);
+        osc.stop(beep.start + beep.duration);
+      });
+    };
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(doPlay).catch(e => console.error('AudioContext resume hatası:', e));
+    } else {
+      doPlay();
+    }
   } catch(e) {
     console.error("Ses çalma hatası:", e);
   }
+}
 }
 function updTimer(){
   const m = Math.floor(tRem/60), s = tRem%60;
@@ -2119,6 +2124,14 @@ function updTimer(){
 }
 
 function toggleTimer(){
+  // Kullanıcı etkileşimindeyken AudioContext'i ön ısıt (autoplay politikası)
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      if (!window.audioContext) window.audioContext = new AudioCtx();
+      if (window.audioContext.state === 'suspended') window.audioContext.resume();
+    }
+  } catch(e){}
   if(tRun){clearInterval(tInt);tRun=false;document.getElementById('t-btn').textContent='DEVAM';}
   else{
     if(tRem<=0){ tRem=tTot; }
@@ -2137,6 +2150,10 @@ function toggleTimer(){
         playAlarmSound();
         
         // Bildirim gönder
+        if (Notification.permission !== 'granted') {
+          const btn = document.getElementById('notify-btn');
+          if (btn) { btn.style.background='var(--accent)'; btn.style.color='#000'; btn.textContent='🔔 Bildirim İzni Ver!'; }
+        }
         sendNotification();
         
         tRem=tTot;
@@ -2177,17 +2194,20 @@ function ensureNotificationPermission() {
 
 function resetTimer(){clearInterval(tInt);tRun=false;tRem=tTot;document.getElementById('t-btn').textContent='BAŞLAT';updTimer();}
 
-// Bildirim izni iste
-if(document.getElementById('notify-btn')){
-  document.getElementById('notify-btn').addEventListener('click', () => {
-    ensureNotificationPermission().then(granted => {
-      if(granted) {
-        console.log('✅ Bildirim izni verildi');
-        alert('✅ Bildirimler açıldı!');
-      } else {
-        console.log('❌ Bildirim izni reddedildi');
-      }
-    });
+function notifyBtnClick(){
+  if(!('Notification' in window)){ alert('Bu tarayıcı bildirimleri desteklemiyor.'); return; }
+  if(Notification.permission==='denied'){
+    alert('Bildirim izni reddedilmiş. Tarayıcı adres çubuğundaki kilit simgesinden izni açmanız gerekiyor.');
+    return;
+  }
+  ensureNotificationPermission().then(granted=>{
+    const btn=document.getElementById('notify-btn');
+    if(granted){
+      if(btn){ btn.textContent='✅ Bildirim Açık'; btn.style.background=''; btn.style.color=''; }
+      setTimeout(()=>sendNotification(),300);
+    } else {
+      if(btn) btn.textContent='❌ İzin Reddedildi';
+    }
   });
 }
 
@@ -2250,20 +2270,6 @@ function resetPlank(){
   document.getElementById('plank-display').style.color='var(--accent)';
   document.getElementById('plank-status').textContent='HAZIR';
   document.getElementById('plank-btn').textContent='BAŞLAT';
-}
-
-// Bildirim izni iste
-if(document.getElementById('notify-btn')){
-  document.getElementById('notify-btn').addEventListener('click', () => {
-    ensureNotificationPermission().then(granted => {
-      if(granted) {
-        console.log('✅ Bildirim izni verildi');
-        alert('✅ Bildirimler açıldı!');
-      } else {
-        console.log('❌ Bildirim izni reddedildi');
-      }
-    });
-  });
 }
 
 // ============================================================
