@@ -1,0 +1,65 @@
+name: Version Bump
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              html = f.read()
+
+          # Find current version like v2.0.0
+          m = re.search(r'v(\d+)\.(\d+)\.(\d+)', html)
+          if not m:
+              print("Version not found, skipping.")
+              sys.exit(0)
+
+          major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+          new_patch = patch + 1
+          old_ver = f"v{major}.{minor}.{patch}"
+          new_ver = f"v{major}.{minor}.{new_patch}"
+          print(f"Bumping {old_ver} -> {new_ver}")
+
+          # Update display version and cache key in index.html
+          html = html.replace(old_ver, new_ver)
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(html)
+
+          # Update cache key in sw.js
+          with open('sw.js', 'r', encoding='utf-8') as f:
+              sw = f.read()
+          sw = sw.replace(old_ver, new_ver)
+          with open('sw.js', 'w', encoding='utf-8') as f:
+              f.write(sw)
+
+          with open('version.txt', 'w') as f:
+              f.write(new_ver)
+          EOF
+
+      - name: Commit version bump
+        run: |
+          NEW_VER=$(cat version.txt)
+          rm version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: bump version to $NEW_VER [skip ci]"
+          git push origin main
