@@ -1,0 +1,24 @@
+#settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:150;display:none;align-items:center;justify-content:center}
+#settings-overlay.open{display:flex}
+.settings-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-height:90vh;overflow-y:auto;box-sizing:border-box}
+.settings-handle{display:none}
+.settings-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.settings-title{font-size:17px;font-weight:700;color:var(--text);font-family:var(--fb)}
+.settings-close{background:var(--bg3);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.settings-body{padding:16px 20px 24px}
+.settings-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px;margin-top:16px}
+.settings-section-title:first-child{margin-top:0}
+.settings-group{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:0 16px;margin-bottom:4px}
+.gear-btn{background:none;border:none;color:var(--muted);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:500;color:var(--text)}
+.setting-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sw-toggle{position:relative;width:44px;height:26px;flex-shrink:0}
+.sw-toggle input{opacity:0;width:0;height:0;position:absolute}
+.sw-slider{position:absolute;inset:0;background:var(--bg3);border:1px solid var(--border);border-radius:99px;cursor:pointer;transition:.2s}
+.sw-slider:before{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.2s}
+.sw-toggle input:checked+.sw-slider{background:var(--accent);border-color:var(--accent)}
+.sw-toggle input:checked+.sw-slider:before{transform:translateX(18px);background:#0a0a0a}
+[data-theme="light"] .sw-slider{background:#e0e0e0}
+[data-theme="light"] .sw-toggle input:checked+.sw-slider:before{background:#fff}
