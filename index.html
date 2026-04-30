@@ -1943,12 +1943,15 @@ function renderProgram(){
         </div>`;
     } else {
       let inputsHtml = `<div class="set-inputs" id="sets-${ex.id}">`;
+      const prevWeekSets = w > 0 ? (S.weekData?.['w'+(w-1)]?.['d'+d]?.[ex.id] || null) : null;
       for(let i=1; i<=ex.sets; i++){
          const draftVal = (S.setDrafts?.[`w${w}_d${d}_${ex.id}`]?.[`s${i}`]) ?? '';
+         const prevVal = prevWeekSets?.['s'+i];
+         const ph = prevVal !== undefined && prevVal !== '' ? prevVal : (ex.reps>0 ? ex.reps : '—');
          inputsHtml += `
           <div class="set-inp-wrap">
             <div class="set-inp-lbl">Set ${i}</div>
-            <input class="set-inp" type="number" id="s${i}-${ex.id}" placeholder="${ex.reps>0 ? ex.reps : '—'}" min="0" max="999" step="1" value="${draftVal}" oninput="updSetTotalDynamic('${ex.id}', ${ex.sets});saveDraft('${ex.id}',${w},${d},${i},this.value)" onblur="autoSaveSets('${ex.id}',${w},${d},${ex.sets})"/>
+            <input class="set-inp" type="number" id="s${i}-${ex.id}" placeholder="${ph}" min="0" max="999" step="1" value="${draftVal}" oninput="updSetTotalDynamic('${ex.id}', ${ex.sets});saveDraft('${ex.id}',${w},${d},${i},this.value)" onblur="autoSaveSets('${ex.id}',${w},${d},${ex.sets})"/>
           </div>`;
       }
       inputsHtml += `</div><div class="set-total" id="total-${ex.id}">Toplam: —</div>`;
