@@ -435,7 +435,7 @@ select option{background:var(--bg3)}
       <div style="height:24px"></div>
       <div style="text-align:center;padding-bottom:4px">
         <div style="font-family:var(--fa);font-size:13px;color:var(--accent);letter-spacing:1px">FITTRACK</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">v2.0.0</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">v2.0.1</div>
       </div>
 
       <div style="height:16px"></div>
@@ -1034,7 +1034,7 @@ function openWeeklyReport(){
 (function initPWA(){
   if(!('serviceWorker' in navigator)) return;
   const swCode=`
-const CACHE='fittrack-v2.0.0';
+const CACHE='fittrack-v2.0.1';
 const URLS=['/'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS))); self.skipWaiting(); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });
