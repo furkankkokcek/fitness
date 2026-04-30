@@ -323,8 +323,13 @@ select option{background:var(--bg3)}
     </div>
 
     <div class="page" id="page-progress">
-      <div class="pt">İLERLEME</div>
-      <div class="ps">Haftalık ağırlık artışın</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div>
+          <div class="pt">İLERLEME</div>
+          <div class="ps">Haftalık ağırlık artışın</div>
+        </div>
+        <button class="xact-btn" onclick="openWeeklyReport()" style="margin-top:4px">📊 Haftalık Rapor</button>
+      </div>
       <div id="progress-content"></div>
       <div style="height:16px"></div>
     </div>
@@ -867,6 +872,159 @@ function showWeeklySummary(w){
         <button class="btn bp" style="flex:1" onclick="exportData();document.getElementById('weekly-summary-modal').remove()">💾 Yedek Al</button>
         <button class="btn bo" style="flex:1" onclick="document.getElementById('weekly-summary-modal').remove()">Kapat</button>
       </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+// ── HAFTALIK RAPOR ───────────────────────────────────────
+function openWeeklyReport(){
+  const existing=document.getElementById('weekly-report-modal');
+  if(existing) existing.remove();
+
+  const w=S.currentWeek;
+  const dayTypes=['Push','Pull','Leg'];
+  const dayIcons=['🔴','🔵','🟢'];
+
+  // Her gün için veri topla
+  let totalVol=0, totalTimeMs=0, completedDays=0;
+  const days=[0,1,2].map(d=>{
+    const data=S.weekData?.['w'+w]?.['d'+d];
+    const hasSome=data && Object.keys(data).length>0;
+    if(!hasSome) return {done:false,vol:0,dur:null};
+    completedDays++;
+    let dayVol=0;
+    DAYS[d].forEach(id=>{
+      const ex=EX[id]; if(!ex.hasWeight) return;
+      const kg=getKgAt(id,w);
+      const val=data[id]; if(!val) return;
+      let reps=0;
+      for(let i=1;i<=ex.sets;i++) reps+=parseInt(val['s'+i]||0);
+      dayVol+=Math.round(kg*reps);
+    });
+    totalVol+=dayVol;
+    const sess=S.workoutSessions?.[workoutKey(w,d)];
+    if(sess?.start && sess?.end) totalTimeMs+=sess.end-sess.start;
+    return {done:true, vol:dayVol, dur:workoutDuration(w,d)};
+  });
+
+  // PR'lar bu hafta
+  const prs=[];
+  Object.entries(S.prs||{}).forEach(([id,pr])=>{
+    if(pr.week!==w) return;
+    const ex=EX[id]; if(!ex) return;
+    const name=normalizeUppercaseText(getDisplayName(ex));
+    const val=ex.hasWeight?`${pr.kg} kg`:
+              (ex.repType==='max'?`${pr.reps} tekrar`:`${pr.reps} tekrar`);
+    prs.push({name,val});
+  });
+
+  // Kilo değişimi
+  const curWt=S.weeklyWeights?.[w];
+  const prevWt=w>0?(S.weeklyWeights?.[w-1]||S.profile?.kg):S.profile?.kg;
+  const wtDiff=(curWt&&prevWt)?(curWt-prevWt):null;
+
+  // Streak
+  const streak=S.streak?.count||0;
+
+  // Toplam süre
+  const totalMin=Math.floor(totalTimeMs/60000);
+  const totalTimeStr=totalMin>0?`${totalMin} dk`:'—';
+
+  // Motivasyon
+  const pct=completedDays/3;
+  const [moji,msg]=pct===1?['🔥','Muhteşem hafta! 3/3 antrenman tamamlandı.']:
+                   pct>=0.67?['💪','İyi gidiyorsun! Haftayı güçlü bitir.']:
+                   pct>0?['⚡','Her adım önemli, devam et!']:
+                   ['📅','Bu hafta henüz antrenman yok.'];
+
+  // Gün satırları
+  const dayRows=days.map((d,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:16px">${dayIcons[i]}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:${d.done?'var(--text)':'var(--muted)'};font-family:var(--fb)">${dayTypes[i]}</div>
+        ${d.dur?`<div style="font-size:11px;color:var(--muted);margin-top:1px">⏱ ${d.dur}</div>`:''}
+      </div>
+      ${d.done
+        ?`<div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);font-family:var(--fd)">${d.vol.toLocaleString()} kg</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:1px">hacim</div>
+          </div>`
+        :`<div style="font-size:11px;color:var(--muted)">—</div>`
+      }
+    </div>`).join('');
+
+  // PR bölümü
+  const prHtml=prs.length?`
+    <div style="background:rgba(232,255,71,.07);border:1px solid rgba(232,255,71,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🏆 Bu Haftanın PR'ları</div>
+      ${prs.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
+        <span style="color:var(--text)">${p.name}</span>
+        <span style="font-weight:700;color:var(--accent)">${p.val}</span>
+      </div>`).join('')}
+    </div>`:'';
+
+  // Kilo bölümü
+  const wtHtml=curWt?`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Vücut Kilosu</div>
+        <div style="font-size:22px;font-family:var(--fd);color:var(--text);margin-top:2px">${curWt} kg</div>
+      </div>
+      ${wtDiff!==null?`<div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Değişim</div>
+        <div style="font-size:20px;font-family:var(--fd);margin-top:2px;color:${wtDiff<0?'var(--success)':wtDiff>0?'var(--danger)':'var(--muted)'}">
+          ${wtDiff>0?'+':''}${wtDiff.toFixed(1)} kg
+        </div>
+      </div>`:''}
+    </div>`:'';
+
+  const modal=document.createElement('div');
+  modal.id='weekly-report-modal';
+  modal.className='mo open';
+  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
+  modal.innerHTML=`
+    <div class="ms" style="width:calc(100% - 32px);max-width:400px;box-sizing:border-box;padding:20px">
+
+      <!-- Başlık -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-family:var(--fa);font-size:20px;letter-spacing:1px;color:var(--accent)">HAFTA ${w+1} <span style="color:var(--muted);font-size:14px">/ 12</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${moji} ${msg}</div>
+        </div>
+        <button onclick="document.getElementById('weekly-report-modal').remove()"
+          style="background:var(--bg3);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+
+      <!-- Özet kartlar -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-family:var(--fd);font-size:26px;color:${completedDays===3?'var(--accent)':'var(--text)'}">${completedDays}/3</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Gün</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-family:var(--fd);font-size:${totalMin>99?'20':'26'}px;color:var(--text)">${totalTimeStr}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Süre</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-family:var(--fd);font-size:${streak>99?'20':'26'}px;color:var(--success)">${streak}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Streak</div>
+        </div>
+      </div>
+
+      <!-- Gün detayları -->
+      <div style="margin-bottom:14px">${dayRows}</div>
+
+      <!-- Toplam hacim -->
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:2px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:14px">
+        <span style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Toplam Hacim</span>
+        <span style="font-family:var(--fd);font-size:24px;color:var(--accent)">${totalVol.toLocaleString()} kg</span>
+      </div>
+
+      ${wtHtml}
+      ${prHtml}
+
+      <button class="btn bo" style="width:100%" onclick="document.getElementById('weekly-report-modal').remove()">Kapat</button>
     </div>`;
   document.body.appendChild(modal);
 }
