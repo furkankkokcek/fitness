@@ -3289,6 +3289,9 @@ function parseAiPaste(){
   const emptyEl=document.getElementById('ai-parse-empty');
   if(!text.trim()){ resEl.style.display='none'; emptyEl.style.display='none'; return; }
 
+  // ~45g, ≈33g, 33–35g gibi formatları da yakala: tilde/yaklaşık işareti ve aralıkların ilk değeri
+  const NUM='[~≈]?\\s*([\\d]+(?:[.,][\\d]+)?)';
+
   function findNum(patterns){
     for(const re of patterns){
       const m=text.match(re);
@@ -3298,20 +3301,20 @@ function parseAiPaste(){
   }
 
   const kcal=findNum([
-    /(?:kalori|enerji|energy|calories?)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*(?:kcal)?/i,
-    /([\d]+(?:[.,][\d]+)?)\s*kcal/i,
+    new RegExp('(?:kalori|enerji|energy|calories?)\\s*[:\\|\\-]?\\s*'+NUM+'\\s*(?:kcal)?','i'),
+    new RegExp(NUM+'\\s*kcal','i'),
   ]);
   const protein=findNum([
-    /protein\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
-    /protein\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+    new RegExp('protein\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
+    new RegExp('protein\\s*[:\\|\\-]?\\s*'+NUM,'i'),
   ]);
   const carb=findNum([
-    /(?:karbonhidrat|toplam karbonhidrat|karb|carbohydrates?|kh)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
-    /(?:karbonhidrat|karb|carb|kh)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+    new RegExp('(?:karbonhidrat|toplam karbonhidrat|karb|carbohydrates?|kh)\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
+    new RegExp('(?:karbonhidrat|karb|carb|kh)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
   ]);
   const fat=findNum([
-    /(?:ya[gğ]|fat|lipid|toplam ya[gğ])\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)\s*g/i,
-    /(?:ya[gğ]|fat)\s*[:\|\-]?\s*([\d]+(?:[.,][\d]+)?)/i,
+    new RegExp('(?:ya[gğ]|fat|lipid|toplam ya[gğ])\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
+    new RegExp('(?:ya[gğ]|fat)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
   ]);
 
   let name='';
