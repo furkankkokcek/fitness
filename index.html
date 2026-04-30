@@ -3284,10 +3284,13 @@ function renderAiPasteTab(el){
 }
 
 function parseAiPaste(){
-  const text=document.getElementById('ai-paste-input')?.value||'';
+  const raw=document.getElementById('ai-paste-input')?.value||'';
   const resEl=document.getElementById('ai-parse-result');
   const emptyEl=document.getElementById('ai-parse-empty');
-  if(!text.trim()){ resEl.style.display='none'; emptyEl.style.display='none'; return; }
+  if(!raw.trim()){ resEl.style.display='none'; emptyEl.style.display='none'; return; }
+
+  // Markdown bold/italic/code işaretlerini soy, sonra parse et
+  const text=raw.replace(/\*\*/g,'').replace(/[*_`]/g,'');
 
   // ~45g, ≈33g, 33–35g, 33-35g: tilde/yaklaşık + aralık ortası
   const NUM='[~≈]?\\s*([\\d]+(?:[.,][\\d]+)?)(?:\\s*[–—\\-]\\s*([\\d]+(?:[.,][\\d]+)?))?';
