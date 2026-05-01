@@ -61,9 +61,16 @@ function finishWorkout(w,d){
 function workoutDuration(w,d){
   const s=S.workoutSessions?.[workoutKey(w,d)];
   if(!s?.start) return null;
-  const ms=(s.end||Date.now())-s.start;
+  const end=s.end||Date.now();
+  const ms=end-s.start;
+  // Stale: no end set and started more than 6 hours ago → invalid session
+  if(!s.end && ms>6*60*60*1000) return null;
   const min=Math.floor(ms/60000), sec=Math.floor((ms%60000)/1000);
   return `${min}d ${sec}s`;
+}
+function resetWorkoutSession(w,d){
+  const key=workoutKey(w,d);
+  if(S.workoutSessions?.[key]) delete S.workoutSessions[key];
 }
 
 // ── HAFTALIK ÖZET ────────────────────────────────────────
