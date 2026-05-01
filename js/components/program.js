@@ -168,6 +168,9 @@ function undoDone(exId,w,d){
   // Geri almadan önce gün tamam mıydı kontrol et
   const wasDayDone = DAYS[d].every(id => S.weekData[wk]?.[dk]?.[id] !== undefined);
   if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
+  // Tüm egzersizler silindiyse antrenman süresini sıfırla
+  const remaining=Object.keys(S.weekData[wk]?.[dk]||{}).length;
+  if(remaining===0) resetWorkoutSession(w,d);
   // Gün tamamlanmışsa streak'i düzelt
   if(wasDayDone){
     if(!S.streak) S.streak={count:0,completedSessions:[]};
