@@ -1,65 +1,45 @@
-name: Version Bump
+name: Bump Version
 
 on:
   push:
     branches:
       - main
 
-jobs:
-  bump-version:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+permissions:
+  contents: write
 
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'chore: bump version')"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump patch version
         run: |
-          python3 - <<'EOF'
-          import re, sys
-
+          python3 << 'PYEOF'
+          import re
           with open('index.html', 'r', encoding='utf-8') as f:
-              html = f.read()
-
-          # Find current version like v2.0.0
-          m = re.search(r'v(\d+)\.(\d+)\.(\d+)', html)
+              content = f.read()
+          m = re.search(r'(\d+\.\d+\.\d+)</div>', content)
           if not m:
-              print("Version not found, skipping.")
-              sys.exit(0)
-
-          major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
-          new_patch = patch + 1
-          old_ver = f"v{major}.{minor}.{patch}"
-          new_ver = f"v{major}.{minor}.{new_patch}"
-          print(f"Bumping {old_ver} -> {new_ver}")
-
-          # Update display version and cache key in index.html
-          html = html.replace(old_ver, new_ver)
+              print("Version not found")
+              exit(0)
+          old = m.group(1)
+          major, minor, patch = old.split('.')
+          new = f"{major}.{minor}.{int(patch)+1}"
+          content = content.replace(f'Sürüm {old}', f'Sürüm {new}', 1)
           with open('index.html', 'w', encoding='utf-8') as f:
-              f.write(html)
+              f.write(content)
+          print(f"Bumped: {old} -> {new}")
+          PYEOF
 
-          # Update cache key in sw.js
-          with open('sw.js', 'r', encoding='utf-8') as f:
-              sw = f.read()
-          sw = sw.replace(old_ver, new_ver)
-          with open('sw.js', 'w', encoding='utf-8') as f:
-              f.write(sw)
-
-          with open('version.txt', 'w') as f:
-              f.write(new_ver)
-          EOF
-
-      - name: Commit version bump
+      - name: Commit and push
         run: |
-          NEW_VER=$(cat version.txt)
-          rm version.txt
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html sw.js
-          git diff --cached --quiet && echo "No changes" && exit 0
-          git commit -m "chore: bump version to $NEW_VER [skip ci]"
-          git push origin main
+          git add index.html
+          git diff --staged --quiet && echo "No version change" || git commit -m "chore: bump version"
+          git push
