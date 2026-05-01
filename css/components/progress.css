@@ -1,0 +1,8 @@
+.pec{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.pen{font-size:14px;font-weight:600;margin-bottom:10px}
+.wscroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px}
+.wscroll::-webkit-scrollbar{height:3px}
+.wscroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.wkcell{flex-shrink:0;width:42px;text-align:center}
+.wkbox{padding:6px 2px;border-radius:8px;border:1px solid var(--border)}
+.wkkg{font-size:11px;font-weight:700}
