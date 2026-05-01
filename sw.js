@@ -1,4 +1,4 @@
-const CACHE = 'fittrack-v1';
+const CACHE = 'fittrack-v2.0.1';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -80,8 +80,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(title, {
       body: text,
-      icon: '/fitness/icons/icon-192.png',
-      badge: '/fitness/icons/icon-192.png',
+      icon: '/fitness/assets/icons/icon-192.png',
+      badge: '/fitness/assets/icons/icon-192.png',
       tag: 'fittrack-notification',
       requireInteraction: true,
       vibrate: [200, 100, 200, 100, 200]
