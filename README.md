@@ -2,6 +2,8 @@
 
 **12 haftalık progresif yüklenme antrenman takipçisi**
 
+![FitTrack Uygulama Ekranları](https://raw.githubusercontent.com/furkankkokcek/fitness/main/assets/preview.jpg)
+
 Progressive Web App (PWA). Sunucu, build adımı ya da bağımlılık yok — doğrudan tarayıcıda çalışır.
 
 ## Özellikler
@@ -59,6 +61,7 @@ fitness/
 │       └── timer.js            # Dinlenme zamanlayıcısı & plank kronometresi
 │
 ├── assets/
+│   ├── preview.png             # Uygulama ekran görüntüsü (README)
 │   └── icons/
 │       ├── icon-192.png        # PWA ikonu
 │       └── icon-512.png        # PWA ikonu (splash screen)
