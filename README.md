@@ -2,7 +2,7 @@
 
 **12 haftalık progresif yüklenme antrenman takipçisi**
 
-![FitTrack Uygulama Ekranları](https://raw.githubusercontent.com/furkankkokcek/fitness/main/assets/preview.jpg)
+![FitTrack Uygulama Ekranları](https://github.com/furkankkokcek/fitness/blob/main/assets/preview.jpg?raw=true)
 
 Progressive Web App (PWA). Sunucu, build adımı ya da bağımlılık yok — doğrudan tarayıcıda çalışır.
 
