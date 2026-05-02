@@ -24,8 +24,6 @@ function openSettingsModal(){
   if(tog) tog.checked = S.theme === 'light';
   const notifTog = document.getElementById('cfg-notif-toggle');
   if(notifTog) notifTog.checked = !!(S.notifEnabled && Notification.permission === 'granted');
-  const notifInfo = document.getElementById('notif-info');
-  if(notifInfo) notifInfo.style.display = notifTog?.checked ? 'block' : 'none';
   document.getElementById('settings-overlay').classList.add('open');
 }
 
@@ -45,14 +43,11 @@ async function toggleNotifSetting(el){
     const perm = await Notification.requestPermission();
     if(perm !== 'granted'){
       el.checked = false;
-      if(info) info.style.display='none';
       return;
     }
     S.notifEnabled = true;
-    if(info) info.style.display='block';
   } else {
     S.notifEnabled = false;
-    if(info) info.style.display='none';
   }
   saveS();
 }
