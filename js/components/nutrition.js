@@ -667,6 +667,19 @@ function parseAiPaste(){
     new RegExp('(?:ya[gğ]|fat)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
   ]);
 
+  // Porsiyon miktarını metinden çıkar: "150g", "150 gr", "150 gram", "porsiyon: 150g" vb.
+  let amount=100;
+  const amountPatterns=[
+    /porsiyon\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
+    /miktar\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
+    /serving\s*(?:size)?\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
+    /(\d+(?:[.,]\d+)?)\s*(?:gr(?:am)?|g)\b/i,
+  ];
+  for(const re of amountPatterns){
+    const m=text.match(re);
+    if(m){ const v=parseFloat(m[1].replace(',','.')); if(!isNaN(v)&&v>0){ amount=v; break; } }
+  }
+
   let name='';
   const skipRe=/kalori|enerji|protein|karbonhidrat|karb\b|ya[gğ]\b|kcal|lif|fiber|sodyum|sodium|şeker|sugar|kalsiyum|demir|toplam/i;
   const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>1);
@@ -684,6 +697,7 @@ function parseAiPaste(){
   emptyEl.style.display=!found?'block':'none';
   if(found){
     document.getElementById('ai-name').value=name;
+    document.getElementById('ai-amount').value=amount;
     document.getElementById('ai-kcal').value=kcal!==null?kcal:'';
     document.getElementById('ai-protein').value=protein!==null?protein:'';
     document.getElementById('ai-carb').value=carb!==null?carb:'';
