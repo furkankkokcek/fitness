@@ -937,23 +937,21 @@ function openAiMealModal(){
     modal.className='mo add-food-modal';
     document.body.appendChild(modal);
   }
-  const savedKey=S.geminiKey||'';
+  const savedKey=S.groqKey||'';
   modal.innerHTML=`
     <div class="ms">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div style="font-family:var(--fa);font-size:16px;letter-spacing:.5px">✨ AI ÖĞÜN ANALİZİ</div>
         <button onclick="document.getElementById('ai-meal-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-          <div class="lbl" style="margin:0">Gemini API Anahtarı</div>
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">Nasıl alınır? ↗</a>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div class="lbl" style="margin:0">Groq API Anahtarı</div>
+          <a href="https://console.groq.com/keys" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">Ücretsiz al ↗</a>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">aistudio.google.com → Get API Key → Create API Key (ücretsiz)</div>
-        <div style="display:flex;gap:6px">
-          <input id="ai-gemini-key" type="password" placeholder="AIzaSy..." value="${savedKey}" style="flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;box-sizing:border-box;font-family:monospace"/>
-          <button id="ai-key-save-btn" class="btn bo" style="white-space:nowrap;font-size:12px;padding:0 12px" onclick="saveGeminiKey()">Kaydet</button>
-        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">console.groq.com → API Keys → Create API Key (kart gerekmez)</div>
+        <input id="ai-groq-key" type="password" placeholder="gsk_..." value="${savedKey}" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;box-sizing:border-box;font-family:monospace;letter-spacing:.5px"/>
+        <button id="ai-key-save-btn" class="btn bo" style="width:100%;margin-top:6px;font-size:13px" onclick="saveGroqKey()">Kaydet</button>
       </div>
       <div class="lbl">Besinler (her satıra bir tane)</div>
       <textarea id="ai-meal-input" rows="6" style="width:100%;resize:vertical;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;box-sizing:border-box;font-family:inherit" placeholder="60 gr çiğ basmati pirinç&#10;20 gr tereyağ&#10;100 gr haşlanmış brokoli&#10;170 gr çiğ tavuk göğsü&#10;200 gr kaymaksız yoğurt"></textarea>
@@ -963,30 +961,33 @@ function openAiMealModal(){
   modal.style.display='flex';
 }
 
-function saveGeminiKey(){
-  const key=document.getElementById('ai-gemini-key')?.value?.trim()||'';
-  S.geminiKey=key;
+function saveGroqKey(){
+  const key=document.getElementById('ai-groq-key')?.value?.trim()||'';
+  S.groqKey=key;
   saveS();
   const btn=document.getElementById('ai-key-save-btn');
   if(btn){ btn.textContent='✓ Kaydedildi'; btn.style.color='var(--accent)'; setTimeout(()=>{ btn.textContent='Kaydet'; btn.style.color=''; },1800); }
 }
 
 async function analyzeAiMealQuery(){
-  saveGeminiKey();
-  const key=S.geminiKey;
-  if(!key){alert('Önce Gemini API anahtarı girin');return;}
+  saveGroqKey();
+  const key=S.groqKey;
+  if(!key){alert('Önce Groq API anahtarı girin');return;}
   const query=document.getElementById('ai-meal-input')?.value?.trim();
   if(!query){alert('Besin listesi girin');return;}
   const res=document.getElementById('ai-meal-results');
   res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Analiz ediliyor...</div>';
   try{
-    const prompt='Sen bir beslenme uzmanısın. Aşağıdaki besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA şu JSON formatında yanıt ver, başka hiçbir şey yazma: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.\n\nBesin listesi:\n'+query;
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`,{
+    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
       body:JSON.stringify({
-        contents:[{parts:[{text:prompt}]}],
-        generationConfig:{responseMimeType:'application/json'}
+        model:'llama-3.3-70b-versatile',
+        response_format:{type:'json_object'},
+        messages:[
+          {role:'system',content:'Sen bir beslenme uzmanısın. Kullanıcının verdiği besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA geçerli JSON formatında yanıt ver, başka hiçbir şey yazma. Format: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.'},
+          {role:'user',content:query}
+        ]
       })
     });
     if(!resp.ok){
@@ -994,7 +995,8 @@ async function analyzeAiMealQuery(){
       throw new Error(err?.error?.message||'API hatası: '+resp.status);
     }
     const data=await resp.json();
-    const parsed=JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text||'{}');
+    const raw=data.choices?.[0]?.message?.content||'{}';
+    const parsed=JSON.parse(raw);
     if(!parsed.items?.length){
       res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Besin verisi alınamadı.</div>';
       return;
