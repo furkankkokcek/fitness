@@ -44,7 +44,10 @@ function renderKalori(){
       <div class="kal-macro"><div class="kal-macro-val" style="color:#a78bfa">${tot.fat}g</div><div class="kal-macro-lbl">Yağ</div></div>
     </div>
   </div>
-  <button class="btn bo" style="margin-bottom:12px;font-size:13px" onclick="openKalGoalEditor()">🎯 Hedef: ${goal} kcal · Değiştir</button>`;
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn bo" style="flex:1;font-size:13px" onclick="openKalGoalEditor()">🎯 Hedef: ${goal} kcal · Değiştir</button>
+    <button class="btn bo" style="padding:0 16px;font-size:19px;flex-shrink:0" onclick="openAiMealModal()" title="AI Öğün Analizi">✨</button>
+  </div>`;
 
   // Öğün bölümleri
   Object.entries(MEAL_NAMES).forEach(([key,label])=>{
@@ -922,4 +925,121 @@ function addFoodToMeal(mealKey,dateKey,food){
   renderKalori();
   // İlgili öğünü aç
   setTimeout(()=>{ const b=document.getElementById('meal-body-'+mealKey); if(b&&!b.classList.contains('open')) toggleMeal(mealKey); },100);
+}
+
+// ── AI ÖĞÜN ANALİZİ ──
+let _aiMealItems=[];
+
+function openAiMealModal(){
+  let modal=document.getElementById('ai-meal-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='ai-meal-modal';
+    modal.className='mo add-food-modal';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=`
+    <div class="ms">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-family:var(--fa);font-size:16px;letter-spacing:.5px">✨ AI ÖĞÜN ANALİZİ</div>
+        <button onclick="document.getElementById('ai-meal-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Her satıra bir besin ve miktarı yaz (İngilizce besin adı daha doğru sonuç verir)</div>
+      <textarea id="ai-meal-input" rows="6" style="width:100%;resize:vertical;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;box-sizing:border-box;font-family:inherit" placeholder="60g raw basmati rice&#10;20g butter&#10;100g boiled broccoli&#10;170g raw chicken breast&#10;200g plain yogurt"></textarea>
+      <button class="btn bp" style="margin-top:8px" onclick="analyzeAiMealQuery()">🔍 Analiz Et</button>
+      <div id="ai-meal-results"></div>
+    </div>`;
+  modal.style.display='flex';
+}
+
+async function analyzeAiMealQuery(){
+  const query=document.getElementById('ai-meal-input')?.value?.trim();
+  if(!query){alert('Besin listesi girin');return;}
+  const res=document.getElementById('ai-meal-results');
+  res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Analiz ediliyor...</div>';
+  try{
+    const resp=await fetch(`https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`,{
+      headers:{'X-Api-Key':'WhqzUJab0B7ugI+QqMQ4pQ==9FpXn3H9ZBmz6dko'}
+    });
+    const data=await resp.json();
+    if(!data.items||data.items.length===0){
+      res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Besin bulunamadı. Lütfen İngilizce besin adı ve miktar yazın.</div>';
+      return;
+    }
+    _aiMealItems=data.items.map(item=>({
+      name:item.name,
+      amount:Math.round(item.serving_size_g*10)/10,
+      unit:'g',
+      kcal:Math.round(item.calories),
+      protein:Math.round(item.protein_g*10)/10,
+      carb:Math.round(item.carbohydrates_total_g*10)/10,
+      fat:Math.round(item.fat_total_g*10)/10,
+    }));
+    const tot=_aiMealItems.reduce((a,f)=>({kcal:a.kcal+f.kcal,protein:a.protein+f.protein,carb:a.carb+f.carb,fat:a.fat+f.fat}),{kcal:0,protein:0,carb:0,fat:0});
+    let html='<div style="margin-top:12px">';
+    _aiMealItems.forEach(f=>{
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${f.amount}g · P:${f.protein}g · K:${f.carb}g · Y:${f.fat}g</div>
+        </div>
+        <div style="font-family:var(--fa);font-size:14px;color:var(--accent);margin-left:10px;white-space:nowrap">${f.kcal} kcal</div>
+      </div>`;
+    });
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--accent);border-radius:8px;margin-top:2px;color:#fff">
+      <div style="font-size:13px;font-weight:700">TOPLAM</div>
+      <div style="font-size:11px">P:${Math.round(tot.protein)}g · K:${Math.round(tot.carb)}g · Y:${Math.round(tot.fat)}g</div>
+      <div style="font-family:var(--fa);font-size:15px;font-weight:700">${Math.round(tot.kcal)} kcal</div>
+    </div>`;
+    html+=`<div style="margin-top:12px">
+      <div class="lbl">Öğün seç</div>
+      <select id="ai-meal-select" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box">
+        <option value="sabah">☀️ Sabah</option>
+        <option value="ogle" selected>🌤 Öğle</option>
+        <option value="aksam">🌙 Akşam</option>
+        <option value="ara">🍎 Ara Öğün</option>
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn bp" onclick="addAiMealItems()">✓ Öğüne Ekle</button>
+        <button class="btn bo" onclick="saveAiMealItems()">💾 Kaydet</button>
+      </div>
+    </div></div>`;
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML=`<div style="color:var(--danger);font-size:13px;text-align:center;padding:16px;margin-top:10px">Hata oluştu: ${e.message}</div>`;
+  }
+}
+
+function addAiMealItems(){
+  const mealKey=document.getElementById('ai-meal-select')?.value||'ogle';
+  if(!_aiMealItems.length) return;
+  const dk=kalDateKey();
+  const day=getKalDay(dk);
+  _aiMealItems.forEach(f=>day.meals[mealKey].push({...f,addedAt:Date.now()}));
+  saveS();
+  document.getElementById('ai-meal-modal').style.display='none';
+  renderKalori();
+  setTimeout(()=>{const b=document.getElementById('meal-body-'+mealKey);if(b&&!b.classList.contains('open'))toggleMeal(mealKey);},100);
+}
+
+function saveAiMealItems(){
+  if(!_aiMealItems.length) return;
+  if(!S.nutrition) S.nutrition={};
+  if(!S.nutrition.customFoods) S.nutrition.customFoods={};
+  _aiMealItems.forEach(f=>{
+    const id='cf_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+    const ratio=f.amount/100;
+    S.nutrition.customFoods[id]={
+      name:f.name, amount:f.amount, unit:'g',
+      kcal:f.kcal, protein:f.protein, carb:f.carb, fat:f.fat,
+      kcal100:Math.round(f.kcal/ratio),
+      protein100:Math.round(f.protein/ratio*10)/10,
+      carb100:Math.round(f.carb/ratio*10)/10,
+      fat100:Math.round(f.fat/ratio*10)/10,
+      baseLabel:'100g',
+    };
+  });
+  saveS();
+  alert('✅ '+_aiMealItems.length+' besin kayıtlara eklendi!');
+  document.getElementById('ai-meal-modal').style.display='none';
 }
