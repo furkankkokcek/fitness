@@ -602,13 +602,16 @@ function renderAiPasteTab(el){
     <div id="ai-parse-result" style="display:none;margin-top:10px">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">Ayrıştırılan bilgiler — düzenleyebilirsin</div>
       <div style="margin-bottom:8px">
-        <div class="lbl">Yemek Adı</div>
+        <div class="lbl">Besin Adı</div>
         <input id="ai-name" type="text" placeholder="Yemek adı"/>
       </div>
-      <div style="margin-bottom:8px">
-        <div class="lbl">Miktar (g)</div>
-        <input id="ai-amount" type="number" placeholder="100" min="1" max="9999" value="100"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="lbl">Birim</div>
+          <select id="ai-unit"><option value="g">gram (g)</option><option value="ml">mililitre (ml)</option><option value="adet">adet</option></select></div>
+        <div><div class="lbl">Miktar</div>
+          <input id="ai-amount" type="number" placeholder="100" min="1" max="9999" value="100"/></div>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Değerler girilen miktara aittir</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div><div class="lbl">Kalori (kcal)</div><input id="ai-kcal" type="number" placeholder="0"/></div>
         <div><div class="lbl">Protein (g)</div><input id="ai-protein" type="number" placeholder="0"/></div>
@@ -667,17 +670,22 @@ function parseAiPaste(){
     new RegExp('(?:ya[gğ]|fat)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
   ]);
 
-  // Porsiyon miktarını metinden çıkar: "150g", "150 gr", "150 gram", "porsiyon: 150g" vb.
-  let amount=100;
+  // Porsiyon miktarı ve birimini metinden çıkar
+  let amount=100, detectedUnit='g';
   const amountPatterns=[
-    /porsiyon\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
-    /miktar\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
-    /serving\s*(?:size)?\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,
-    /(\d+(?:[.,]\d+)?)\s*(?:gr(?:am)?|g)\b/i,
+    [/porsiyon\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*ml/i,'ml'],
+    [/porsiyon\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,'g'],
+    [/miktar\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*ml/i,'ml'],
+    [/miktar\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,'g'],
+    [/serving\s*(?:size)?\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*ml/i,'ml'],
+    [/serving\s*(?:size)?\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*g/i,'g'],
+    [/(\d+(?:[.,]\d+)?)\s*ml\b/i,'ml'],
+    [/(\d+(?:[.,]\d+)?)\s*(?:gr(?:am)?|g)\b/i,'g'],
+    [/(\d+(?:[.,]\d+)?)\s*adet\b/i,'adet'],
   ];
-  for(const re of amountPatterns){
+  for(const [re,unit] of amountPatterns){
     const m=text.match(re);
-    if(m){ const v=parseFloat(m[1].replace(',','.')); if(!isNaN(v)&&v>0){ amount=v; break; } }
+    if(m){ const v=parseFloat(m[1].replace(',','.')); if(!isNaN(v)&&v>0){ amount=v; detectedUnit=unit; break; } }
   }
 
   let name='';
@@ -697,6 +705,7 @@ function parseAiPaste(){
   emptyEl.style.display=!found?'block':'none';
   if(found){
     document.getElementById('ai-name').value=name;
+    document.getElementById('ai-unit').value=detectedUnit;
     document.getElementById('ai-amount').value=amount;
     document.getElementById('ai-kcal').value=kcal!==null?kcal:'';
     document.getElementById('ai-protein').value=protein!==null?protein:'';
@@ -707,28 +716,29 @@ function parseAiPaste(){
 
 function saveAiFood(andAdd){
   const name=document.getElementById('ai-name').value.trim();
+  const unit=document.getElementById('ai-unit')?.value||'g';
   const amount=parseFloat(document.getElementById('ai-amount').value)||100;
   const kcal=parseFloat(document.getElementById('ai-kcal').value)||0;
   const protein=parseFloat(document.getElementById('ai-protein').value)||0;
   const carb=parseFloat(document.getElementById('ai-carb').value)||0;
   const fat=parseFloat(document.getElementById('ai-fat').value)||0;
-  if(!name){alert('Yemek adı girin');return;}
+  if(!name){alert('Besin adı girin');return;}
   if(!kcal){alert('Kalori değeri girin');return;}
-  const ratio=amount/100;
+  const isCountUnit=unit==='adet'||unit==='porsiyon';
+  const ratio=isCountUnit?amount:amount/100;
+  const baseLabel=isCountUnit?'1 '+unit:'100'+unit;
   const kcal100=Math.round(kcal/ratio);
   const protein100=Math.round(protein/ratio*10)/10;
   const carb100=Math.round(carb/ratio*10)/10;
   const fat100=Math.round(fat/ratio*10)/10;
-  // Save to customFoods first so it appears in library
   const id='cf_'+Date.now();
   if(!S.nutrition) S.nutrition={};
   if(!S.nutrition.customFoods) S.nutrition.customFoods={};
-  S.nutrition.customFoods[id]={name,kcal100,protein100,carb100,fat100};
+  S.nutrition.customFoods[id]={name,kcal100,protein100,carb100,fat100,baseLabel,unit};
   saveS();
   if(andAdd){
-    // Route through confirm dialog so user can adjust portion
-    const food={name,amount,unit:'g',kcal,protein,carb,fat,addedAt:Date.now()};
-    showFoodConfirm(food, false);
+    const food={name,amount,unit,kcal,protein,carb,fat,kcal100,protein100,carb100,fat100,baseLabel};
+    showFoodConfirm(food,false);
   } else {
     alert('✅ Kaydedildi!');
     switchFoodTab('saved');
