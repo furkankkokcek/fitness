@@ -734,7 +734,7 @@ function saveAiFood(andAdd){
   const id='cf_'+Date.now();
   if(!S.nutrition) S.nutrition={};
   if(!S.nutrition.customFoods) S.nutrition.customFoods={};
-  S.nutrition.customFoods[id]={name,kcal100,protein100,carb100,fat100,baseLabel,unit};
+  S.nutrition.customFoods[id]={name,amount,unit,kcal,protein,carb,fat,kcal100,protein100,carb100,fat100,baseLabel};
   saveS();
   if(andAdd){
     const food={name,amount,unit,kcal,protein,carb,fat,kcal100,protein100,carb100,fat100,baseLabel};
