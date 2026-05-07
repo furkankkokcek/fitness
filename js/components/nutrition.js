@@ -30,7 +30,7 @@ function renderKalori(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div>
         <div style="font-family:var(--fa);font-size:32px;color:${fillColor};letter-spacing:1px;line-height:1">${tot.kcal}</div>
-        <div style="font-size:11px;color:var(--muted)">/ ${goal} kcal hedef</div>
+        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">/ ${goal} kcal hedef <button onclick="openKalGoalEditor()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:12px;line-height:1;opacity:.7">✏️</button></div>
       </div>
       <div style="text-align:right">
         <div style="font-size:11px;color:var(--muted)">kalan</div>
@@ -44,9 +44,8 @@ function renderKalori(){
       <div class="kal-macro"><div class="kal-macro-val" style="color:#a78bfa">${tot.fat}g</div><div class="kal-macro-lbl">Yağ</div></div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:12px">
-    <button class="btn bo" style="flex:1;font-size:13px" onclick="openKalGoalEditor()">🎯 Hedef: ${goal} kcal · Değiştir</button>
-    <button class="btn bo" style="padding:0 16px;font-size:19px;flex-shrink:0" onclick="openAiMealModal()" title="AI Öğün Analizi">✨</button>
+  <div style="text-align:center;margin-bottom:12px">
+    <button onclick="openAiMealModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;letter-spacing:.3px">✨ AI Öğün Analizi</button>
   </div>`;
 
   // Öğün bölümleri
@@ -938,7 +937,7 @@ function openAiMealModal(){
     modal.className='mo add-food-modal';
     document.body.appendChild(modal);
   }
-  const savedKey=S.openaiKey||'';
+  const savedKey=S.geminiKey||'';
   modal.innerHTML=`
     <div class="ms">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -946,10 +945,14 @@ function openAiMealModal(){
         <button onclick="document.getElementById('ai-meal-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
       <div style="margin-bottom:10px">
-        <div class="lbl">OpenAI API Anahtarı</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+          <div class="lbl" style="margin:0">Gemini API Anahtarı</div>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">Nasıl alınır? ↗</a>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">aistudio.google.com → Get API Key → Create API Key (ücretsiz)</div>
         <div style="display:flex;gap:6px">
-          <input id="ai-openai-key" type="password" placeholder="sk-..." value="${savedKey}" style="flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;box-sizing:border-box;font-family:monospace"/>
-          <button class="btn bo" style="white-space:nowrap;font-size:12px;padding:0 12px" onclick="saveOpenAiKey()">Kaydet</button>
+          <input id="ai-gemini-key" type="password" placeholder="AIzaSy..." value="${savedKey}" style="flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;box-sizing:border-box;font-family:monospace"/>
+          <button id="ai-key-save-btn" class="btn bo" style="white-space:nowrap;font-size:12px;padding:0 12px" onclick="saveGeminiKey()">Kaydet</button>
         </div>
       </div>
       <div class="lbl">Besinler (her satıra bir tane)</div>
@@ -960,31 +963,30 @@ function openAiMealModal(){
   modal.style.display='flex';
 }
 
-function saveOpenAiKey(){
-  const key=document.getElementById('ai-openai-key')?.value?.trim()||'';
-  S.openaiKey=key;
+function saveGeminiKey(){
+  const key=document.getElementById('ai-gemini-key')?.value?.trim()||'';
+  S.geminiKey=key;
   saveS();
+  const btn=document.getElementById('ai-key-save-btn');
+  if(btn){ btn.textContent='✓ Kaydedildi'; btn.style.color='var(--accent)'; setTimeout(()=>{ btn.textContent='Kaydet'; btn.style.color=''; },1800); }
 }
 
 async function analyzeAiMealQuery(){
-  saveOpenAiKey();
-  const key=S.openaiKey;
-  if(!key){alert('Önce OpenAI API anahtarı girin');return;}
+  saveGeminiKey();
+  const key=S.geminiKey;
+  if(!key){alert('Önce Gemini API anahtarı girin');return;}
   const query=document.getElementById('ai-meal-input')?.value?.trim();
   if(!query){alert('Besin listesi girin');return;}
   const res=document.getElementById('ai-meal-results');
   res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Analiz ediliyor...</div>';
   try{
-    const resp=await fetch('https://api.openai.com/v1/chat/completions',{
+    const prompt='Sen bir beslenme uzmanısın. Aşağıdaki besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA şu JSON formatında yanıt ver, başka hiçbir şey yazma: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.\n\nBesin listesi:\n'+query;
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'gpt-4o-mini',
-        response_format:{type:'json_object'},
-        messages:[
-          {role:'system',content:'Sen bir beslenme uzmanısın. Kullanıcının verdiği besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA şu JSON formatında yanıt ver: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.'},
-          {role:'user',content:query}
-        ]
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{responseMimeType:'application/json'}
       })
     });
     if(!resp.ok){
@@ -992,7 +994,7 @@ async function analyzeAiMealQuery(){
       throw new Error(err?.error?.message||'API hatası: '+resp.status);
     }
     const data=await resp.json();
-    const parsed=JSON.parse(data.choices?.[0]?.message?.content||'{}');
+    const parsed=JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text||'{}');
     if(!parsed.items?.length){
       res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Besin verisi alınamadı.</div>';
       return;
