@@ -605,6 +605,10 @@ function renderAiPasteTab(el){
         <div class="lbl">Yemek Adı</div>
         <input id="ai-name" type="text" placeholder="Yemek adı"/>
       </div>
+      <div style="margin-bottom:8px">
+        <div class="lbl">Miktar (g)</div>
+        <input id="ai-amount" type="number" placeholder="100" min="1" max="9999" value="100"/>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div><div class="lbl">Kalori (kcal)</div><input id="ai-kcal" type="number" placeholder="0"/></div>
         <div><div class="lbl">Protein (g)</div><input id="ai-protein" type="number" placeholder="0"/></div>
@@ -689,21 +693,29 @@ function parseAiPaste(){
 
 function saveAiFood(andAdd){
   const name=document.getElementById('ai-name').value.trim();
+  const amount=parseFloat(document.getElementById('ai-amount').value)||100;
   const kcal=parseFloat(document.getElementById('ai-kcal').value)||0;
   const protein=parseFloat(document.getElementById('ai-protein').value)||0;
   const carb=parseFloat(document.getElementById('ai-carb').value)||0;
   const fat=parseFloat(document.getElementById('ai-fat').value)||0;
   if(!name){alert('Yemek adı girin');return;}
   if(!kcal){alert('Kalori değeri girin');return;}
-  const food={name,amount:100,unit:'g',kcal,protein,carb,fat,addedAt:Date.now()};
+  const ratio=amount/100;
+  const kcal100=Math.round(kcal/ratio);
+  const protein100=Math.round(protein/ratio*10)/10;
+  const carb100=Math.round(carb/ratio*10)/10;
+  const fat100=Math.round(fat/ratio*10)/10;
+  // Save to customFoods first so it appears in library
+  const id='cf_'+Date.now();
+  if(!S.nutrition) S.nutrition={};
+  if(!S.nutrition.customFoods) S.nutrition.customFoods={};
+  S.nutrition.customFoods[id]={name,kcal100,protein100,carb100,fat100};
+  saveS();
   if(andAdd){
-    addFoodToMeal(_addFoodMeal,_addFoodDate,food);
+    // Route through confirm dialog so user can adjust portion
+    const food={name,amount,unit:'g',kcal,protein,carb,fat,addedAt:Date.now()};
+    showFoodConfirm(food, false);
   } else {
-    const id='cf_'+Date.now();
-    if(!S.nutrition) S.nutrition={};
-    if(!S.nutrition.customFoods) S.nutrition.customFoods={};
-    S.nutrition.customFoods[id]={name,kcal100:kcal,protein100:protein,carb100:carb,fat100:fat};
-    saveS();
     alert('✅ Kaydedildi!');
     switchFoodTab('saved');
   }
