@@ -16,6 +16,16 @@ function kalTotals(dateKey){
 const MEAL_NAMES={sabah:'☀️ Sabah',ogle:'🌤 Öğle',aksam:'🌙 Akşam',ara:'🍎 Ara Öğün'};
 const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜNÜ EKLE',ogle:'ÖĞLE ÖĞÜNÜ EKLE',aksam:'AKŞAM ÖĞÜNÜ EKLE',ara:'ARA ÖĞÜN EKLE'};
 
+function getMacroTargets(){
+  const weight=parseFloat(S.profile?.kg)||0;
+  const goal=S.nutrition?.goal||2000;
+  if(!weight) return null;
+  const protein=Math.round(weight*1.8);
+  const fat=Math.round(weight*0.7);
+  const carb=Math.max(0,Math.round((goal-protein*4-fat*9)/4));
+  return {weight,protein,fat,carb};
+}
+
 function renderKalori(){
   if(!S.nutrition) S.nutrition={customFoods:{},dailyLog:{},goal:2000};
   const dk=kalDateKey();
@@ -43,6 +53,32 @@ function renderKalori(){
       <div class="kal-macro"><div class="kal-macro-val" style="color:#fb923c">${tot.carb}g</div><div class="kal-macro-lbl">Karbonhidrat</div></div>
       <div class="kal-macro"><div class="kal-macro-val" style="color:#a78bfa">${tot.fat}g</div><div class="kal-macro-lbl">Yağ</div></div>
     </div>
+    ${(()=>{
+      const t=getMacroTargets();
+      if(!t) return `<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:10px;font-size:11px;color:var(--muted)">Kas koruma hedefleri için <a onclick="document.querySelector('[data-tab=profile]')?.click()" style="color:var(--accent);cursor:pointer;text-decoration:underline">profilde kilo girin</a></div>`;
+      const rows=[
+        {label:'Protein',    val:tot.protein, target:t.protein, color:'#60a5fa'},
+        {label:'Karbonhidrat',val:tot.carb,   target:t.carb,   color:'#fb923c'},
+        {label:'Yağ',        val:tot.fat,     target:t.fat,    color:'#a78bfa'},
+      ];
+      const bars=rows.map(r=>{
+        const pct=Math.min(100,t[r.label==='Protein'?'protein':r.label==='Yağ'?'fat':'carb']>0?Math.round(r.val/r.target*100):0);
+        const met=r.val>=r.target;
+        return `<div style="margin-bottom:7px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;margin-bottom:3px">
+            <span style="color:${r.color};font-weight:600">${r.label}</span>
+            <span style="color:${met?'#4ade80':'var(--muted)'}"><b style="color:${met?'#4ade80':r.color}">${r.val}</b> / ${r.target}g</span>
+          </div>
+          <div style="background:var(--bg);border-radius:4px;height:5px;overflow:hidden">
+            <div style="background:${met?'#4ade80':r.color};height:100%;width:${pct}%;border-radius:4px;transition:width .3s"></div>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:10px">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:.6px;margin-bottom:8px;font-family:var(--fa)">KAS KORUMA HEDEFLERİ · ${t.weight}kg</div>
+        ${bars}
+      </div>`;
+    })()}
   </div>
   <div style="text-align:center;margin-bottom:12px">
     <button onclick="openAiMealModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;letter-spacing:.3px">✨ AI Öğün Analizi</button>
