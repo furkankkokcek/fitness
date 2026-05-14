@@ -698,14 +698,17 @@ function parseAiPaste(){
   const protein=findNum([
     new RegExp('protein\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
     new RegExp('protein\\s*[:\\|\\-]?\\s*'+NUM,'i'),
+    new RegExp(NUM+'\\s*g?\\s*protein','i'),
   ]);
   const carb=findNum([
     new RegExp('(?:karbonhidrat|toplam karbonhidrat|karb|carbohydrates?|kh)\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
     new RegExp('(?:karbonhidrat|karb|carb|kh)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
+    new RegExp(NUM+'\\s*g?\\s*(?:karbonhidrat|karb|carb|kh)','i'),
   ]);
   const fat=findNum([
     new RegExp('(?:ya[gğ]|fat|lipid|toplam ya[gğ])\\s*[:\\|\\-]?\\s*'+NUM+'\\s*g','i'),
     new RegExp('(?:ya[gğ]|fat)\\s*[:\\|\\-]?\\s*'+NUM,'i'),
+    new RegExp(NUM+'\\s*g?\\s*(?:ya[gğ]|fat|lipid)','i'),
   ]);
 
   // Porsiyon miktarı ve birimini metinden çıkar
@@ -964,6 +967,8 @@ function addFoodToMeal(mealKey,dateKey,food){
 
 // ── AI ÖĞÜN ANALİZİ ──
 let _aiMealItems=[];
+let _aiMealActiveTab='text';
+let _aiMealPhotoBase64='';
 
 function openAiMealModal(){
   let modal=document.getElementById('ai-meal-modal');
@@ -974,6 +979,8 @@ function openAiMealModal(){
     document.body.appendChild(modal);
   }
   const savedKey=S.groqKey||'';
+  _aiMealActiveTab='text';
+  _aiMealPhotoBase64='';
   modal.innerHTML=`
     <div class="ms">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -989,12 +996,83 @@ function openAiMealModal(){
         <input id="ai-groq-key" type="password" placeholder="gsk_..." value="${savedKey}" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;box-sizing:border-box;font-family:monospace;letter-spacing:.5px"/>
         <button id="ai-key-save-btn" class="btn bo" style="width:100%;margin-top:6px;font-size:13px" onclick="saveGroqKey()">Kaydet</button>
       </div>
-      <div class="lbl">Besinler (her satıra bir tane)</div>
-      <textarea id="ai-meal-input" rows="6" style="width:100%;resize:vertical;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;box-sizing:border-box;font-family:inherit" placeholder="60 gr çiğ basmati pirinç&#10;20 gr tereyağ&#10;100 gr haşlanmış brokoli&#10;170 gr çiğ tavuk göğsü&#10;200 gr kaymaksız yoğurt"></textarea>
-      <button class="btn bp" style="margin-top:8px" onclick="analyzeAiMealQuery()">🔍 Analiz Et</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;background:var(--bg3);padding:4px;border-radius:10px">
+        <button id="ai-meal-tab-text" onclick="switchAiMealTab('text')" style="border:none;background:var(--bg2);color:var(--text);padding:8px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600">📝 Metin</button>
+        <button id="ai-meal-tab-photo" onclick="switchAiMealTab('photo')" style="border:none;background:transparent;color:var(--muted);padding:8px;border-radius:7px;font-size:13px;cursor:pointer">📷 Foto</button>
+      </div>
+      <div id="ai-meal-tab-content"></div>
       <div id="ai-meal-results"></div>
     </div>`;
   modal.style.display='flex';
+  renderAiMealTabContent();
+}
+
+function switchAiMealTab(tab){
+  _aiMealActiveTab=tab;
+  const tEl=document.getElementById('ai-meal-tab-text');
+  const pEl=document.getElementById('ai-meal-tab-photo');
+  if(tEl){ tEl.style.background=tab==='text'?'var(--bg2)':'transparent'; tEl.style.color=tab==='text'?'var(--text)':'var(--muted)'; tEl.style.fontWeight=tab==='text'?'600':'400'; }
+  if(pEl){ pEl.style.background=tab==='photo'?'var(--bg2)':'transparent'; pEl.style.color=tab==='photo'?'var(--text)':'var(--muted)'; pEl.style.fontWeight=tab==='photo'?'600':'400'; }
+  renderAiMealTabContent();
+}
+
+function renderAiMealTabContent(){
+  const el=document.getElementById('ai-meal-tab-content');
+  if(!el) return;
+  if(_aiMealActiveTab==='text'){
+    el.innerHTML=`
+      <div class="lbl">Besinler (her satıra bir tane)</div>
+      <textarea id="ai-meal-input" rows="6" style="width:100%;resize:vertical;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;box-sizing:border-box;font-family:inherit" placeholder="60 gr çiğ basmati pirinç&#10;20 gr tereyağ&#10;100 gr haşlanmış brokoli&#10;170 gr çiğ tavuk göğsü&#10;200 gr kaymaksız yoğurt"></textarea>
+      <button class="btn bp" style="margin-top:8px" onclick="analyzeAiMealQuery()">🔍 Analiz Et</button>`;
+  } else {
+    if(_aiMealPhotoBase64){
+      el.innerHTML=`
+        <div class="lbl">Tabak Fotoğrafı</div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;margin-bottom:8px">
+          <img src="${_aiMealPhotoBase64}" style="max-width:100%;max-height:240px;border-radius:8px;display:inline-block"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn bp" onclick="analyzeAiMealPhoto()">🔍 Analiz Et</button>
+          <button class="btn bo" onclick="clearAiMealPhoto()">↺ Tekrar Çek</button>
+        </div>`;
+    } else {
+      el.innerHTML=`
+        <div class="lbl">Tabak Fotoğrafı</div>
+        <label for="ai-meal-photo-input" style="display:block;background:var(--bg3);border:2px dashed var(--border);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer">
+          <div style="font-size:34px;margin-bottom:6px">📷</div>
+          <div style="font-size:13px;color:var(--text);font-weight:600">Fotoğraf Çek veya Seç</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Tabaktaki tüm besinleri AI tanır</div>
+        </label>
+        <input type="file" id="ai-meal-photo-input" accept="image/*" capture="environment" style="display:none" onchange="onAiMealPhotoSelect(this)"/>`;
+    }
+  }
+}
+
+function onAiMealPhotoSelect(input){
+  const file=input.files?.[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const maxDim=1024;
+      const ratio=Math.min(1,maxDim/Math.max(img.width,img.height));
+      const w=Math.round(img.width*ratio);
+      const h=Math.round(img.height*ratio);
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      _aiMealPhotoBase64=canvas.toDataURL('image/jpeg',0.85);
+      renderAiMealTabContent();
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearAiMealPhoto(){
+  _aiMealPhotoBase64='';
+  renderAiMealTabContent();
 }
 
 function saveGroqKey(){
@@ -1005,77 +1083,107 @@ function saveGroqKey(){
   if(btn){ btn.textContent='✓ Kaydedildi'; btn.style.color='var(--accent)'; setTimeout(()=>{ btn.textContent='Kaydet'; btn.style.color=''; },1800); }
 }
 
+const AI_MEAL_SYSTEM_PROMPT='Sen bir beslenme uzmanısın. Kullanıcının verdiği besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA geçerli JSON formatında yanıt ver, başka hiçbir şey yazma. Format: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.';
+const AI_MEAL_PHOTO_PROMPT='Bu tabak fotoğrafındaki her besini ayrı ayrı tanı. Her besinin porsiyon miktarını gözle tahmin et (gram cinsinden). YALNIZCA geçerli JSON formatında yanıt ver, başka hiçbir şey yazma. Format: {"items":[{"name":"besin adı","amount":miktar_gram,"unit":"g","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Besin adlarını Türkçe yaz.';
+
+function _renderAiMealResults(items){
+  _aiMealItems=items.map(item=>({
+    name:String(item.name||''),
+    amount:parseFloat(item.amount)||100,
+    unit:String(item.unit||'g'),
+    kcal:Math.round(parseFloat(item.kcal)||0),
+    protein:Math.round((parseFloat(item.protein)||0)*10)/10,
+    carb:Math.round((parseFloat(item.carb)||0)*10)/10,
+    fat:Math.round((parseFloat(item.fat)||0)*10)/10,
+  }));
+  const tot=_aiMealItems.reduce((a,f)=>({kcal:a.kcal+f.kcal,protein:a.protein+f.protein,carb:a.carb+f.carb,fat:a.fat+f.fat}),{kcal:0,protein:0,carb:0,fat:0});
+  let html='<div style="margin-top:12px">';
+  _aiMealItems.forEach(f=>{
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${f.amount}${f.unit} · P:${f.protein}g · K:${f.carb}g · Y:${f.fat}g</div>
+      </div>
+      <div style="font-family:var(--fa);font-size:14px;color:var(--accent);margin-left:10px;white-space:nowrap">${f.kcal} kcal</div>
+    </div>`;
+  });
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--accent);border-radius:8px;margin-top:2px;color:#fff">
+    <div style="font-size:13px;font-weight:700">TOPLAM</div>
+    <div style="font-size:11px">P:${Math.round(tot.protein)}g · K:${Math.round(tot.carb)}g · Y:${Math.round(tot.fat)}g</div>
+    <div style="font-family:var(--fa);font-size:15px;font-weight:700">${Math.round(tot.kcal)} kcal</div>
+  </div>`;
+  html+=`<div style="margin-top:12px">
+    <div class="lbl">Öğün seç</div>
+    <select id="ai-meal-select" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box">
+      <option value="sabah">☀️ Sabah</option>
+      <option value="ogle" selected>🌤 Öğle</option>
+      <option value="aksam">🌙 Akşam</option>
+      <option value="ara">🍎 Ara Öğün</option>
+    </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn bp" onclick="addAiMealItems()">✓ Öğüne Ekle</button>
+      <button class="btn bo" onclick="saveAiMealItems()">💾 Kaydet</button>
+    </div>
+  </div></div>`;
+  document.getElementById('ai-meal-results').innerHTML=html;
+}
+
+async function _callGroqMeal(messages,model){
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.groqKey},
+    body:JSON.stringify({model,response_format:{type:'json_object'},messages})
+  });
+  if(!resp.ok){
+    const err=await resp.json().catch(()=>({}));
+    throw new Error(err?.error?.message||'API hatası: '+resp.status);
+  }
+  const data=await resp.json();
+  const raw=data.choices?.[0]?.message?.content||'{}';
+  return JSON.parse(raw);
+}
+
 async function analyzeAiMealQuery(){
   saveGroqKey();
-  const key=S.groqKey;
-  if(!key){alert('Önce Groq API anahtarı girin');return;}
+  if(!S.groqKey){alert('Önce Groq API anahtarı girin');return;}
   const query=document.getElementById('ai-meal-input')?.value?.trim();
   if(!query){alert('Besin listesi girin');return;}
   const res=document.getElementById('ai-meal-results');
   res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Analiz ediliyor...</div>';
   try{
-    const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        response_format:{type:'json_object'},
-        messages:[
-          {role:'system',content:'Sen bir beslenme uzmanısın. Kullanıcının verdiği besin listesindeki her madde için makro besin değerlerini hesapla. YALNIZCA geçerli JSON formatında yanıt ver, başka hiçbir şey yazma. Format: {"items":[{"name":"besin adı","amount":miktar,"unit":"birim","kcal":kalori,"protein":protein_g,"carb":karbonhidrat_g,"fat":yag_g}]}. Sayıları 1 ondalık basamağa yuvarla. Değerleri belirtilen miktar için hesapla. Besin adlarını Türkçe yaz.'},
-          {role:'user',content:query}
-        ]
-      })
-    });
-    if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      throw new Error(err?.error?.message||'API hatası: '+resp.status);
-    }
-    const data=await resp.json();
-    const raw=data.choices?.[0]?.message?.content||'{}';
-    const parsed=JSON.parse(raw);
+    const parsed=await _callGroqMeal([
+      {role:'system',content:AI_MEAL_SYSTEM_PROMPT},
+      {role:'user',content:query}
+    ],'llama-3.3-70b-versatile');
     if(!parsed.items?.length){
       res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Besin verisi alınamadı.</div>';
       return;
     }
-    _aiMealItems=parsed.items.map(item=>({
-      name:String(item.name||''),
-      amount:parseFloat(item.amount)||100,
-      unit:String(item.unit||'g'),
-      kcal:Math.round(parseFloat(item.kcal)||0),
-      protein:Math.round((parseFloat(item.protein)||0)*10)/10,
-      carb:Math.round((parseFloat(item.carb)||0)*10)/10,
-      fat:Math.round((parseFloat(item.fat)||0)*10)/10,
-    }));
-    const tot=_aiMealItems.reduce((a,f)=>({kcal:a.kcal+f.kcal,protein:a.protein+f.protein,carb:a.carb+f.carb,fat:a.fat+f.fat}),{kcal:0,protein:0,carb:0,fat:0});
-    let html='<div style="margin-top:12px">';
-    _aiMealItems.forEach(f=>{
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:6px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.name}</div>
-          <div style="font-size:11px;color:var(--muted)">${f.amount}${f.unit} · P:${f.protein}g · K:${f.carb}g · Y:${f.fat}g</div>
-        </div>
-        <div style="font-family:var(--fa);font-size:14px;color:var(--accent);margin-left:10px;white-space:nowrap">${f.kcal} kcal</div>
-      </div>`;
-    });
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--accent);border-radius:8px;margin-top:2px;color:#fff">
-      <div style="font-size:13px;font-weight:700">TOPLAM</div>
-      <div style="font-size:11px">P:${Math.round(tot.protein)}g · K:${Math.round(tot.carb)}g · Y:${Math.round(tot.fat)}g</div>
-      <div style="font-family:var(--fa);font-size:15px;font-weight:700">${Math.round(tot.kcal)} kcal</div>
-    </div>`;
-    html+=`<div style="margin-top:12px">
-      <div class="lbl">Öğün seç</div>
-      <select id="ai-meal-select" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box">
-        <option value="sabah">☀️ Sabah</option>
-        <option value="ogle" selected>🌤 Öğle</option>
-        <option value="aksam">🌙 Akşam</option>
-        <option value="ara">🍎 Ara Öğün</option>
-      </select>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn bp" onclick="addAiMealItems()">✓ Öğüne Ekle</button>
-        <button class="btn bo" onclick="saveAiMealItems()">💾 Kaydet</button>
-      </div>
-    </div></div>`;
-    res.innerHTML=html;
+    _renderAiMealResults(parsed.items);
+  }catch(e){
+    res.innerHTML=`<div style="color:var(--danger);font-size:13px;text-align:center;padding:16px;margin-top:10px">Hata oluştu: ${e.message}</div>`;
+  }
+}
+
+async function analyzeAiMealPhoto(){
+  saveGroqKey();
+  if(!S.groqKey){alert('Önce Groq API anahtarı girin');return;}
+  if(!_aiMealPhotoBase64){alert('Önce bir fotoğraf seçin');return;}
+  const res=document.getElementById('ai-meal-results');
+  res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Fotoğraf analiz ediliyor...</div>';
+  try{
+    const parsed=await _callGroqMeal([{
+      role:'user',
+      content:[
+        {type:'text',text:AI_MEAL_PHOTO_PROMPT},
+        {type:'image_url',image_url:{url:_aiMealPhotoBase64}}
+      ]
+    }],'meta-llama/llama-4-scout-17b-16e-instruct');
+    if(!parsed.items?.length){
+      res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Fotoğrafta besin tanınamadı.</div>';
+      return;
+    }
+    _renderAiMealResults(parsed.items);
   }catch(e){
     res.innerHTML=`<div style="color:var(--danger);font-size:13px;text-align:center;padding:16px;margin-top:10px">Hata oluştu: ${e.message}</div>`;
   }
