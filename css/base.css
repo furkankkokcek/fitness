@@ -2,7 +2,7 @@
   --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;
   --text:#f0f0f0;--muted:#666;--accent:#e8ff47;
   --success:#4ade80;--danger:#f87171;--warn:#fbbf24;
-  --radius:14px;--fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;
+  --radius:6px;--fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;
   --fa:'Anton SC',sans-serif;
 }
 [data-theme="light"]{

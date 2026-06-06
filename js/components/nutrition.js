@@ -13,7 +13,7 @@ function kalTotals(dateKey){
   return {kcal:Math.round(kcal),protein:Math.round(protein),carb:Math.round(carb),fat:Math.round(fat)};
 }
 
-const MEAL_NAMES={sabah:'☀️ Sabah',ogle:'🌤 Öğle',aksam:'🌙 Akşam',ara:'🍎 Ara Öğün'};
+const MEAL_NAMES={sabah:'Sabah',ogle:'Öğle',aksam:'Akşam',ara:'Ara Öğün'};
 const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜNÜ EKLE',ogle:'ÖĞLE ÖĞÜNÜ EKLE',aksam:'AKŞAM ÖĞÜNÜ EKLE',ara:'ARA ÖĞÜN EKLE'};
 
 function getMacroTargets(){
@@ -36,11 +36,11 @@ function renderKalori(){
   const fillColor=pct>100?'var(--danger)':pct>80?'var(--warn)':'var(--accent)';
 
   let html=`
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div>
         <div style="font-family:var(--fa);font-size:32px;color:${fillColor};letter-spacing:1px;line-height:1">${tot.kcal}</div>
-        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">/ ${goal} kcal hedef <button onclick="openKalGoalEditor()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:12px;line-height:1;opacity:.7">✏️</button></div>
+        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">/ ${goal} kcal hedef <button onclick="openKalGoalEditor()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:12px;line-height:1;opacity:.7">düzenle</button></div>
       </div>
       <div style="text-align:right">
         <div style="font-size:11px;color:var(--muted)">kalan</div>
@@ -80,8 +80,8 @@ function renderKalori(){
       </div>`;
     })()}
   </div>
-  <div style="text-align:center;margin-bottom:12px">
-    <button onclick="openAiMealModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;letter-spacing:.3px">✨ AI Öğün Analizi</button>
+  <div style="margin-bottom:12px">
+    <button onclick="openAiMealModal()" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fb)">AI Öğün Analizi</button>
   </div>`;
 
   // Öğün bölümleri
@@ -121,7 +121,7 @@ function renderKalori(){
     logKeys.forEach(k=>{
       const t=kalTotals(k);
       const [y,m,d]=k.split('-');
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" onclick="openPastDayDetail('${k}')">
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer" onclick="openPastDayDetail('${k}')">
         <span style="font-size:13px;font-weight:600;color:var(--text)">${d}/${m}/${y}</span>
         <span style="font-size:11px;color:var(--muted)">P:${t.protein}g K:${t.carb}g Y:${t.fat}g</span>
         <div style="display:flex;align-items:center;gap:6px">
@@ -280,8 +280,8 @@ function renderTarifTab(el){
         <div style="font-size:11px;color:var(--muted);margin-top:4px" id="tarif-prev-macros"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn bo" onclick="saveTarifFood(false)">💾 Kaydet</button>
-        <button class="btn bp" onclick="saveTarifFood(true)">✅ Kaydet ve Ekle</button>
+        <button class="btn bo" onclick="saveTarifFood(false)">Kaydet</button>
+        <button class="btn bp" onclick="saveTarifFood(true)">Kaydet ve Ekle</button>
       </div>
     </div>`;
 }
@@ -340,7 +340,7 @@ function saveTarifFood(andAdd=false){
     kcal100:kcal,protein100:protein,carb100:carb,fat100:fat,baseLabel:'1 porsiyon'};
   saveS();
   if(andAdd) addFoodToMeal(_addFoodMeal,_addFoodDate,f);
-  else { alert('✅ Tarif kaydedildi!'); switchFoodTab('saved'); }
+  else { alert('Tarif kaydedildi!'); switchFoodTab('saved'); }
 }
 
 
@@ -362,7 +362,7 @@ function renderRecentTab(el){
   el.innerHTML=window._recentFoods.map((f,i)=>`
     <div class="search-result-item" onclick="selectRecentFood(${i})">
       <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
-      <div class="search-result-macros">🔥 ${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+      <div class="search-result-macros">${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
     </div>`).join('');
 }
 function selectRecentFood(i){ showFoodConfirm({...window._recentFoods[i]}, false); }
@@ -408,11 +408,11 @@ async function doFoodSearch(){
   // Lokal sonuçlar HTML
   let localHTML='';
   if(savedMatches.length){
-    localHTML+=`<div class="search-section-hdr">💾 Kayıtlı</div>`;
+    localHTML+=`<div class="search-section-hdr">Kayıtlı</div>`;
     localHTML+=savedMatches.map(([id,f])=>`
       <div class="search-result-item" onclick="selectSavedFoodForSearch('${id}')">
         <div class="search-result-name">${f.name}</div>
-        <div class="search-result-macros">🔥 ${f.kcal100} kcal &nbsp;·&nbsp; P:${f.protein100}g &nbsp;·&nbsp; K:${f.carb100}g &nbsp;·&nbsp; Y:${f.fat100}g <span style="color:var(--muted2)">/100g</span></div>
+        <div class="search-result-macros">${f.kcal100} kcal &nbsp;·&nbsp; P:${f.protein100}g &nbsp;·&nbsp; K:${f.carb100}g &nbsp;·&nbsp; Y:${f.fat100}g <span style="color:var(--muted2)">/100g</span></div>
       </div>`).join('');
   }
   if(recentMatches.length){
@@ -420,7 +420,7 @@ async function doFoodSearch(){
     localHTML+=recentMatches.map((f,i)=>`
       <div class="search-result-item" onclick="selectLocalRecentForSearch(${i})">
         <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
-        <div class="search-result-macros">🔥 ${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+        <div class="search-result-macros">${Math.round(f.kcal)} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
       </div>`).join('');
   }
 
@@ -474,14 +474,14 @@ async function doFoodSearch(){
     apiEl.innerHTML=_searchResults.map((f,i)=>`
       <div class="search-result-item" onclick="selectSearchResult(${i})">
         <div class="search-result-name">${f.name} <span style="font-weight:400;color:var(--muted)">${f.amount}${f.unit}</span></div>
-        <div class="search-result-macros">🔥 ${f.kcal} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
+        <div class="search-result-macros">${f.kcal} kcal &nbsp;·&nbsp; P:${f.protein}g &nbsp;·&nbsp; K:${f.carb}g &nbsp;·&nbsp; Y:${f.fat}g</div>
       </div>`).join('');
     _searchResultsHTML=res.innerHTML;
   }catch(e){
     const apiEl=document.getElementById('api-search-section');
     if(apiEl) apiEl.innerHTML=`<div style="text-align:center;padding:12px 0">
       <div style="color:var(--danger);font-size:13px;margin-bottom:8px">⚠️ ${e.message==='Tüm sunucular meşgul'?'Sunucu şu an meşgul (503). Birkaç saniye bekleyip tekrar deneyin.':'Bağlantı hatası. İnternet bağlantınızı kontrol edin.'}</div>
-      <button class="btn bo" style="font-size:12px" onclick="doFoodSearch()">🔄 Tekrar Dene</button>
+      <button class="btn bo" style="font-size:12px" onclick="doFoodSearch()">Tekrar Dene</button>
     </div>`;
     _searchResultsHTML=res.innerHTML;
   }
@@ -512,8 +512,8 @@ function renderSavedTab(el){
             <div style="font-size:13px;font-weight:600">${f.name}</div>
             <div style="font-size:11px;color:var(--muted)">${f.baseLabel||'100'+(f.unit||'g')} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g</div>
           </div>
-          <button style="background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:4px 6px" onclick="openEditSavedFood('${id}')">✏️</button>
-          <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:4px 6px" onclick="deleteSavedFood('${id}')">🗑</button>
+          <button style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:4px 6px;font-family:var(--fb);font-weight:600" onclick="openEditSavedFood('${id}')">düzenle</button>
+          <button style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:4px 6px;font-family:var(--fb);font-weight:600" onclick="deleteSavedFood('${id}')">sil</button>
         </div>`).join('')}`;
 }
 
@@ -537,7 +537,7 @@ function openEditSavedFood(id){
           <select id="ef-unit"><option value="g" ${f.unit==='g'?'selected':''}>gram (g)</option><option value="ml" ${f.unit==='ml'?'selected':''}>mililitre (ml)</option><option value="adet" ${f.unit==='adet'?'selected':''}>adet</option><option value="porsiyon" ${f.unit==='porsiyon'?'selected':''}>porsiyon</option></select></div>
         <div><div class="lbl">Varsayılan Miktar</div><input id="ef-amount" type="number" value="${f.amount}"/></div>
       </div>
-      <button class="btn bp" style="margin-top:4px" onclick="saveEditedFood('${id}')">💾 Güncelle</button>
+      <button class="btn bp" style="margin-top:4px" onclick="saveEditedFood('${id}')">Güncelle</button>
       <button class="btn bo" style="margin-top:0" onclick="switchFoodTab('saved')">İptal</button>
     </div>`;
 }
@@ -590,8 +590,8 @@ function openManualFoodForm(){
         <div><div class="lbl">Miktar</div><input id="mf-amount" type="number" placeholder="örn: 200"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-        <button class="btn bp" onclick="saveManualFood(false)">💾 Kaydet</button>
-        <button class="btn bp" onclick="saveManualFood(true)">✅ Kaydet ve Ekle</button>
+        <button class="btn bp" onclick="saveManualFood(false)">Kaydet</button>
+        <button class="btn bp" onclick="saveManualFood(true)">Kaydet ve Ekle</button>
       </div>
       <button class="btn bo" style="margin-top:8px" onclick="switchFoodTab('saved')">İptal</button>
     </div>`;
@@ -615,15 +615,14 @@ function saveManualFood(andAdd=false){
   S.nutrition.customFoods[id]=food;
   saveS();
   if(andAdd) showFoodConfirm(food, true);
-  else { alert('✅ Besin kaydedildi!'); switchFoodTab('saved'); }
+  else { alert('Besin kaydedildi!'); switchFoodTab('saved'); }
 }
 
 // ── FOTOĞRAF SEKMESİ ──
 function renderPhotoTab(el){
   el.innerHTML=`
     <div class="photo-upload-area" onclick="document.getElementById('food-photo-input').click()">
-      <div style="font-size:40px;margin-bottom:8px">📷</div>
-      <div style="font-size:14px;font-weight:600">Besin fotoğrafı yükle</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Besin fotoğrafı yükle</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Etiket, tabak veya ürün fotoğrafı</div>
     </div>
     <input type="file" id="food-photo-input" accept="image/*" style="display:none" onchange="analyzePhoto(this)"/>
@@ -657,8 +656,8 @@ function renderAiPasteTab(el){
         <div><div class="lbl">Yağ (g)</div><input id="ai-fat" type="number" placeholder="0"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button class="btn bo" onclick="saveAiFood(false)">💾 Kaydet</button>
-        <button class="btn bp" onclick="saveAiFood(true)">✅ Kaydet ve Ekle</button>
+        <button class="btn bo" onclick="saveAiFood(false)">Kaydet</button>
+        <button class="btn bp" onclick="saveAiFood(true)">Kaydet ve Ekle</button>
       </div>
     </div>
     <div id="ai-parse-empty" style="display:none;margin-top:10px;color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px">
@@ -781,7 +780,7 @@ function saveAiFood(andAdd){
     const food={name,amount,unit,kcal,protein,carb,fat,kcal100,protein100,carb100,fat100,baseLabel};
     showFoodConfirm(food,false);
   } else {
-    alert('✅ Kaydedildi!');
+    alert('Kaydedildi!');
     switchFoodTab('saved');
   }
 }
@@ -860,7 +859,7 @@ async function analyzePhoto(input){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn bp" onclick="addPendingPhotoFood()">✓ Ekle</button>
-        <button class="btn bp" onclick="savePendingAndAdd()">✅ Kaydet ve Ekle</button>
+        <button class="btn bp" onclick="savePendingAndAdd()">Kaydet ve Ekle</button>
       </div>`;
 
   }catch(e){
@@ -909,7 +908,7 @@ function showFoodConfirm(food, fromManual){
   el.innerHTML=`
     <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:12px">
       <div style="font-size:14px;font-weight:600;margin-bottom:4px">${food.name}</div>
-      <div style="font-size:12px;color:var(--muted)">🔥 ${Math.round(food.kcal)} kcal · P:${food.protein}g · K:${food.carb}g · Y:${food.fat}g (${food.amount}${food.unit})</div>
+      <div style="font-size:12px;color:var(--muted)">${Math.round(food.kcal)} kcal · P:${food.protein}g · K:${food.carb}g · Y:${food.fat}g (${food.amount}${food.unit})</div>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:6px">
       <div>
@@ -984,7 +983,7 @@ function openAiMealModal(){
   modal.innerHTML=`
     <div class="ms">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-family:var(--fa);font-size:16px;letter-spacing:.5px">✨ AI ÖĞÜN ANALİZİ</div>
+        <div style="font-family:var(--fa);font-size:16px;letter-spacing:.5px">AI ÖĞÜN ANALİZİ</div>
         <button onclick="document.getElementById('ai-meal-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
       <div style="margin-bottom:12px">
@@ -997,8 +996,8 @@ function openAiMealModal(){
         <button id="ai-key-save-btn" class="btn bo" style="width:100%;margin-top:6px;font-size:13px" onclick="saveGroqKey()">Kaydet</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;background:var(--bg3);padding:4px;border-radius:10px">
-        <button id="ai-meal-tab-text" onclick="switchAiMealTab('text')" style="border:none;background:var(--bg2);color:var(--text);padding:8px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600">📝 Metin</button>
-        <button id="ai-meal-tab-photo" onclick="switchAiMealTab('photo')" style="border:none;background:transparent;color:var(--muted);padding:8px;border-radius:7px;font-size:13px;cursor:pointer">📷 Foto</button>
+        <button id="ai-meal-tab-text" onclick="switchAiMealTab('text')" style="border:none;background:var(--bg2);color:var(--text);padding:8px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600">Metin</button>
+        <button id="ai-meal-tab-photo" onclick="switchAiMealTab('photo')" style="border:none;background:transparent;color:var(--muted);padding:8px;border-radius:7px;font-size:13px;cursor:pointer">Foto</button>
       </div>
       <div id="ai-meal-tab-content"></div>
       <div id="ai-meal-results"></div>
@@ -1039,7 +1038,6 @@ function renderAiMealTabContent(){
       el.innerHTML=`
         <div class="lbl">Tabak Fotoğrafı</div>
         <label for="ai-meal-photo-input" style="display:block;background:var(--bg3);border:2px dashed var(--border);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer">
-          <div style="font-size:34px;margin-bottom:6px">📷</div>
           <div style="font-size:13px;color:var(--text);font-weight:600">Fotoğraf Çek veya Seç</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">Tabaktaki tüm besinleri AI tanır</div>
         </label>
@@ -1115,14 +1113,14 @@ function _renderAiMealResults(items){
   html+=`<div style="margin-top:12px">
     <div class="lbl">Öğün seç</div>
     <select id="ai-meal-select" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;box-sizing:border-box">
-      <option value="sabah">☀️ Sabah</option>
-      <option value="ogle" selected>🌤 Öğle</option>
-      <option value="aksam">🌙 Akşam</option>
-      <option value="ara">🍎 Ara Öğün</option>
+      <option value="sabah">Sabah</option>
+      <option value="ogle" selected>Öğle</option>
+      <option value="aksam">Akşam</option>
+      <option value="ara">Ara Öğün</option>
     </select>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button class="btn bp" onclick="addAiMealItems()">✓ Öğüne Ekle</button>
-      <button class="btn bo" onclick="saveAiMealItems()">💾 Kaydet</button>
+      <button class="btn bo" onclick="saveAiMealItems()">Kaydet</button>
     </div>
   </div></div>`;
   document.getElementById('ai-meal-results').innerHTML=html;
@@ -1219,6 +1217,6 @@ function saveAiMealItems(){
     };
   });
   saveS();
-  alert('✅ '+_aiMealItems.length+' besin kayıtlara eklendi!');
+  alert(''+_aiMealItems.length+' besin kayıtlara eklendi!');
   document.getElementById('ai-meal-modal').style.display='none';
 }

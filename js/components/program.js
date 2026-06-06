@@ -81,22 +81,21 @@ function showDayCompleteDialog(w, d){
     const mm = String(startTime.getMinutes()).padStart(2,'0');
     const dur = workoutDuration(w,d);
     const sc = S.streak?.count || 0;
-    const streakTxt = sc >= 1 ? `&nbsp;·&nbsp; 🔥 <b style="color:var(--accent)">${sc} antrenman serisi</b>` : '';
-    timeInfo = `<div style="margin:10px 0 4px;font-size:13px;color:var(--muted)">⏰ <b style="color:var(--text)">${hh}:${mm}</b> başladı &nbsp;·&nbsp; ⏱ <b style="color:var(--accent)">${dur||'—'}</b>${streakTxt}</div>`;
+    const streakTxt = sc >= 1 ? `&nbsp;·&nbsp; <b style="color:var(--accent)">${sc} antrenman serisi</b>` : '';
+    timeInfo = `<div style="margin:10px 0 4px;font-size:13px;color:var(--muted)"><b style="color:var(--text)">${hh}:${mm}</b> başladı &nbsp;·&nbsp; <b style="color:var(--accent)">${dur||'—'}</b>${streakTxt}</div>`;
   }
 
   const modal = document.createElement('div');
   modal.id = 'day-complete-modal';
   modal.className = 'mo open';
   modal.innerHTML = `
-    <div class="ms" style="text-align:center">
-      <div style="font-size:48px;margin-bottom:8px">🏆</div>
+    <div class="ms">
       <div class="mt2">GÜNÜ TAMAMLADIN!</div>
       <div class="msub">Harika iş! Tüm egzersizleri bitirdin.</div>
       ${timeInfo}
       <div class="mbtns" style="margin-top:14px">
-        <button class="btn bp" onclick="exportData();document.getElementById('day-complete-modal').remove()">💾 Yedek Al</button>
-        <button class="btn bo" onclick="document.getElementById('day-complete-modal').remove()">Hayır, Geç</button>
+        <button class="btn bp" onclick="exportData();document.getElementById('day-complete-modal').remove()">Yedek Al</button>
+        <button class="btn bo" onclick="document.getElementById('day-complete-modal').remove()">Geç</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -212,7 +211,7 @@ function renderProgram(){
     const tab = document.getElementById('dtab-'+di);
     if(!tab) return;
     const dayDone = w<12 && DAYS[di].every(id=> S.weekData['w'+w]?.['d'+di]?.[id] !== undefined);
-    tab.innerHTML = dayDone ? `✅ ${dayNames[di]}` : dayNames[di];
+    tab.innerHTML = dayNames[di];
     tab.style.color = dayDone ? 'var(--success)' : '';
     // weekData'da tamamlanmış ama completedSessions'ta yoksa ekle
     if(dayDone){
@@ -234,11 +233,11 @@ function renderProgram(){
      document.querySelector('.sr').style.display = 'none';
      
      let html = `
-     <div style="text-align:center; padding:20px; background:var(--bg2); border-radius:var(--radius); border:1px solid var(--accent); margin-bottom:20px;">
-       <h1 style="font-family:var(--fa); color:var(--accent); font-size:32px; letter-spacing:1px; margin-bottom:10px;">TEBRİKLER! 💪</h1>
+     <div style="text-align:left; padding:20px; background:var(--bg2); border-radius:var(--radius); border:1px solid var(--accent); margin-bottom:20px;">
+       <h1 style="font-family:var(--fa); color:var(--accent); font-size:32px; letter-spacing:1px; margin-bottom:10px;">TEBRİKLER!</h1>
        <p style="font-family:var(--fb); line-height:1.6; font-size:15px; color:var(--text);">
          12 döngüyü tamamladın ve dinlenme haftasına ulaştın.<br>
-         Bu hafta yalnızca 2 gün, hafif antrenmanlar yapacaksın ve bol bol dinleneceksin. 😴<br><br>
+         Bu hafta yalnızca 2 gün, hafif antrenmanlar yapacaksın ve bol bol dinleneceksin.<br><br>
          <small style="color:var(--muted)">Hafta 12'de yapabildiğin en son ağırlık ve tekrarları bir kenara not etmeyi unutma.</small>
        </p>
      </div>`;
@@ -264,7 +263,7 @@ function renderProgram(){
          }
          
          html += `
-         <div class="xc" style="background:var(--bg3); padding:15px; border-radius:var(--radius); margin-bottom:10px; border-left:4px solid var(--accent)">
+         <div class="xc" style="background:var(--bg3); padding:15px; border-radius:var(--radius); margin-bottom:10px; border:1px solid var(--border)">
            <div class="xname">${name}</div>
            <div style="color:var(--muted); font-size:14px; font-weight:500;">
              3 Set × 5 Tekrar <span style="margin:0 8px; color:var(--border);">|</span> <span style="color:var(--accent); font-weight:600;">Hedef: ${weightText}</span>
@@ -331,11 +330,11 @@ function renderProgram(){
       startTxt=`${String(st.getHours()).padStart(2,'0')}:${String(st.getMinutes()).padStart(2,'0')}`;
     }
     const metaItems=[
-      startTxt?`⏰ ${startTxt}`:'',
-      dur?`⏱ ${dur}`:'',
-      sc>=1?`🔥 ${sc} seri`:''
+      startTxt?`${startTxt}`:'',
+      dur?`${dur}`:'',
+      sc>=1?`${sc} seri`:''
     ].filter(Boolean).join(' &nbsp;·&nbsp; ');
-    html+=`<div class="done-banner"><div style="font-family:var(--fa);font-size:30px;color:var(--success)">GÜN TAMAM! 🏆</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div>${metaItems?`<div style="font-size:12px;color:var(--accent);margin-top:8px;font-weight:600">${metaItems}</div>`:''}</div>`;
+    html+=`<div class="done-banner"><div style="font-family:var(--fd);font-size:36px;color:var(--success);line-height:1">GÜN TAMAM</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Harika antrenman!</div>${metaItems?`<div style="font-size:12px;color:var(--accent);margin-top:8px;font-weight:600">${metaItems}</div>`:''}</div>`;
   }
 
   exs.forEach((ex, exIdx)=>{
@@ -382,8 +381,8 @@ function renderProgram(){
         if(exIdx===0){ sets=[{mult:0.60,label:'Isınma 1'},{mult:0.70,label:'Isınma 2'},{mult:0.85,label:'Isınma 3'}]; } 
         else if(exIdx===1||exIdx===2){ sets=[{mult:0.60,label:'Isınma 1'},{mult:0.85,label:'Isınma 2'}]; }
         if(sets.length){
-          warmupHtml=`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Isınma Setleri</div>
+          warmupHtml=`<div style="margin-top:10px;padding:10px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:8px">Isınma Setleri</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               ${sets.map(s=>{
                 const wkg=mround25(kg*s.mult);
@@ -391,7 +390,7 @@ function renderProgram(){
                 if(ex.id==='g1_rdl') altLoading=` (${mround25((wkg-20)/2)} kg)`;
                 else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp') altLoading=` (${mround25(wkg/2)} kg)`;
                 else if(ex.id==='g3_br') altLoading=` (${mround25((wkg-10)/2)} kg)`;
-                return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
+                return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 8px;text-align:center">
                   <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} kg</div>
                   <div style="font-size:12px;color:var(--muted);font-weight:400"">${altLoading}</div>
                 </div>`;
@@ -448,11 +447,11 @@ function renderProgram(){
 
     html+=`
       <div class="xc${done?' done':''}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;gap:8px">
           <div class="xname">${name}</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
             <span class="badge ${bcls}">${badge}</span>
-            ${isSwapped?`<span class="badge bswap">DEGISTIRILDI</span>`:''}
+            ${isSwapped?`<span class="badge bswap">DEĞİŞTİRİLDİ</span>`:''}
           </div>
         </div>
         ${isSwapped?`<div class="xorig">↳ Yerine: ${origName}</div>`:''}
@@ -466,10 +465,10 @@ function renderProgram(){
         </div>
         <div class="xact">
           <button type="button" class="xact-btn" onclick="toggleExpl('${ex.id}',this)">
-            <span id="expl-arrow-${ex.id}">▸</span> Açıklama
+            <span id="expl-arrow-${ex.id}">+</span> Açıklama
           </button>
           <button type="button" class="xact-btn${isSwapped?' swapped':''}" onclick="openSwapModal('${ex.id}',${w},${d})">
-            🔄 ${isSwapped?'Değiştirildi':'Değiştir'}
+            ${isSwapped?'Değiştirildi':'Değiştir'}
           </button>
         </div>
         <div id="expl-content-${ex.id}" style="display:none;margin-top:8px;margin-bottom:8px">

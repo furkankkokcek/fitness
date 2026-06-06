@@ -119,7 +119,7 @@ function toggleTimer(){
       if(tRem<=0){
         clearInterval(tInt);tRun=false;
         document.getElementById('t-btn').textContent='BAŞLAT';
-        document.getElementById('t-status').textContent='SÜRE BİTTİ! 💪';
+        document.getElementById('t-status').textContent='SÜRE BİTTİ!';
         
         // Vibrasyon
         if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);
@@ -224,7 +224,7 @@ function togglePlank(){
     const wasSec=plankSec;
     plankPhase='idle';
     if(wasSec>0){
-      document.getElementById('plank-status').textContent='TAMAMLANDI! 💪';
+      document.getElementById('plank-status').textContent='TAMAMLANDI!';
       document.getElementById('plank-btn').textContent='TEKRAR';
       if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
       playAlarmSound();
