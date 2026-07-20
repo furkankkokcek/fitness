@@ -61,9 +61,11 @@ function mround25(v){return Math.round(v / 2.5) * 2.5;}
 const LBS_PER_KG = 2.20462;
 // Bir hareketin birimi; kayıtlı değeri yoksa varsayılan 'kg' (geriye dönük uyumluluk)
 function exUnit(exId){ return (S.maxes && S.maxes[exId] && S.maxes[exId].unit) || 'kg'; }
-// Yuvarlama adımı: kg → 2.5, lbs → 5 (plaka mantığı)
-function wStep(unit){ return unit==='lbs' ? 5 : 2.5; }
-function wRound(v, unit){ const s=wStep(unit); return Math.round(v/s)*s; }
+// Yuvarlama: kg → 2.5 adım (plaka mantığı); lbs → yuvarlama yok (yalnızca ondalık temizliği)
+function wRound(v, unit){
+  if(unit==='lbs') return Math.round(v*100)/100;
+  return Math.round(v/2.5)*2.5;
+}
 // Hacim/tonaj hesapları için ortak birime (kg) çevir
 function toKg(v, unit){ return unit==='lbs' ? v/LBS_PER_KG : v; }
 // Bar ağırlığı (tek taraf plaka hesabı için)
