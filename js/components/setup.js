@@ -15,7 +15,9 @@ function buildSetup(){
         ${weightExs.map(ex=>{
           const sv=S.maxes[ex.id];
           const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
-          const startKg=sv?.kg ? `${sv.kg} kg` : '—';
+          const u=sv?.unit||'kg';
+          const startKg=sv?.kg ? `${sv.kg} ${u}` : '—';
+          const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
           return `<div class="ec">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <div class="en" style="margin:0">${ex.name}</div>
@@ -31,9 +33,14 @@ function buildSetup(){
             <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
               style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
               value="${sv?.customName||''}"/>
+            <div class="lbl" style="margin-bottom:5px">Birim</div>
+            <div id="unit-${ex.id}" data-unit="${u}" style="display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;margin-bottom:10px">
+              <button type="button" data-unit="kg" onclick="setExUnit('${ex.id}','kg')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='kg'?'var(--accent)':'transparent'};color:${u==='kg'?'#000':'var(--muted)'}">kg</button>
+              <button type="button" data-unit="lbs" onclick="setExUnit('${ex.id}','lbs')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='lbs'?'var(--accent)':'transparent'};color:${u==='lbs'?'#000':'var(--muted)'}">lbs</button>
+            </div>
             <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı</div>
             <div class="g2" style="margin-bottom:6px">
-              <div><div class="lbl">Ağırlık (kg)</div>
+              <div><div class="lbl" id="rmkglbl-${ex.id}">Ağırlık (${u})</div>
                 <input type="number" id="rmkg-${ex.id}" class="no-spin" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
               <div><div class="lbl">Tekrar sayısı</div>
@@ -44,10 +51,10 @@ function buildSetup(){
               <span style="color:var(--muted)">Başlangıç ağırlığı</span>
               <span style="font-size:16px;font-weight:700;color:var(--accent)" id="calcval-${ex.id}">${startKg}</span>
             </div>
-            <div><div class="lbl">Haftalık artış (kg)</div>
+            <div><div class="lbl" id="inclbl-${ex.id}">Haftalık artış (${u})</div>
               <div style="display:flex;gap:8px;align-items:center">
                 <button class="btn bo" type="button" onclick="decrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">−</button>
-                <input type="number" id="inc-${ex.id}" class="no-spin" placeholder="ör. 2.5" min="0" step="0.5" value="${(typeof sv!=='undefined' && typeof sv.inc!=='undefined')?sv.inc:2.5}" style="text-align:center;flex:1"/>
+                <input type="number" id="inc-${ex.id}" class="no-spin" placeholder="ör. 2.5" min="0" step="0.5" value="${defInc}" style="text-align:center;flex:1"/>
                 <button class="btn bp" type="button" onclick="incrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">+</button>
               </div>
             </div>
@@ -143,15 +150,42 @@ function closeGifModal(){
   document.getElementById('gif-img').src='';
 }
 
+function curUnit(exId){
+  return document.getElementById('unit-'+exId)?.dataset.unit || S.maxes[exId]?.unit || 'kg';
+}
+
+function setExUnit(exId, unit){
+  const seg=document.getElementById('unit-'+exId);
+  if(seg){
+    seg.dataset.unit=unit;
+    seg.querySelectorAll('button').forEach(b=>{
+      const on=b.dataset.unit===unit;
+      b.style.background=on?'var(--accent)':'transparent';
+      b.style.color=on?'#000':'var(--muted)';
+    });
+  }
+  const rl=document.getElementById('rmkglbl-'+exId); if(rl) rl.textContent='Ağırlık ('+unit+')';
+  const il=document.getElementById('inclbl-'+exId); if(il) il.textContent='Haftalık artış ('+unit+')';
+  // Kullanıcı özel değer girmediyse artış varsayılanını birime göre güncelle (kg:2.5 ↔ lbs:5)
+  const incEl=document.getElementById('inc-'+exId);
+  if(incEl){
+    const cur=parseFloat(incEl.value);
+    if(!incEl.value || cur===2.5 || cur===5){ incEl.value = unit==='lbs'?5:2.5; }
+  }
+  const ex=EX[exId];
+  if(ex) calcStart(exId, ex.rmMult);
+}
+
 function calcStart(exId, mult){
-  const kg=parseFloat(document.getElementById('rmkg-'+exId)?.value)||0;
+  const unit=curUnit(exId);
+  const wt=parseFloat(document.getElementById('rmkg-'+exId)?.value)||0;
   const reps=parseInt(document.getElementById('rmrep-'+exId)?.value)||0;
   const calcEl=document.getElementById('calc-'+exId);
   const valEl=document.getElementById('calcval-'+exId);
-  if(kg>0&&reps>0){
-    const orm=kg+(kg*reps*0.0333);
-    const start = mround25(orm * mult);
-    if(valEl) valEl.textContent=start+' kg';
+  if(wt>0&&reps>0){
+    const orm=wt+(wt*reps*0.0333);
+    const start = wRound(orm * mult, unit);
+    if(valEl) valEl.textContent=start+' '+unit;
     if(calcEl) calcEl.style.display='flex';
   } else {
     if(calcEl) calcEl.style.display='none';
@@ -193,9 +227,10 @@ function saveAndStart(){
     const altIdx=altVal==='custom'?'custom':parseInt(altVal);
     const customName=customEl?.value.trim()||'';
     if(isNaN(rmKg)||rmKg<=0||rmReps<=0){missing=true;return;}
+    const unit=curUnit(ex.id);
     const orm=rmKg+(rmKg*rmReps*0.0333);
-    const kg = mround25(orm * ex.rmMult);
-    S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps};
+    const kg = wRound(orm * ex.rmMult, unit);
+    S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps, unit};
   });
   if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
   

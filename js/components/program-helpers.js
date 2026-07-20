@@ -31,7 +31,7 @@ function showPRToast(exId){
   const ex=EX[exId];
   const name=normalizeUppercaseText(getDisplayName(ex));
   const pr=S.prs[exId];
-  const val=ex.hasWeight ? `${pr?.kg} kg` : (ex.id==='g3_pl'||ex.name==='Plank') ? `${pr?.reps} sn` : `${pr?.reps} tekrar`;
+  const val=ex.hasWeight ? `${pr?.kg} ${exUnit(exId)}` : (ex.id==='g3_pl'||ex.name==='Plank') ? `${pr?.reps} sn` : `${pr?.reps} tekrar`;
   let toast=document.getElementById('pr-toast');
   if(!toast){ toast=document.createElement('div'); toast.id='pr-toast'; document.body.appendChild(toast); }
   toast.innerHTML=`🏆 KİŞİSEL REKOR! ${name} — ${val}`;
@@ -98,7 +98,7 @@ function showWeeklySummary(w){
       if(!val) return;
       let reps=0;
       for(let i=1;i<=ex.sets;i++) reps+=parseInt(val['s'+i]||0);
-      dayVol+=Math.round(kg*reps);
+      dayVol+=Math.round(toKg(kg, exUnit(id))*reps);
     });
     totalVol+=dayVol;
     daysHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
@@ -110,7 +110,7 @@ function showWeeklySummary(w){
 
   // PR'lar
   Object.entries(S.prs||{}).forEach(([id,pr])=>{
-    if(pr.week===w) prList.push(`🏆 ${normalizeUppercaseText(getDisplayName(EX[id]))} — ${pr.kg} kg`);
+    if(pr.week===w) prList.push(`🏆 ${normalizeUppercaseText(getDisplayName(EX[id]))} — ${pr.kg} ${exUnit(id)}`);
   });
 
   const modal=document.createElement('div');
@@ -158,7 +158,7 @@ function openWeeklyReport(){
       const val=data[id]; if(!val) return;
       let reps=0;
       for(let i=1;i<=ex.sets;i++) reps+=parseInt(val['s'+i]||0);
-      dayVol+=Math.round(kg*reps);
+      dayVol+=Math.round(toKg(kg, exUnit(id))*reps);
     });
     totalVol+=dayVol;
     const sess=S.workoutSessions?.[workoutKey(w,d)];
@@ -172,7 +172,7 @@ function openWeeklyReport(){
     if(pr.week!==w) return;
     const ex=EX[id]; if(!ex) return;
     const name=normalizeUppercaseText(getDisplayName(ex));
-    const val=ex.hasWeight?`${pr.kg} kg`:
+    const val=ex.hasWeight?`${pr.kg} ${exUnit(id)}`:
               (ex.repType==='max'?`${pr.reps} tekrar`:`${pr.reps} tekrar`);
     prs.push({name,val});
   });
