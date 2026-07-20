@@ -258,9 +258,10 @@ function renderProgram(){
          
          if (ex.hasWeight) {
             // 12. Haftanın (indeks 11) ağırlığını çekip %70'ini hesaplıyoruz
-            const lastWeight = getKgAt(exId, 11) || 0; 
-            const deloadWeight = mround25(lastWeight * 0.7);
-            weightText = `${deloadWeight} kg`;
+            const u = exUnit(exId);
+            const lastWeight = getKgAt(exId, 11) || 0;
+            const deloadWeight = wRound(lastWeight * 0.7, u);
+            weightText = `${deloadWeight} ${u}`;
          }
          
          html += `
@@ -313,7 +314,7 @@ function renderProgram(){
   let totalSets=0,totalVol=0;
   exs.forEach(ex=>{
     totalSets+=ex.sets;
-    if(ex.hasWeight){ const kg=getKgAt(ex.id,w); totalVol+=kg*ex.sets*ex.reps; }
+    if(ex.hasWeight){ const kg=toKg(getKgAt(ex.id,w), exUnit(ex.id)); totalVol+=kg*ex.sets*ex.reps; }
   });
   document.getElementById('s-ex').textContent=exs.length;
   document.getElementById('s-sets').textContent=totalSets;
@@ -347,16 +348,17 @@ function renderProgram(){
     const name=normalizeUppercaseText(displayName);
     const origName=normalizeUppercaseText(getDisplayName(ex));
 
+    const u=exUnit(ex.id);
     let wtxt='',badge='',bcls='',kg=0;
     if(ex.hasWeight){
       const m=S.maxes[ex.id];
-      if(!m){wtxt='— kg gir';badge='GİRİLMEDİ';bcls='bsame';}
+      if(!m){wtxt=`— ${u} gir`;badge='GİRİLMEDİ';bcls='bsame';}
       else{
         kg=getKgAt(ex.id,w);
         const prevKg=w>0?getKgAt(ex.id,w-1):kg;
-        wtxt=`${kg} kg`;
+        wtxt=`${kg} ${u}`;
         if(w===0){badge='BAŞLANGIÇ';bcls='bnew';}
-        else if(kg>prevKg){badge=`+${mround25(kg-prevKg)}kg`;bcls='bup';}
+        else if(kg>prevKg){badge=`+${wRound(kg-prevKg,u)}${u}`;bcls='bup';}
         else{badge='AYNI';bcls='bsame';}
       }
     } else {
@@ -366,15 +368,17 @@ function renderProgram(){
     let warmupHtml='';
     let altLoadingText='';
     if(ex.hasWeight && kg>0){
-      if(ex.id==='g1_rdl'){ altLoadingText=` (${(kg-20)/2} kg)`; } 
-      else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){ altLoadingText=` (${kg/2} kg)`; } 
-      else if(ex.id==='g3_br'){ altLoadingText=` (${(kg-10)/2} kg)`; }
+      const bar=barWeight(u);
+      const brOff=u==='lbs'?25:10;
+      if(ex.id==='g1_rdl'){ altLoadingText=` (${(kg-bar)/2} ${u})`; }
+      else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){ altLoadingText=` (${kg/2} ${u})`; }
+      else if(ex.id==='g3_br'){ altLoadingText=` (${(kg-brOff)/2} ${u})`; }
     }
-    
+
     if(altLoadingText && ex.hasWeight){
-      wtxt=`${kg} kg<span style="font-size:13px;color:var(--muted);font-weight:400">${altLoadingText}</span>`;
+      wtxt=`${kg} ${u}<span style="font-size:13px;color:var(--muted);font-weight:400">${altLoadingText}</span>`;
     }
-    
+
     if(ex.hasWeight && kg>0){
       const isDay2PullUps=(d===1 && exIdx===2);
       if(!isDay2PullUps){
@@ -386,13 +390,15 @@ function renderProgram(){
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Isınma Setleri</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               ${sets.map(s=>{
-                const wkg=mround25(kg*s.mult);
+                const wkg=wRound(kg*s.mult, u);
+                const bar=barWeight(u);
+                const brOff=u==='lbs'?25:10;
                 let altLoading='';
-                if(ex.id==='g1_rdl') altLoading=` (${mround25((wkg-20)/2)} kg)`;
-                else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp') altLoading=` (${mround25(wkg/2)} kg)`;
-                else if(ex.id==='g3_br') altLoading=` (${mround25((wkg-10)/2)} kg)`;
+                if(ex.id==='g1_rdl') altLoading=` (${wRound((wkg-bar)/2, u)} ${u})`;
+                else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp') altLoading=` (${wRound(wkg/2, u)} ${u})`;
+                else if(ex.id==='g3_br') altLoading=` (${wRound((wkg-brOff)/2, u)} ${u})`;
                 return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
-                  <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} kg</div>
+                  <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} ${u}</div>
                   <div style="font-size:12px;color:var(--muted);font-weight:400"">${altLoading}</div>
                 </div>`;
               }).join('')}

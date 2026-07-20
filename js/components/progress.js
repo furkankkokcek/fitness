@@ -1,4 +1,5 @@
-function buildExChart(weeks){
+function buildExChart(weeks, unit){
+  unit=unit||'kg';
   const W=320, H=72, PAD=8;
   const doneWks=weeks.filter(w=>w.done);
   if(doneWks.length<2) return '';
@@ -15,8 +16,8 @@ function buildExChart(weeks){
   const donePts=pts.filter(p=>p.y!==null);
   const polyline=donePts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const dots=donePts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${p.wk.cur?'#e8ff47':'#4ade80'}"/>`).join('');
-  const labels=`<text x="${donePts[0].x.toFixed(1)}" y="${H}" fill="#666" font-size="9" text-anchor="middle">${minKg}kg</text>
-    <text x="${donePts[donePts.length-1].x.toFixed(1)}" y="${(donePts[donePts.length-1].y-6).toFixed(1)}" fill="#e8ff47" font-size="9" text-anchor="middle">${donePts[donePts.length-1].wk.kg}kg</text>`;
+  const labels=`<text x="${donePts[0].x.toFixed(1)}" y="${H}" fill="#666" font-size="9" text-anchor="middle">${minKg}${unit}</text>
+    <text x="${donePts[donePts.length-1].x.toFixed(1)}" y="${(donePts[donePts.length-1].y-6).toFixed(1)}" fill="#e8ff47" font-size="9" text-anchor="middle">${donePts[donePts.length-1].wk.kg}${unit}</text>`;
   return `<svg width="100%" viewBox="0 0 ${W} ${H}" style="margin-top:10px;overflow:visible">
     <polyline points="${polyline}" fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round"/>
     ${dots}${labels}
@@ -39,24 +40,25 @@ function renderProgress(){
     seen.add(id);
     const name=normalizeUppercaseText(getDisplayName(ex));
     const inc=S.maxes[id].inc;
+    const u=exUnit(id);
     const weeks=Array.from({length:12},(_,i)=>({
       w:i, kg:getKgAt(id,i),
       done:exCompletedInWeek(id,i),
       cur:i===S.currentWeek
     }));
     html+=`<div class="pec">
-      <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">+${inc}kg/hafta</span></div>
+      <div class="pen">${name} <span style="font-size:11px;color:var(--muted);font-weight:400">+${inc}${u}/hafta</span></div>
       <div class="wscroll">
         ${weeks.map(wk=>`
           <div class="wkcell">
             <div style="font-size:9px;color:${wk.cur?'var(--accent)':'var(--muted)'};margin-bottom:4px;font-weight:${wk.cur?700:400}">${wk.w+1}</div>
             <div class="wkbox" style="background:${wk.done?'rgba(74,222,128,.12)':wk.cur?'rgba(232,255,71,.08)':'var(--bg3)'};border-color:${wk.done?'rgba(74,222,128,.3)':wk.cur?'rgba(232,255,71,.3)':'var(--border)'}">
               <div class="wkkg" style="color:${wk.done?'var(--success)':wk.cur?'var(--accent)':'var(--text)'}">${wk.kg}</div>
-              <div style="font-size:9px;color:var(--muted)">kg</div>
+              <div style="font-size:9px;color:var(--muted)">${u}</div>
             </div>
           </div>`).join('')}
       </div>
-      ${buildExChart(weeks)}
+      ${buildExChart(weeks, u)}
     </div>`;
   });
 

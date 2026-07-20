@@ -57,11 +57,24 @@ function renderProgWeightTracker(){
 
 function mround25(v){return Math.round(v / 2.5) * 2.5;}
 
+// ── AĞIRLIK BİRİMİ (hareket bazında kg/lbs) ─────────────
+const LBS_PER_KG = 2.20462;
+// Bir hareketin birimi; kayıtlı değeri yoksa varsayılan 'kg' (geriye dönük uyumluluk)
+function exUnit(exId){ return (S.maxes && S.maxes[exId] && S.maxes[exId].unit) || 'kg'; }
+// Yuvarlama adımı: kg → 2.5, lbs → 5 (plaka mantığı)
+function wStep(unit){ return unit==='lbs' ? 5 : 2.5; }
+function wRound(v, unit){ const s=wStep(unit); return Math.round(v/s)*s; }
+// Hacim/tonaj hesapları için ortak birime (kg) çevir
+function toKg(v, unit){ return unit==='lbs' ? v/LBS_PER_KG : v; }
+// Bar ağırlığı (tek taraf plaka hesabı için)
+function barWeight(unit){ return unit==='lbs' ? 45 : 20; }
+
 function getKgAt(exId, weekIdx){
   const m=S.maxes[exId]; if(!m) return 0;
+  const u=m.unit||'kg';
   let kg=m.kg;
-  for(let w=0;w<weekIdx;w++){ if(exCompletedInWeek(exId,w)) kg=mround25(kg+(m.inc||0)); }
-  return mround25(kg);
+  for(let w=0;w<weekIdx;w++){ if(exCompletedInWeek(exId,w)) kg=wRound(kg+(m.inc||0), u); }
+  return wRound(kg, u);
 }
 
 function exCompletedInWeek(exId, weekIdx){
