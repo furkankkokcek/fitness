@@ -47,7 +47,7 @@ function buildSetup(){
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
             </div>
             <div><div class="lbl" id="startlbl-${ex.id}">Başlangıç ağırlığı (${u})</div>
-              <input type="number" id="start-${ex.id}" class="no-spin" placeholder="ör. 40" min="0" step="0.5" value="${sv?.kg??''}" style="margin-bottom:10px;font-weight:700;color:var(--accent)"/>
+              <input type="number" id="start-${ex.id}" class="no-spin" placeholder="ör. 40" min="0" step="0.5" value="${sv?.kg??''}" style="margin-bottom:10px;font-weight:700;color:var(--accent)" onblur="snapStart('${ex.id}')"/>
             </div>
             <div><div class="lbl" id="inclbl-${ex.id}">Haftalık artış (${u})</div>
               <div style="display:flex;gap:8px;align-items:center">
@@ -175,6 +175,16 @@ function setExUnit(exId, unit){
   if(ex) calcStart(exId, ex.rmMult);
 }
 
+// Başlangıç input'undan çıkınca değeri birim ızgarasına oturt (kg → 2.5, lbs → yuvarlama yok).
+// Böylece kaydedilen/gösterilen değer input'takiyle birebir aynı olur.
+function snapStart(exId){
+  const el=document.getElementById('start-'+exId);
+  if(!el || !el.value) return;
+  const v=parseFloat(el.value);
+  if(isNaN(v)||v<=0) return;
+  el.value = wRound(v, curUnit(exId));
+}
+
 // 1RM (ağırlık+tekrar) girildiğinde başlangıç ağırlığı input'unu otomatik doldurur.
 // Kullanıcı bu değeri elle değiştirebilir.
 function calcStart(exId, mult){
@@ -218,7 +228,9 @@ function saveAndStart(){
     const customEl=document.getElementById('custom-'+ex.id);
     if(!startEl) return;
     const unit=curUnit(ex.id);
-    const kg=parseFloat(startEl.value);
+    const rawStart=parseFloat(startEl.value);
+    if(isNaN(rawStart)||rawStart<=0){missing=true;return;}
+    const kg=wRound(rawStart, unit);
     // 1RM alanları artık opsiyonel — sadece referans olarak saklanır
     const rmKg=parseFloat(rmkgEl?.value)||0;
     const rmReps=parseInt(rmrepEl?.value)||0;
@@ -226,7 +238,6 @@ function saveAndStart(){
     const altVal=altEl?.value??'-1';
     const altIdx=altVal==='custom'?'custom':parseInt(altVal);
     const customName=customEl?.value.trim()||'';
-    if(isNaN(kg)||kg<=0){missing=true;return;}
     S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps, unit};
   });
   if(missing){alert('Lütfen tüm hareketler için başlangıç ağırlığı gir!');return;}
