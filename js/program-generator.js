@@ -135,9 +135,5 @@ function useDefaultProgram(){
   if(!S.dayCount || S.dayCount<3) S.dayCount=3;
   saveS();
 }
-// Belirli bir bölünme için geçerli gün sayıları
-function validDaysForSplit(split){
-  if(split==='ppl') return [3,6];
-  if(split==='upperlower') return [4,6];
-  return [3,4,5,6]; // full body
-}
+// Geçerli haftalık gün sayıları (tüm bölünmeler için 3-5)
+function validDaysForSplit(split){ return [3,4,5]; }

@@ -26,14 +26,14 @@ function setWizSplit(s){
 }
 function setWizDays(n){ _initWiz(); _wiz.days=n; buildSetup(); }
 function setWizDiff(d){ _initWiz(); _wiz.difficulty=d; buildSetup(); }
-function setWizGender(g){ _initWiz(); _wiz.gender=g; buildSetup(); }
 function applyWizard(){
   _initWiz();
   if(_wiz.split==='default'){
     useDefaultProgram();
     S.dayCount=_wiz.days; saveS();
   } else {
-    generateAndApply({split:_wiz.split, days:_wiz.days, difficulty:_wiz.difficulty, gender:_wiz.gender});
+    const gender=(S.profile&&S.profile.gender)||'';
+    generateAndApply({split:_wiz.split, days:_wiz.days, difficulty:_wiz.difficulty, gender});
   }
   buildSetup();
   if(typeof renderProgram==='function') renderProgram();
@@ -63,9 +63,7 @@ function _wizardHtml(){
       ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Varsayılan Superhero programı (3 antrenman şablonu). 3'ten fazla gün seçersen şablonlar döngüyle tekrarlanır (Gün 4 = Gün 1 ...).</div>`
       : `<div class="lbl" style="margin-bottom:6px">Zorluk</div>
          <div style="display:flex;gap:6px;margin-bottom:12px">${diffs.map(([v,l])=>_seg(_wiz.difficulty===v,`setWizDiff('${v}')`,l)).join('')}</div>
-         <div class="lbl" style="margin-bottom:6px">Cinsiyet vurgusu</div>
-         <div style="display:flex;gap:6px;margin-bottom:10px">${[['male','Erkek'],['female','Kadın']].map(([v,l])=>_seg(_wiz.gender===v,`setWizGender('${v}')`,l)).join('')}</div>
-         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">${_wiz.gender==='female'?'Alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
+         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
     <button class="btn bp" style="width:100%" onclick="applyWizard()">${isDef?'Uygula':'Programı Oluştur'}</button>
   </div>`;
 }
