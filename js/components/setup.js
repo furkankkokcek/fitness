@@ -6,99 +6,171 @@ function setDayCount(n){
   if(typeof renderProgram==='function') renderProgram();
 }
 
+// ── PROGRAM SİHİRBAZI ──────────────────────────────────
+let _wiz=null;
+function _initWiz(){
+  if(_wiz) return;
+  const cp=S.customProgram;
+  _wiz={
+    split: cp?cp.split:'default',
+    days: cp?cp.days:(S.dayCount||3),
+    difficulty: cp?cp.difficulty:'intermediate',
+    gender: cp?cp.gender:((S.profile&&S.profile.gender)?S.profile.gender:'male'),
+  };
+}
+function setWizSplit(s){
+  _initWiz(); _wiz.split=s;
+  const valid=validDaysForSplit(s);
+  if(s!=='default' && !valid.includes(_wiz.days)) _wiz.days=valid[0];
+  buildSetup();
+}
+function setWizDays(n){ _initWiz(); _wiz.days=n; buildSetup(); }
+function setWizDiff(d){ _initWiz(); _wiz.difficulty=d; buildSetup(); }
+function setWizGender(g){ _initWiz(); _wiz.gender=g; buildSetup(); }
+function applyWizard(){
+  _initWiz();
+  if(_wiz.split==='default'){
+    useDefaultProgram();
+    S.dayCount=_wiz.days; saveS();
+  } else {
+    generateAndApply({split:_wiz.split, days:_wiz.days, difficulty:_wiz.difficulty, gender:_wiz.gender});
+  }
+  buildSetup();
+  if(typeof renderProgram==='function') renderProgram();
+  if(typeof renderProgress==='function') renderProgress();
+  alert('Program oluşturuldu! Aşağıdan hareketlerin başlangıç ağırlıklarını ayarla.');
+}
+function _seg(active,cb,label){
+  return `<button type="button" onclick="${cb}" style="flex:1;border:1px solid var(--border);cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:9px 4px;border-radius:8px;background:${active?'var(--accent)':'var(--bg3)'};color:${active?'#000':'var(--text)'}">${label}</button>`;
+}
+function _wizardHtml(){
+  _initWiz();
+  const splits=[['default','Varsayılan'],['fullbody','Full Body'],['upperlower','Upper/Lower'],['ppl','Push/Pull/Legs']];
+  const validDays=validDaysForSplit(_wiz.split);
+  const diffs=[['beginner','Başlangıç'],['intermediate','Orta'],['advanced','İleri']];
+  const isDef=_wiz.split==='default';
+  return `<div class="ec" style="margin-bottom:14px">
+    <div class="gt" style="font-family:var(--fa);font-size:18px;margin-bottom:12px">PROGRAM SİHİRBAZI</div>
+    <div class="lbl" style="margin-bottom:6px">Bölünme tipi</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+      ${splits.map(([v,l])=>_seg(_wiz.split===v,`setWizSplit('${v}')`,l)).join('')}
+    </div>
+    <div class="lbl" style="margin-bottom:6px">Haftalık gün sayısı</div>
+    <div style="display:flex;gap:6px;margin-bottom:${isDef?'8px':'12px'}">
+      ${validDays.map(n=>_seg(_wiz.days===n,`setWizDays(${n})`,n)).join('')}
+    </div>
+    ${isDef
+      ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Varsayılan Superhero programı (3 antrenman şablonu). 3'ten fazla gün seçersen şablonlar döngüyle tekrarlanır (Gün 4 = Gün 1 ...).</div>`
+      : `<div class="lbl" style="margin-bottom:6px">Zorluk</div>
+         <div style="display:flex;gap:6px;margin-bottom:12px">${diffs.map(([v,l])=>_seg(_wiz.difficulty===v,`setWizDiff('${v}')`,l)).join('')}</div>
+         <div class="lbl" style="margin-bottom:6px">Cinsiyet vurgusu</div>
+         <div style="display:flex;gap:6px;margin-bottom:10px">${[['male','Erkek'],['female','Kadın']].map(([v,l])=>_seg(_wiz.gender===v,`setWizGender('${v}')`,l)).join('')}</div>
+         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">${_wiz.gender==='female'?'Alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
+    <button class="btn bp" style="width:100%" onclick="applyWizard()">${isDef?'Uygula':'Programı Oluştur'}</button>
+  </div>`;
+}
+
+function _weightCardHtml(ex){
+  const sv=S.maxes[ex.id];
+  const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
+  const u=sv?.unit||'kg';
+  const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
+  return `<div class="ec">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="en" style="margin:0">${ex.name}</div>
+      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+    </div>
+    <div class="esch">${ex.scheme}</div>
+    <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
+    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
+      <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
+      ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
+      <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
+    </select>
+    <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
+      style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
+      value="${sv?.customName||''}"/>
+    <div class="lbl" style="margin-bottom:5px">Birim</div>
+    <div id="unit-${ex.id}" data-unit="${u}" style="display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;margin-bottom:10px">
+      <button type="button" data-unit="kg" onclick="setExUnit('${ex.id}','kg')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='kg'?'var(--accent)':'transparent'};color:${u==='kg'?'#000':'var(--muted)'}">kg</button>
+      <button type="button" data-unit="lbs" onclick="setExUnit('${ex.id}','lbs')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='lbs'?'var(--accent)':'transparent'};color:${u==='lbs'?'#000':'var(--muted)'}">lbs</button>
+    </div>
+    <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(opsiyonel — başlangıcı otomatik doldurur)</span></div>
+    <div class="g2" style="margin-bottom:8px">
+      <div><div class="lbl" id="rmkglbl-${ex.id}">Ağırlık (${u})</div>
+        <input type="number" id="rmkg-${ex.id}" class="no-spin" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
+          oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
+      <div><div class="lbl">Tekrar sayısı</div>
+        <input type="number" id="rmrep-${ex.id}" class="no-spin" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
+          oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
+    </div>
+    <div><div class="lbl" id="startlbl-${ex.id}">Başlangıç ağırlığı (${u})</div>
+      <input type="number" id="start-${ex.id}" class="no-spin" placeholder="ör. 40" min="0" step="0.5" value="${sv?.kg??''}" style="margin-bottom:10px;font-weight:700;color:var(--accent)" onblur="snapStart('${ex.id}')"/>
+    </div>
+    <div><div class="lbl" id="inclbl-${ex.id}">Haftalık artış (${u})</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn bo" type="button" onclick="decrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">−</button>
+        <input type="number" id="inc-${ex.id}" class="no-spin" placeholder="ör. 2.5" min="0" step="0.5" value="${defInc}" style="text-align:center;flex:1"/>
+        <button class="btn bp" type="button" onclick="incrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _bwCardHtml(ex){
+  const sv=S.maxes[ex.id];
+  return `<div class="ec">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="en" style="margin:0">${ex.name}</div>
+      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+    </div>
+    <div class="esch">${ex.scheme}</div>
+    <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
+    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
+      <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
+      ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
+      <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
+    </select>
+    <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
+      style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
+      value="${sv?.customName||''}"/>
+    <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px">Vücut ağırlığı — giriş gerekmez</div>
+  </div>`;
+}
+
+function _repeatChip(ex){
+  return `<div class="ec" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px">
+    <div class="en" style="margin:0;font-size:14px">${ex.name}</div>
+    <span style="font-size:11px;color:var(--muted)">✓ yukarıda ayarlandı</span>
+  </div>`;
+}
+
 function buildSetup(){
   const el=document.getElementById('setup-list');
-  const dayNames=["Gün 1","Gün 2","Gün 3"];
+  const isCustom=!!S.customProgram;
   const dc=dayCount();
-  const daySelector=`<div class="ec" style="margin-bottom:14px">
-    <div class="lbl" style="margin-bottom:8px">Haftalık antrenman günü sayısı</div>
-    <div style="display:flex;gap:6px">
-      ${[3,4,5,6].map(nn=>`<button type="button" onclick="setDayCount(${nn})" style="flex:1;border:1px solid var(--border);cursor:pointer;font-family:var(--fb);font-size:16px;font-weight:700;padding:11px 0;border-radius:8px;background:${dc===nn?'var(--accent)':'var(--bg3)'};color:${dc===nn?'#000':'var(--text)'}">${nn}</button>`).join('')}
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Program 3 antrenman şablonundan oluşur. 3'ten fazla gün seçersen günler bu şablonları döngüyle tekrarlar (Gün 4 = Gün 1, Gün 5 = Gün 2 ...). Aşağıdaki 3 şablonun ağırlıklarını ayarlaman yeterli.</div>
-  </div>`;
-  el.innerHTML = daySelector + DAYS.map((tplIds,di)=>{
-    const weightExs = tplIds.map(id=>EX[id]).filter(e=>e.hasWeight);
-    const bwExs = tplIds.map(id=>EX[id]).filter(e=>!e.hasWeight);
-    const usedByDays=[]; for(let dd=0; dd<dc; dd++){ if(dd%3===di) usedByDays.push(dd+1); }
-    const usageLabel = dc>3 ? `Gün ${usedByDays.join(', ')}` : `${tplIds.length} hareket`;
-    return `
-    <div style="margin-bottom:8px">
+  const seen=new Set();
+  const daysHtml = DAYS.map((tplIds,di)=>{
+    let label;
+    if(isCustom){ label=`${tplIds.length} hareket`; }
+    else if(dc>3){ const u=[]; for(let dd=0; dd<dc; dd++){ if(dd%DAYS.length===di) u.push(dd+1); } label=`Gün ${u.join(', ')}`; }
+    else { label=`${tplIds.length} hareket`; }
+    const cards = tplIds.map(id=>{
+      const ex=EX[id]; if(!ex) return '';
+      if(seen.has(id)) return _repeatChip(ex);
+      seen.add(id);
+      return ex.hasWeight ? _weightCardHtml(ex) : _bwCardHtml(ex);
+    }).join('');
+    return `<div style="margin-bottom:8px">
       <div class="gh" onclick="toggleG('g-d${di}')">
-        <div class="gt">${dayNames[di].toLocaleUpperCase('tr-TR')}</div>
-        <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${usageLabel}</div>
+        <div class="gt">GÜN ${di+1}</div>
+        <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${label}</div>
         <span id="g-d${di}-ch">▸</span>
       </div>
-      <div class="gb" id="g-d${di}">
-        ${weightExs.map(ex=>{
-          const sv=S.maxes[ex.id];
-          const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
-          const u=sv?.unit||'kg';
-          const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
-          return `<div class="ec">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <div class="en" style="margin:0">${ex.name}</div>
-              <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
-            </div>
-            <div class="esch">${ex.scheme}</div>
-            <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
-            <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
-              <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
-              ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
-              <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
-            </select>
-            <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
-              style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
-              value="${sv?.customName||''}"/>
-            <div class="lbl" style="margin-bottom:5px">Birim</div>
-            <div id="unit-${ex.id}" data-unit="${u}" style="display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;margin-bottom:10px">
-              <button type="button" data-unit="kg" onclick="setExUnit('${ex.id}','kg')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='kg'?'var(--accent)':'transparent'};color:${u==='kg'?'#000':'var(--muted)'}">kg</button>
-              <button type="button" data-unit="lbs" onclick="setExUnit('${ex.id}','lbs')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='lbs'?'var(--accent)':'transparent'};color:${u==='lbs'?'#000':'var(--muted)'}">lbs</button>
-            </div>
-            <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(opsiyonel — başlangıcı otomatik doldurur)</span></div>
-            <div class="g2" style="margin-bottom:8px">
-              <div><div class="lbl" id="rmkglbl-${ex.id}">Ağırlık (${u})</div>
-                <input type="number" id="rmkg-${ex.id}" class="no-spin" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
-                  oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
-              <div><div class="lbl">Tekrar sayısı</div>
-                <input type="number" id="rmrep-${ex.id}" class="no-spin" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
-                  oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
-            </div>
-            <div><div class="lbl" id="startlbl-${ex.id}">Başlangıç ağırlığı (${u})</div>
-              <input type="number" id="start-${ex.id}" class="no-spin" placeholder="ör. 40" min="0" step="0.5" value="${sv?.kg??''}" style="margin-bottom:10px;font-weight:700;color:var(--accent)" onblur="snapStart('${ex.id}')"/>
-            </div>
-            <div><div class="lbl" id="inclbl-${ex.id}">Haftalık artış (${u})</div>
-              <div style="display:flex;gap:8px;align-items:center">
-                <button class="btn bo" type="button" onclick="decrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">−</button>
-                <input type="number" id="inc-${ex.id}" class="no-spin" placeholder="ör. 2.5" min="0" step="0.5" value="${defInc}" style="text-align:center;flex:1"/>
-                <button class="btn bp" type="button" onclick="incrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">+</button>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
-        ${bwExs.map(ex=>{
-          const sv=S.maxes[ex.id];
-          return `<div class="ec">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <div class="en" style="margin:0">${ex.name}</div>
-              <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
-            </div>
-            <div class="esch">${ex.scheme}</div>
-            <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
-            <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
-              <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
-              ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
-              <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
-            </select>
-            <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
-              style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
-              value="${sv?.customName||''}"/>
-            <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px">Vücut ağırlığı — giriş gerekmez</div>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="gb" id="g-d${di}">${cards}</div>
     </div>`;
   }).join('');
+  el.innerHTML = _wizardHtml() + daysHtml;
 }
 
 function toggleG(id){

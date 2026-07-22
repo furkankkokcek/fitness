@@ -81,8 +81,8 @@ function getKgAt(exId, weekIdx){
 
 // ── HAFTALIK GÜN SAYISI (kullanıcı ayarlı, varsayılan 3) ──
 function dayCount(){ return Math.max(1, S.dayCount || 3); }
-// Bir gün indeksinin egzersiz listesi — günler 3 şablonu döngüyle kullanır
-function dayIds(d){ return DAYS[d % 3]; }
+// Bir gün indeksinin egzersiz listesi — varsayılan programda şablonlar döngüyle tekrarlanır
+function dayIds(d){ return DAYS[d % DAYS.length]; }
 
 function exCompletedInWeek(exId, weekIdx){
   const wk='w'+weekIdx;

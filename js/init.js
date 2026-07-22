@@ -1,4 +1,5 @@
 const hasData=loadS();
+applyProgramFromState();
 buildSetup();
 updTimer();
 applyTheme();
