@@ -16,7 +16,6 @@ function buildSetup(){
           const sv=S.maxes[ex.id];
           const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
           const u=sv?.unit||'kg';
-          const startKg=sv?.kg ? `${sv.kg} ${u}` : '—';
           const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
           return `<div class="ec">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -38,8 +37,8 @@ function buildSetup(){
               <button type="button" data-unit="kg" onclick="setExUnit('${ex.id}','kg')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='kg'?'var(--accent)':'transparent'};color:${u==='kg'?'#000':'var(--muted)'}">kg</button>
               <button type="button" data-unit="lbs" onclick="setExUnit('${ex.id}','lbs')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='lbs'?'var(--accent)':'transparent'};color:${u==='lbs'?'#000':'var(--muted)'}">lbs</button>
             </div>
-            <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı</div>
-            <div class="g2" style="margin-bottom:6px">
+            <div class="lbl" style="margin-bottom:6px">1 Tekrar Max Hesabı <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(opsiyonel — başlangıcı otomatik doldurur)</span></div>
+            <div class="g2" style="margin-bottom:8px">
               <div><div class="lbl" id="rmkglbl-${ex.id}">Ağırlık (${u})</div>
                 <input type="number" id="rmkg-${ex.id}" class="no-spin" placeholder="ör. 60" min="0" step="0.5" value="${rmKg}"
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
@@ -47,9 +46,8 @@ function buildSetup(){
                 <input type="number" id="rmrep-${ex.id}" class="no-spin" placeholder="ör. 8" min="1" max="30" step="1" value="${rmReps}"
                   oninput="calcStart('${ex.id}',${ex.rmMult})"/></div>
             </div>
-            <div id="calc-${ex.id}" style="font-size:13px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:10px;display:${sv?.kg?'flex':'none'};align-items:center;justify-content:space-between">
-              <span style="color:var(--muted)">Başlangıç ağırlığı</span>
-              <span style="font-size:16px;font-weight:700;color:var(--accent)" id="calcval-${ex.id}">${startKg}</span>
+            <div><div class="lbl" id="startlbl-${ex.id}">Başlangıç ağırlığı (${u})</div>
+              <input type="number" id="start-${ex.id}" class="no-spin" placeholder="ör. 40" min="0" step="0.5" value="${sv?.kg??''}" style="margin-bottom:10px;font-weight:700;color:var(--accent)"/>
             </div>
             <div><div class="lbl" id="inclbl-${ex.id}">Haftalık artış (${u})</div>
               <div style="display:flex;gap:8px;align-items:center">
@@ -165,6 +163,7 @@ function setExUnit(exId, unit){
     });
   }
   const rl=document.getElementById('rmkglbl-'+exId); if(rl) rl.textContent='Ağırlık ('+unit+')';
+  const sl=document.getElementById('startlbl-'+exId); if(sl) sl.textContent='Başlangıç ağırlığı ('+unit+')';
   const il=document.getElementById('inclbl-'+exId); if(il) il.textContent='Haftalık artış ('+unit+')';
   // Kullanıcı özel değer girmediyse artış varsayılanını birime göre güncelle (kg:2.5 ↔ lbs:5)
   const incEl=document.getElementById('inc-'+exId);
@@ -176,19 +175,16 @@ function setExUnit(exId, unit){
   if(ex) calcStart(exId, ex.rmMult);
 }
 
+// 1RM (ağırlık+tekrar) girildiğinde başlangıç ağırlığı input'unu otomatik doldurur.
+// Kullanıcı bu değeri elle değiştirebilir.
 function calcStart(exId, mult){
   const unit=curUnit(exId);
   const wt=parseFloat(document.getElementById('rmkg-'+exId)?.value)||0;
   const reps=parseInt(document.getElementById('rmrep-'+exId)?.value)||0;
-  const calcEl=document.getElementById('calc-'+exId);
-  const valEl=document.getElementById('calcval-'+exId);
-  if(wt>0&&reps>0){
+  const startEl=document.getElementById('start-'+exId);
+  if(startEl && wt>0 && reps>0){
     const orm=wt+(wt*reps*0.0333);
-    const start = wRound(orm * mult, unit);
-    if(valEl) valEl.textContent=start+' '+unit;
-    if(calcEl) calcEl.style.display='flex';
-  } else {
-    if(calcEl) calcEl.style.display='none';
+    startEl.value = wRound(orm * mult, unit);
   }
 }
 
@@ -214,25 +210,26 @@ function toggleCustom(exId, val){
 function saveAndStart(){
   let missing=false;
   Object.values(EX).filter(e=>e.hasWeight).forEach(ex=>{
+    const startEl=document.getElementById('start-'+ex.id);
     const rmkgEl=document.getElementById('rmkg-'+ex.id);
     const rmrepEl=document.getElementById('rmrep-'+ex.id);
     const incEl=document.getElementById('inc-'+ex.id);
     const altEl=document.getElementById('alt-'+ex.id);
     const customEl=document.getElementById('custom-'+ex.id);
-    if(!rmkgEl) return;
-    const rmKg=parseFloat(rmkgEl.value);
+    if(!startEl) return;
+    const unit=curUnit(ex.id);
+    const kg=parseFloat(startEl.value);
+    // 1RM alanları artık opsiyonel — sadece referans olarak saklanır
+    const rmKg=parseFloat(rmkgEl?.value)||0;
     const rmReps=parseInt(rmrepEl?.value)||0;
     const inc=parseFloat(incEl?.value);
     const altVal=altEl?.value??'-1';
     const altIdx=altVal==='custom'?'custom':parseInt(altVal);
     const customName=customEl?.value.trim()||'';
-    if(isNaN(rmKg)||rmKg<=0||rmReps<=0){missing=true;return;}
-    const unit=curUnit(ex.id);
-    const orm=rmKg+(rmKg*rmReps*0.0333);
-    const kg = wRound(orm * ex.rmMult, unit);
+    if(isNaN(kg)||kg<=0){missing=true;return;}
     S.maxes[ex.id]={kg, inc:isNaN(inc)?0:inc, altIdx, customName, rmKg, rmReps, unit};
   });
-  if(missing){alert('Lütfen tüm hareketler için ağırlık ve tekrar sayısı gir!');return;}
+  if(missing){alert('Lütfen tüm hareketler için başlangıç ağırlığı gir!');return;}
   
   Object.values(EX).filter(e=>!e.hasWeight).forEach(ex=>{
     const altEl=document.getElementById('alt-'+ex.id);
