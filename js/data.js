@@ -45,7 +45,7 @@ const DAYS = [
   ["g3_sp","g3_lp","g3_br","g3_cf","g3_cpd","g3_pl"],
 ];
 
-function getDayExs(d){ return DAYS[d].map(id => EX[id]); }
+function getDayExs(d){ return DAYS[d % 3].map(id => EX[id]); }
 const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
 
 const EXERCISE_GIFS = {

@@ -75,23 +75,24 @@ function resetWorkoutSession(w,d){
 
 // ── HAFTALIK ÖZET ────────────────────────────────────────
 function allWeekDaysDone(w){
-  return [0,1,2].every(d=>{
+  const n=dayCount();
+  for(let d=0; d<n; d++){
     const dk='d'+d;
-    return DAYS[d].every(id=> S.weekData['w'+w]?.[dk]?.[id] !== undefined);
-  });
+    if(!dayIds(d).every(id=> S.weekData['w'+w]?.[dk]?.[id] !== undefined)) return false;
+  }
+  return true;
 }
 function showWeeklySummary(w){
   const existing=document.getElementById('weekly-summary-modal');
   if(existing) existing.remove();
 
   let totalVol=0, prList=[];
-  const dayNames=['Gün 1','Gün 2','Gün 3'];
 
   let daysHtml='';
-  [0,1,2].forEach(d=>{
+  for(let d=0; d<dayCount(); d++){
     const dur=workoutDuration(w,d);
     let dayVol=0;
-    DAYS[d].forEach(id=>{
+    dayIds(d).forEach(id=>{
       const ex=EX[id]; if(!ex.hasWeight) return;
       const kg=getKgAt(id,w);
       const val=S.weekData['w'+w]?.['d'+d]?.[id];
@@ -102,11 +103,11 @@ function showWeeklySummary(w){
     });
     totalVol+=dayVol;
     daysHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-family:var(--fa);font-size:14px;letter-spacing:.5px;color:var(--text)">${dayNames[d]}</span>
+      <span style="font-family:var(--fa);font-size:14px;letter-spacing:.5px;color:var(--text)">Gün ${d+1}</span>
       <span style="font-size:12px;color:var(--muted)">${dur?`⏱ ${dur}`:''}</span>
       <span style="font-size:13px;font-weight:600;color:var(--accent)">${dayVol.toLocaleString()} kg</span>
     </div>`;
-  });
+  }
 
   // PR'lar
   Object.entries(S.prs||{}).forEach(([id,pr])=>{
@@ -141,18 +142,18 @@ function openWeeklyReport(){
   if(existing) existing.remove();
 
   const w=S.currentWeek;
-  const dayTypes=['Gün 1','Gün 2','Gün 3'];
+  const n=dayCount();
   const dayIcons=['🔴','🔵','🟢'];
 
   // Her gün için veri topla
   let totalVol=0, totalTimeMs=0, completedDays=0;
-  const days=[0,1,2].map(d=>{
+  const days=Array.from({length:n},(_,d)=>d).map(d=>{
     const data=S.weekData?.['w'+w]?.['d'+d];
     const hasSome=data && Object.keys(data).length>0;
     if(!hasSome) return {done:false,vol:0,dur:null};
     completedDays++;
     let dayVol=0;
-    DAYS[d].forEach(id=>{
+    dayIds(d).forEach(id=>{
       const ex=EX[id]; if(!ex.hasWeight) return;
       const kg=getKgAt(id,w);
       const val=data[id]; if(!val) return;
@@ -190,8 +191,8 @@ function openWeeklyReport(){
   const totalTimeStr=totalMin>0?`${totalMin} dk`:'—';
 
   // Motivasyon
-  const pct=completedDays/3;
-  const [moji,msg]=pct===1?['🔥','Muhteşem hafta! 3/3 antrenman tamamlandı.']:
+  const pct=completedDays/n;
+  const [moji,msg]=pct===1?['🔥',`Muhteşem hafta! ${n}/${n} antrenman tamamlandı.`]:
                    pct>=0.67?['💪','İyi gidiyorsun! Haftayı güçlü bitir.']:
                    pct>0?['⚡','Her adım önemli, devam et!']:
                    ['📅','Bu hafta henüz antrenman yok.'];
@@ -199,9 +200,9 @@ function openWeeklyReport(){
   // Gün satırları
   const dayRows=days.map((d,i)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:16px">${dayIcons[i]}</span>
+      <span style="font-size:16px">${dayIcons[i%3]}</span>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:${d.done?'var(--text)':'var(--muted)'};font-family:var(--fb)">${dayTypes[i]}</div>
+        <div style="font-size:13px;font-weight:600;color:${d.done?'var(--text)':'var(--muted)'};font-family:var(--fb)">Gün ${i+1}</div>
         ${d.dur?`<div style="font-size:11px;color:var(--muted);margin-top:1px">⏱ ${d.dur}</div>`:''}
       </div>
       ${d.done
@@ -258,7 +259,7 @@ function openWeeklyReport(){
       <!-- Özet kartlar -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">
-          <div style="font-family:var(--fd);font-size:26px;color:${completedDays===3?'var(--accent)':'var(--text)'}">${completedDays}/3</div>
+          <div style="font-family:var(--fd);font-size:26px;color:${completedDays===n?'var(--accent)':'var(--text)'}">${completedDays}/${n}</div>
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Gün</div>
         </div>
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center">

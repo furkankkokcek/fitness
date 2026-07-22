@@ -1,14 +1,32 @@
+function setDayCount(n){
+  S.dayCount=n;
+  if(S.currentDay>=n) S.currentDay=n-1;
+  saveS();
+  buildSetup();
+  if(typeof renderProgram==='function') renderProgram();
+}
+
 function buildSetup(){
   const el=document.getElementById('setup-list');
   const dayNames=["Gün 1","Gün 2","Gün 3"];
-  el.innerHTML = DAYS.map((dayIds,di)=>{
-    const weightExs = dayIds.map(id=>EX[id]).filter(e=>e.hasWeight);
-    const bwExs = dayIds.map(id=>EX[id]).filter(e=>!e.hasWeight);
+  const dc=dayCount();
+  const daySelector=`<div class="ec" style="margin-bottom:14px">
+    <div class="lbl" style="margin-bottom:8px">Haftalık antrenman günü sayısı</div>
+    <div style="display:flex;gap:6px">
+      ${[3,4,5,6].map(nn=>`<button type="button" onclick="setDayCount(${nn})" style="flex:1;border:1px solid var(--border);cursor:pointer;font-family:var(--fb);font-size:16px;font-weight:700;padding:11px 0;border-radius:8px;background:${dc===nn?'var(--accent)':'var(--bg3)'};color:${dc===nn?'#000':'var(--text)'}">${nn}</button>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Program 3 antrenman şablonundan oluşur. 3'ten fazla gün seçersen günler bu şablonları döngüyle tekrarlar (Gün 4 = Gün 1, Gün 5 = Gün 2 ...). Aşağıdaki 3 şablonun ağırlıklarını ayarlaman yeterli.</div>
+  </div>`;
+  el.innerHTML = daySelector + DAYS.map((tplIds,di)=>{
+    const weightExs = tplIds.map(id=>EX[id]).filter(e=>e.hasWeight);
+    const bwExs = tplIds.map(id=>EX[id]).filter(e=>!e.hasWeight);
+    const usedByDays=[]; for(let dd=0; dd<dc; dd++){ if(dd%3===di) usedByDays.push(dd+1); }
+    const usageLabel = dc>3 ? `Gün ${usedByDays.join(', ')}` : `${tplIds.length} hareket`;
     return `
     <div style="margin-bottom:8px">
       <div class="gh" onclick="toggleG('g-d${di}')">
         <div class="gt">${dayNames[di].toLocaleUpperCase('tr-TR')}</div>
-        <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${dayIds.length} hareket</div>
+        <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${usageLabel}</div>
         <span id="g-d${di}-ch">▸</span>
       </div>
       <div class="gb" id="g-d${di}">
