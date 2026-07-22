@@ -234,6 +234,9 @@ function importData(e){
       if(!S.profile) S.profile={kg:0,cm:0,age:0,gender:''};
       if(!S.theme) S.theme='dark';
       if(S.notifEnabled===undefined) S.notifEnabled=false;
+      if(!S.dayCount) S.dayCount=3;
+      // Programı (varsayılan veya kişiye özel) içe aktarılan state'e göre uygula
+      if(typeof applyProgramFromState==='function') applyProgramFromState();
       applyTheme();
       saveS();
       buildSetup();
