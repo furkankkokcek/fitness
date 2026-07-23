@@ -480,6 +480,9 @@ function renderProgram(){
           }
         </div>
         <div class="xact">
+          <button type="button" class="xact-btn" onclick="showGif('${ex.id}')">
+            📹 Nasıl Yapılır?
+          </button>
           <button type="button" class="xact-btn" onclick="toggleExpl('${ex.id}',this)">
             <span id="expl-arrow-${ex.id}">▸</span> Açıklama
           </button>

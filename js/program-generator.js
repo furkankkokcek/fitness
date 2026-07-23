@@ -48,6 +48,32 @@ const NEW_EX = {
 };
 Object.entries(NEW_EX).forEach(([id,e])=>{ EX[id]={id, gifUrl:'', alts:[], ...e}; });
 
+// Orijinal set/tekrar şemalarını sakla (varsayılan program bunları kullanır).
+// Üretilen programlar kendi şemalarını alır; varsayılana dönünce buradan geri yüklenir.
+const _EX_ORIG = {};
+Object.keys(EX).forEach(id=>{ _EX_ORIG[id]={sets:EX[id].sets, reps:EX[id].reps, scheme:EX[id].scheme, repType:EX[id].repType}; });
+function _restoreSchemes(){ Object.keys(_EX_ORIG).forEach(id=>{ if(EX[id]) Object.assign(EX[id], _EX_ORIG[id]); }); }
+function _applySchemes(schemes){ if(!schemes) return; Object.entries(schemes).forEach(([id,s])=>{ if(EX[id]) Object.assign(EX[id], s); }); }
+
+// Üretilen program için hareket bazında set/tekrar şeması (zorluk + role göre)
+function _genScheme(ex, diff){
+  if(!ex.hasWeight || ex.role==='core'){
+    return {sets:3, reps:0, scheme:'3×max', repType:'max'};
+  }
+  const compound = ex.role==='compound';
+  const sets = diff==='advanced' ? 4 : 3;
+  let lo, hi;
+  if(compound){
+    if(diff==='advanced'){ lo=5; hi=8; }
+    else if(diff==='beginner'){ lo=8; hi=12; }
+    else { lo=6; hi=10; }
+  } else {
+    if(diff==='advanced'){ lo=8; hi=12; }
+    else { lo=10; hi=15; }
+  }
+  return {sets, reps:lo, scheme:`${sets}×${lo}-${hi}`, repType:'range'};
+}
+
 // 3) Bölünme → günlük "slot" şablonları (öncelik sırasıyla)
 const _GEN_SLOT = {
   chest_c:['chest','compound'], chest_i:['chest','iso'],
@@ -114,24 +140,32 @@ function generateProgram(cfg){
 
 // 6) State ile programı uygula / varsayılana dön
 function applyProgramFromState(){
+  _restoreSchemes();
   if(S.customProgram && Array.isArray(S.customProgram.generatedDays) && S.customProgram.generatedDays.length){
     DAYS = S.customProgram.generatedDays.map(a=>a.slice());
     S.dayCount = DAYS.length;
+    _applySchemes(S.customProgram.schemes);
   } else {
     DAYS = DEFAULT_DAYS.map(a=>a.slice());
   }
 }
 function generateAndApply(cfg){
   const gen = generateProgram(cfg);
-  S.customProgram = {split:cfg.split, days:gen.length, difficulty:cfg.difficulty, gender:cfg.gender, generatedDays:gen};
+  const diff = cfg.difficulty||'intermediate';
+  const schemes = {};
+  new Set(gen.flat()).forEach(id=>{ if(EX[id]) schemes[id]=_genScheme(EX[id], diff); });
+  S.customProgram = {split:cfg.split, days:gen.length, difficulty:cfg.difficulty, gender:cfg.gender, generatedDays:gen, schemes};
   DAYS = gen.map(a=>a.slice());
   S.dayCount = gen.length;
   if(S.currentDay>=S.dayCount) S.currentDay=0;
+  _restoreSchemes();
+  _applySchemes(schemes);
   saveS();
 }
 function useDefaultProgram(){
   S.customProgram = null;
   DAYS = DEFAULT_DAYS.map(a=>a.slice());
+  _restoreSchemes();
   if(!S.dayCount || S.dayCount<3) S.dayCount=3;
   saveS();
 }
