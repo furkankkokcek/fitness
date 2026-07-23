@@ -18,16 +18,8 @@ function _initWiz(){
     gender: cp?cp.gender:((S.profile&&S.profile.gender)?S.profile.gender:'male'),
   };
 }
-function setWizSplit(s){
-  _initWiz(); _wiz.split=s;
-  const valid=validDaysForSplit(s);
-  if(s!=='default' && !valid.includes(_wiz.days)) _wiz.days=valid[0];
-  buildSetup();
-}
-function setWizDays(n){ _initWiz(); _wiz.days=n; buildSetup(); }
-function setWizDiff(d){ _initWiz(); _wiz.difficulty=d; buildSetup(); }
-function applyWizard(){
-  _initWiz();
+// Sihirbaz seçimini anında uygula (state + DAYS)
+function _applyWiz(){
   if(_wiz.split==='default'){
     useDefaultProgram();
     S.dayCount=_wiz.days; saveS();
@@ -35,11 +27,20 @@ function applyWizard(){
     const gender=(S.profile&&S.profile.gender)||'';
     generateAndApply({split:_wiz.split, days:_wiz.days, difficulty:_wiz.difficulty, gender});
   }
+}
+function _refreshAfterWiz(){
   buildSetup();
   if(typeof renderProgram==='function') renderProgram();
   if(typeof renderProgress==='function') renderProgress();
-  alert('Program oluşturuldu! Aşağıdan hareketlerin başlangıç ağırlıklarını ayarla.');
 }
+function setWizSplit(s){
+  _initWiz(); _wiz.split=s;
+  const valid=validDaysForSplit(s);
+  if(!valid.includes(_wiz.days)) _wiz.days=valid[0];
+  _applyWiz(); _refreshAfterWiz();
+}
+function setWizDays(n){ _initWiz(); _wiz.days=n; _applyWiz(); _refreshAfterWiz(); }
+function setWizDiff(d){ _initWiz(); _wiz.difficulty=d; _applyWiz(); _refreshAfterWiz(); }
 function _seg(active,cb,label){
   return `<button type="button" onclick="${cb}" style="flex:1;border:1px solid var(--border);cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:9px 4px;border-radius:8px;background:${active?'var(--accent)':'var(--bg3)'};color:${active?'#000':'var(--text)'}">${label}</button>`;
 }
@@ -63,8 +64,8 @@ function _wizardHtml(){
       ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Varsayılan Superhero programı (3 antrenman şablonu). 3'ten fazla gün seçersen şablonlar döngüyle tekrarlanır (Gün 4 = Gün 1 ...).</div>`
       : `<div class="lbl" style="margin-bottom:6px">Zorluk</div>
          <div style="display:flex;gap:6px;margin-bottom:12px">${diffs.map(([v,l])=>_seg(_wiz.difficulty===v,`setWizDiff('${v}')`,l)).join('')}</div>
-         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
-    <button class="btn bp" style="width:100%" onclick="applyWizard()">${isDef?'Uygula':'Programı Oluştur'}</button>
+         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:4px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
+    <div style="font-size:11px;color:var(--accent);line-height:1.5;margin-top:8px">Seçim anında uygulanır. Aşağıdaki günlerden ağırlıkları ayarlayıp <b>Programı Oluştur →</b> ile kaydet.</div>
   </div>`;
 }
 
