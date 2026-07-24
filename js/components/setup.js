@@ -69,15 +69,16 @@ function _wizardHtml(){
   </div>`;
 }
 
-function _weightCardHtml(ex){
+function _weightCardHtml(ex, di){
   const sv=S.maxes[ex.id];
   const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
   const u=sv?.unit||'kg';
   const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
   return `<div class="ec">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div class="en" style="margin:0">${ex.name}</div>
-      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+      <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
+      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
+      <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
     </div>
     <div class="esch">${ex.scheme}</div>
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
@@ -116,12 +117,13 @@ function _weightCardHtml(ex){
   </div>`;
 }
 
-function _bwCardHtml(ex){
+function _bwCardHtml(ex, di){
   const sv=S.maxes[ex.id];
   return `<div class="ec">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div class="en" style="margin:0">${ex.name}</div>
-      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 12px;font-size:12px;width:auto">📹 Nasıl Yapılır?</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+      <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
+      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
+      <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
     </div>
     <div class="esch">${ex.scheme}</div>
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
@@ -137,10 +139,11 @@ function _bwCardHtml(ex){
   </div>`;
 }
 
-function _repeatChip(ex){
-  return `<div class="ec" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px">
-    <div class="en" style="margin:0;font-size:14px">${ex.name}</div>
-    <span style="font-size:11px;color:var(--muted)">✓ yukarıda ayarlandı</span>
+function _repeatChip(ex, di){
+  return `<div class="ec" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:8px">
+    <div class="en" style="margin:0;font-size:14px;flex:1;min-width:0">${ex.name}</div>
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap">✓ ayarlandı</span>
+    <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:4px 9px;font-size:12px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
   </div>`;
 }
 
@@ -149,16 +152,17 @@ function buildSetup(){
   const isCustom=!!S.customProgram;
   const dc=dayCount();
   const seen=new Set();
-  const daysHtml = DAYS.map((tplIds,di)=>{
+  const daysHtml = DAYS.map((_ignored,di)=>{
+    const ids = dayIds(di);
     let label;
-    if(isCustom){ label=`${tplIds.length} hareket`; }
+    if(isCustom){ label=`${ids.length} hareket`; }
     else if(dc>3){ const u=[]; for(let dd=0; dd<dc; dd++){ if(dd%DAYS.length===di) u.push(dd+1); } label=`Gün ${u.join(', ')}`; }
-    else { label=`${tplIds.length} hareket`; }
-    const cards = tplIds.map(id=>{
+    else { label=`${ids.length} hareket`; }
+    const cards = ids.map(id=>{
       const ex=EX[id]; if(!ex) return '';
-      if(seen.has(id)) return _repeatChip(ex);
+      if(seen.has(id)) return _repeatChip(ex, di);
       seen.add(id);
-      return ex.hasWeight ? _weightCardHtml(ex) : _bwCardHtml(ex);
+      return ex.hasWeight ? _weightCardHtml(ex, di) : _bwCardHtml(ex, di);
     }).join('');
     return `<div style="margin-bottom:8px">
       <div class="gh" onclick="toggleG('g-d${di}')">
@@ -166,11 +170,71 @@ function buildSetup(){
         <div style="font-size:12px;color:var(--muted);flex:1;margin-left:8px">${label}</div>
         <span id="g-d${di}-ch">▸</span>
       </div>
-      <div class="gb" id="g-d${di}">${cards}</div>
+      <div class="gb" id="g-d${di}">${cards}
+        <button type="button" class="btn bo" onclick="openAddExModal(${di})" style="width:100%;margin-top:4px;border-style:dashed">+ Hareket Ekle</button>
+      </div>
     </div>`;
   }).join('');
   el.innerHTML = _wizardHtml() + daysHtml;
 }
+
+// Bir güne hareket ekleme/çıkarma (S.dayEdits[di] = düzenlenmiş liste)
+function removeExFromDay(di, exId){
+  const cur = dayIds(di).slice().filter(x=>x!==exId);
+  S.dayEdits[di] = cur;
+  saveS();
+  buildSetup();
+  if(typeof renderProgram==='function') renderProgram();
+  if(typeof renderProgress==='function') renderProgress();
+}
+function addExToDay(di, exId){
+  const cur = dayIds(di).slice();
+  if(!cur.includes(exId)) cur.push(exId);
+  S.dayEdits[di] = cur;
+  saveS();
+  closeAddExModal();
+  buildSetup();
+  if(typeof renderProgram==='function') renderProgram();
+  if(typeof renderProgress==='function') renderProgress();
+}
+const _MUSCLE_LABELS = {
+  chest:'Göğüs', back_v:'Sırt', back_h:'Sırt', shoulders:'Omuz', shoulders_side:'Omuz (yan)',
+  biceps:'Biceps', triceps:'Triceps', quads:'Bacak (ön)', hinge:'Bacak (arka)', glutes:'Kalça', core:'Karın'
+};
+function openAddExModal(di){
+  closeAddExModal();
+  const inDay = new Set(dayIds(di));
+  // Kas grubuna göre grupla, güne ekli olanları hariç tut
+  const groups = {};
+  Object.values(EX).forEach(ex=>{
+    if(inDay.has(ex.id)) return;
+    const g = _MUSCLE_LABELS[ex.muscle] || 'Diğer';
+    (groups[g] = groups[g] || []).push(ex);
+  });
+  const order = ['Göğüs','Sırt','Omuz','Omuz (yan)','Biceps','Triceps','Bacak (ön)','Bacak (arka)','Kalça','Karın','Diğer'];
+  const keys = Object.keys(groups).sort((a,b)=>{ const ia=order.indexOf(a), ib=order.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+  const body = keys.map(g=>`
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:6px">${g}</div>
+      ${groups[g].map(ex=>`<button type="button" onclick="addExToDay(${di},'${ex.id}')" style="display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 12px;margin-bottom:6px;cursor:pointer;color:var(--text);font-family:var(--fb);font-size:14px;text-align:left">
+        <span>${ex.name}</span>
+        <span style="color:var(--accent);font-weight:700;font-size:18px;line-height:1">+</span>
+      </button>`).join('')}
+    </div>`).join('') || '<div style="color:var(--muted);text-align:center;padding:20px">Eklenecek başka hareket yok.</div>';
+  const modal=document.createElement('div');
+  modal.id='add-ex-modal';
+  modal.className='mo open';
+  modal.onclick=e=>{ if(e.target===modal) closeAddExModal(); };
+  modal.innerHTML=`<div class="ms" style="max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="mt2" style="margin:0">GÜN ${di+1} — HAREKET EKLE</div>
+      <button onclick="closeAddExModal()" style="background:var(--bg3);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    ${body}
+  </div>`;
+  document.body.appendChild(modal);
+}
+function closeAddExModal(){ const m=document.getElementById('add-ex-modal'); if(m) m.remove(); }
 
 function toggleG(id){
   const el=document.getElementById(id),ch=document.getElementById(id+'-ch');
