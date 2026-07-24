@@ -64,7 +64,7 @@ function _wizardHtml(){
       ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Varsayılan Superhero programı (3 antrenman şablonu). 3'ten fazla gün seçersen şablonlar döngüyle tekrarlanır (Gün 4 = Gün 1 ...).</div>`
       : `<div class="lbl" style="margin-bottom:6px">Zorluk</div>
          <div style="display:flex;gap:6px;margin-bottom:12px">${diffs.map(([v,l])=>_seg(_wiz.difficulty===v,`setWizDiff('${v}')`,l)).join('')}</div>
-         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:4px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilir, her günün <b>⇅ Sırala</b> butonuyla hareket sırasını değiştirebilirsin.</div>`}
+         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:4px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir. Kartlara dokununca açılır; <b>⠿ sürükleyerek veya ▲▼ ile</b> sıralayabilir, ✕ ile çıkarabilirsin.</div>`}
     <div style="font-size:11px;color:var(--accent);line-height:1.5;margin-top:8px">Seçim anında uygulanır. Aşağıdaki günlerden ağırlıkları ayarlayıp <b>Programı Oluştur →</b> ile kaydet.</div>
   </div>`;
 }
@@ -75,11 +75,9 @@ function _weightCardHtml(ex, di){
   const u=sv?.unit||'kg';
   const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
   return `<div class="ec" data-exid="${ex.id}">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
-      <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
-      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
-      <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
-    </div>
+    ${_exHead(ex, di)}
+    <div class="exc-body" style="display:none;margin-top:10px">
+    <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
     <div class="esch">${ex.scheme}</div>
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
@@ -114,17 +112,16 @@ function _weightCardHtml(ex, di){
         <button class="btn bp" type="button" onclick="incrementInc('${ex.id}')" style="flex:0 0 44px;padding:8px">+</button>
       </div>
     </div>
+    </div>
   </div>`;
 }
 
 function _bwCardHtml(ex, di){
   const sv=S.maxes[ex.id];
   return `<div class="ec" data-exid="${ex.id}">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
-      <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
-      <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
-      <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
-    </div>
+    ${_exHead(ex, di)}
+    <div class="exc-body" style="display:none;margin-top:10px">
+    <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
     <div class="esch">${ex.scheme}</div>
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
@@ -136,6 +133,7 @@ function _bwCardHtml(ex, di){
       style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
       value="${sv?.customName||''}"/>
     <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px">Vücut ağırlığı — giriş gerekmez</div>
+    </div>
   </div>`;
 }
 
@@ -171,9 +169,8 @@ function buildSetup(){
         <span id="g-d${di}-ch">▸</span>
       </div>
       <div class="gb" id="g-d${di}">${cards}
-        <div style="display:flex;gap:6px;margin-top:4px">
-          <button type="button" class="btn bo" onclick="openAddExModal(${di})" style="flex:1;border-style:dashed">+ Hareket Ekle</button>
-          ${S.customProgram?`<button type="button" class="btn bo" onclick="openReorderModal(${di})" style="flex:1">⇅ Sırala</button>`:''}
+        <div class="exc-actions" style="margin-top:6px">
+          <button type="button" class="btn bo" onclick="openAddExModal(${di})" style="width:100%;border-style:dashed">+ Hareket Ekle</button>
         </div>
       </div>
     </div>`;
@@ -239,74 +236,70 @@ function openAddExModal(di){
 }
 function closeAddExModal(){ const m=document.getElementById('add-ex-modal'); if(m) m.remove(); }
 
-// ── HAREKET SIRALAMA MODALI (kısa satırlar; sürükle + ▲▼ oklar) ──
-function openReorderModal(di){
-  closeReorderModal();
-  const ids=dayIds(di).slice();
-  const rows=ids.map(id=>`
-    <div class="reorder-row" data-exid="${id}" style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 10px;margin-bottom:8px;touch-action:none">
-      <span onpointerdown="rowDragStart(event)" title="Sürükle" style="cursor:grab;touch-action:none;user-select:none;color:var(--muted);font-size:22px;line-height:1;padding:0 6px">⠿</span>
-      <span style="flex:1;font-size:15px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${EX[id]?EX[id].name:id}</span>
-      <button type="button" onclick="rowMove(this,-1)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:8px;cursor:pointer;font-size:15px">▲</button>
-      <button type="button" onclick="rowMove(this,1)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:8px;cursor:pointer;font-size:15px">▼</button>
-    </div>`).join('');
-  const modal=document.createElement('div');
-  modal.id='reorder-modal';
-  modal.className='mo open';
-  modal.onclick=e=>{ if(e.target===modal) closeReorderModal(); };
-  modal.innerHTML=`<div class="ms" style="max-height:82vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div class="mt2" style="margin:0">GÜN ${di+1} — SIRALA</div>
-      <button onclick="closeReorderModal()" style="background:var(--bg3);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">⠿ tutup sürükle ya da ▲▼ ile taşı.</div>
-    <div id="reorder-list">${rows}</div>
-    <button class="btn bp" style="width:100%;margin-top:6px" onclick="saveReorder(${di})">Kaydet</button>
-  </div>`;
-  document.body.appendChild(modal);
+// ── HAREKET KARTI aç/kapa + satır içi sıralama (sürükle + ▲▼) ──
+function toggleExCard(head){
+  const body=head.parentElement.querySelector('.exc-body');
+  const ch=head.querySelector('.exc-chevron');
+  if(!body) return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(ch) ch.textContent=open?'▸':'▾';
 }
-function closeReorderModal(){ const m=document.getElementById('reorder-modal'); if(m) m.remove(); }
-function rowMove(btn, dir){
-  const row=btn.closest('.reorder-row'); if(!row) return;
-  const c=row.parentElement;
-  if(dir<0 && row.previousElementSibling) c.insertBefore(row, row.previousElementSibling);
-  else if(dir>0 && row.nextElementSibling) c.insertBefore(row.nextElementSibling, row);
+function _cardOrderSave(di, container){
+  const order=[...container.querySelectorAll(':scope > .ec')].map(c=>c.dataset.exid).filter(Boolean);
+  if(order.length){ S.dayEdits[di]=order; saveS(); if(typeof renderProgram==='function') renderProgram(); }
 }
-function saveReorder(di){
-  const c=document.getElementById('reorder-list');
-  if(c){ const order=[...c.querySelectorAll('.reorder-row')].map(r=>r.dataset.exid).filter(Boolean); if(order.length){ S.dayEdits[di]=order; saveS(); } }
-  closeReorderModal();
-  buildSetup();
-  if(typeof renderProgram==='function') renderProgram();
-  if(typeof renderProgress==='function') renderProgress();
+function cardMove(btn, dir){
+  const card=btn.closest('.ec'); if(!card) return;
+  const c=card.parentElement;
+  const sib=dir<0?card.previousElementSibling:card.nextElementSibling;
+  if(!sib || !sib.classList.contains('ec')) return;
+  if(dir<0) c.insertBefore(card, sib); else c.insertBefore(sib, card);
+  _cardOrderSave(parseInt(c.id.replace('g-d','')), c);
 }
-let _rdrag=null;
-function rowDragStart(e){
+let _cdrag=null;
+function cardDragStart(e){
   e.preventDefault(); e.stopPropagation();
-  const row=e.target.closest('.reorder-row'); if(!row) return;
-  _rdrag={row, container:row.parentElement};
-  row.style.opacity='0.55'; row.style.background='var(--bg2)';
-  document.addEventListener('pointermove', rowDragMove, {passive:false});
-  document.addEventListener('pointerup', rowDragEnd);
-  document.addEventListener('pointercancel', rowDragEnd);
+  const card=e.target.closest('.ec'); if(!card) return;
+  _cdrag={card, container:card.parentElement};
+  card.style.opacity='0.55';
+  document.addEventListener('pointermove', cardDragMove, {passive:false});
+  document.addEventListener('pointerup', cardDragEnd);
+  document.addEventListener('pointercancel', cardDragEnd);
 }
-function rowDragMove(e){
-  if(!_rdrag) return;
+function cardDragMove(e){
+  if(!_cdrag) return;
   if(e.cancelable) e.preventDefault();
-  const {container, row}=_rdrag;
+  const {container, card}=_cdrag;
   const y=e.clientY;
-  const others=[...container.querySelectorAll('.reorder-row')].filter(r=>r!==row);
+  const others=[...container.querySelectorAll(':scope > .ec')].filter(c=>c!==card);
   let ref=null;
-  for(const r of others){ const b=r.getBoundingClientRect(); if(y < b.top + b.height/2){ ref=r; break; } }
-  if(ref) container.insertBefore(row, ref); else container.appendChild(row);
+  for(const c of others){ const b=c.getBoundingClientRect(); if(y < b.top + b.height/2){ ref=c; break; } }
+  if(ref) container.insertBefore(card, ref);
+  else { const act=container.querySelector('.exc-actions'); if(act) container.insertBefore(card, act); else container.appendChild(card); }
 }
-function rowDragEnd(){
-  if(!_rdrag) return;
-  _rdrag.row.style.opacity=''; _rdrag.row.style.background='';
-  document.removeEventListener('pointermove', rowDragMove, {passive:false});
-  document.removeEventListener('pointerup', rowDragEnd);
-  document.removeEventListener('pointercancel', rowDragEnd);
-  _rdrag=null;
+function cardDragEnd(){
+  if(!_cdrag) return;
+  _cdrag.card.style.opacity='';
+  document.removeEventListener('pointermove', cardDragMove, {passive:false});
+  document.removeEventListener('pointerup', cardDragEnd);
+  document.removeEventListener('pointercancel', cardDragEnd);
+  const c=_cdrag.container;
+  _cdrag=null;
+  _cardOrderSave(parseInt(c.id.replace('g-d','')), c);
+}
+// Kart başlığı (aç/kapa + özel programda sürükle/ok kontrolleri)
+function _exHead(ex, di){
+  const custom=!!S.customProgram;
+  const dh = custom ? `<span onpointerdown="cardDragStart(event)" onclick="event.stopPropagation()" title="Sürükle" style="cursor:grab;touch-action:none;user-select:none;color:var(--muted);font-size:20px;line-height:1;padding:0 2px">⠿</span>` : '';
+  const arrows = custom ? `<button type="button" onclick="event.stopPropagation();cardMove(this,-1)" title="Yukarı" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:12px;padding:0">▲</button><button type="button" onclick="event.stopPropagation();cardMove(this,1)" title="Aşağı" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:12px;padding:0">▼</button>` : '';
+  return `<div class="exc-head" onclick="toggleExCard(this)" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+    ${dh}
+    <span class="en" style="margin:0;flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
+    ${arrows}
+    <button type="button" onclick="event.stopPropagation();removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="background:none;border:1px solid rgba(248,113,113,.4);color:var(--danger);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:13px;padding:0">✕</button>
+    <span class="exc-chevron" style="color:var(--muted);font-size:12px;width:14px;text-align:center">▸</span>
+  </div>`;
 }
 
 function toggleG(id){
