@@ -52,7 +52,7 @@ function _wizardHtml(){
   const isDef=_wiz.split==='default';
   return `<div class="ec" style="margin-bottom:14px">
     <div class="gt" style="font-family:var(--fa);font-size:18px;margin-bottom:12px">PROGRAM SİHİRBAZI</div>
-    <div class="lbl" style="margin-bottom:6px">Bölünme tipi</div>
+    <div class="lbl" style="margin-bottom:6px">Antrenman tipi</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
       ${splits.map(([v,l])=>_seg(_wiz.split===v,`setWizSplit('${v}')`,l)).join('')}
     </div>
@@ -64,18 +64,23 @@ function _wizardHtml(){
       ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Varsayılan Superhero programı (3 antrenman şablonu). 3'ten fazla gün seçersen şablonlar döngüyle tekrarlanır (Gün 4 = Gün 1 ...).</div>`
       : `<div class="lbl" style="margin-bottom:6px">Zorluk</div>
          <div style="display:flex;gap:6px;margin-bottom:12px">${diffs.map(([v,l])=>_seg(_wiz.difficulty===v,`setWizDiff('${v}')`,l)).join('')}</div>
-         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:4px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilirsin.</div>`}
+         <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:4px">${((S.profile&&S.profile.gender)==='female')?'Profilin kadın olduğu için alt vücut/bacak günlerine ekstra glute hacmi eklenir. ':''}Hareketler zorluk ve bölünmeye göre otomatik seçilir; aşağıdan alternatifle değiştirebilir, <b>⠿ tutup sürükleyerek sıralayabilirsin.</b></div>`}
     <div style="font-size:11px;color:var(--accent);line-height:1.5;margin-top:8px">Seçim anında uygulanır. Aşağıdaki günlerden ağırlıkları ayarlayıp <b>Programı Oluştur →</b> ile kaydet.</div>
   </div>`;
 }
 
+function _dragHandle(di, exId){
+  if(!S.customProgram) return '';
+  return `<span class="drag-handle" onpointerdown="dragStart(event,${di},'${exId}')" title="Sürükleyerek sırala" style="cursor:grab;touch-action:none;user-select:none;color:var(--muted);font-size:18px;line-height:1;padding:2px 2px">⠿</span>`;
+}
 function _weightCardHtml(ex, di){
   const sv=S.maxes[ex.id];
   const rmKg=sv?.rmKg||'', rmReps=sv?.rmReps||'';
   const u=sv?.unit||'kg';
   const defInc=(sv && sv.inc!==undefined)?sv.inc:(u==='lbs'?5:2.5);
-  return `<div class="ec">
+  return `<div class="ec" data-exid="${ex.id}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+      ${_dragHandle(di, ex.id)}
       <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
       <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
       <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
@@ -119,8 +124,9 @@ function _weightCardHtml(ex, di){
 
 function _bwCardHtml(ex, di){
   const sv=S.maxes[ex.id];
-  return `<div class="ec">
+  return `<div class="ec" data-exid="${ex.id}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px">
+      ${_dragHandle(di, ex.id)}
       <div class="en" style="margin:0;flex:1;min-width:0">${ex.name}</div>
       <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap">📹 Nasıl Yapılır?</button>
       <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:6px 10px;font-size:13px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
@@ -235,6 +241,52 @@ function openAddExModal(di){
   document.body.appendChild(modal);
 }
 function closeAddExModal(){ const m=document.getElementById('add-ex-modal'); if(m) m.remove(); }
+
+// ── SÜRÜKLE-BIRAK ile hareket sıralama (yalnızca özel programlarda) ──
+let _drag=null;
+function dragStart(e, di, exId){
+  if(!S.customProgram) return;
+  e.preventDefault(); e.stopPropagation();
+  const card=e.target.closest('.ec');
+  if(!card) return;
+  _drag={di, card, container:card.parentElement};
+  card.classList.add('dragging');
+  card.style.opacity='0.55';
+  card.style.background='var(--bg2)';
+  document.addEventListener('pointermove', dragMove, {passive:false});
+  document.addEventListener('pointerup', dragEnd);
+  document.addEventListener('pointercancel', dragEnd);
+}
+function dragMove(e){
+  if(!_drag) return;
+  if(e.cancelable) e.preventDefault();
+  const {container, card}=_drag;
+  const y=e.clientY;
+  const others=[...container.querySelectorAll('.ec')].filter(c=>c!==card);
+  let ref=null;
+  for(const c of others){
+    const r=c.getBoundingClientRect();
+    if(y < r.top + r.height/2){ ref=c; break; }
+  }
+  if(ref){ container.insertBefore(card, ref); }
+  else {
+    const addBtn=container.querySelector('button[onclick^="openAddExModal"]');
+    if(addBtn) container.insertBefore(card, addBtn); else container.appendChild(card);
+  }
+}
+function dragEnd(){
+  if(!_drag) return;
+  const {di, container, card}=_drag;
+  card.classList.remove('dragging');
+  card.style.opacity=''; card.style.background='';
+  document.removeEventListener('pointermove', dragMove, {passive:false});
+  document.removeEventListener('pointerup', dragEnd);
+  document.removeEventListener('pointercancel', dragEnd);
+  const newOrder=[...container.querySelectorAll('.ec')].map(c=>c.dataset.exid).filter(Boolean);
+  if(newOrder.length){ S.dayEdits[di]=newOrder; saveS(); }
+  _drag=null;
+  if(typeof renderProgram==='function') renderProgram();
+}
 
 function toggleG(id){
   const el=document.getElementById(id),ch=document.getElementById(id+'-ch');
