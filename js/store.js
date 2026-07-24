@@ -1,5 +1,5 @@
 let S = {
-  maxes:{}, weekData:{}, currentWeek:0, currentDay:0, setupDone:false,
+  maxes:{}, weekData:{}, currentWeek:0, currentDay:0, dayCount:3, setupDone:false,
   profile:{kg:0,cm:0,age:0,gender:''},
   weeklyWeights:{},
   explanations:{},

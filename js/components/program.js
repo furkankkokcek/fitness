@@ -187,7 +187,32 @@ function undoDone(exId,w,d){
   saveS(); renderProgram(); renderProgress();
 }
 
+function buildDayTabs(w){
+  const cont=document.getElementById('day-tabs');
+  if(!cont) return;
+  const n=dayCount();
+  cont.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  let changed=false, html='';
+  for(let di=0; di<n; di++){
+    const dayDone = w<12 && dayIds(di).every(id=> S.weekData['w'+w]?.['d'+di]?.[id] !== undefined);
+    const active = di===S.currentDay ? ' active' : '';
+    const fs = n>4 ? 'font-size:11px;padding:9px 2px' : '';
+    html+=`<div class="dtab${active}" id="dtab-${di}" onclick="changeDay(${di},this)" style="color:${dayDone?'var(--success)':''};${fs}">${dayDone?'✅ ':''}GÜN ${di+1}</div>`;
+    if(dayDone){
+      const key=`w${w}_d${di}`;
+      if(!S.streak.completedSessions.includes(key)){
+        S.streak.completedSessions.push(key);
+        S.streak.count=S.streak.completedSessions.length;
+        changed=true;
+      }
+    }
+  }
+  cont.innerHTML=html;
+  if(changed) saveS();
+}
+
 function renderProgram(){
+  if(S.currentDay>=dayCount()) S.currentDay=dayCount()-1;
   const w=S.currentWeek, d=S.currentDay;
   const wk='w'+w, dk='d'+d;
 
@@ -204,26 +229,10 @@ function renderProgram(){
 
   renderProgWeightTracker();
 
-  // ── GÜN sekmelerine tamamlanma ikonu + streak senkronizasyonu ──
+  // ── GÜN sekmeleri (kullanıcı ayarlı sayıda) + tamamlanma ikonu + streak senkronizasyonu ──
   if(!S.streak) S.streak={count:0,completedSessions:[]};
   if(!S.streak.completedSessions) S.streak.completedSessions=[];
-  const dayNames = ['GÜN 1','GÜN 2','GÜN 3'];
-  [0,1,2].forEach(di=>{
-    const tab = document.getElementById('dtab-'+di);
-    if(!tab) return;
-    const dayDone = w<12 && DAYS[di].every(id=> S.weekData['w'+w]?.['d'+di]?.[id] !== undefined);
-    tab.innerHTML = dayDone ? `✅ ${dayNames[di]}` : dayNames[di];
-    tab.style.color = dayDone ? 'var(--success)' : '';
-    // weekData'da tamamlanmış ama completedSessions'ta yoksa ekle
-    if(dayDone){
-      const key=`w${w}_d${di}`;
-      if(!S.streak.completedSessions.includes(key)){
-        S.streak.completedSessions.push(key);
-        S.streak.count=S.streak.completedSessions.length;
-        saveS();
-      }
-    }
-  });
+  buildDayTabs(w);
 
   // ==========================================
   // 13. HAFTA (DELOAD / DİNLENME HAFTASI)
@@ -380,7 +389,7 @@ function renderProgram(){
     }
 
     if(ex.hasWeight && kg>0){
-      const isDay2PullUps=(d===1 && exIdx===2);
+      const isDay2PullUps=(d%3===1 && exIdx===2);
       if(!isDay2PullUps){
         let sets=[];
         if(exIdx===0){ sets=[{mult:0.60,label:'Isınma 1'},{mult:0.70,label:'Isınma 2'},{mult:0.85,label:'Isınma 3'}]; } 
@@ -471,6 +480,9 @@ function renderProgram(){
           }
         </div>
         <div class="xact">
+          <button type="button" class="xact-btn" onclick="showGif('${ex.id}')">
+            📹 Nasıl Yapılır?
+          </button>
           <button type="button" class="xact-btn" onclick="toggleExpl('${ex.id}',this)">
             <span id="expl-arrow-${ex.id}">▸</span> Açıklama
           </button>

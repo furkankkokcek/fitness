@@ -79,19 +79,23 @@ function getKgAt(exId, weekIdx){
   return wRound(kg, u);
 }
 
+// ── HAFTALIK GÜN SAYISI (kullanıcı ayarlı, varsayılan 3) ──
+function dayCount(){ return Math.max(1, S.dayCount || 3); }
+// Bir gün indeksinin egzersiz listesi — varsayılan programda şablonlar döngüyle tekrarlanır
+function dayIds(d){ return DAYS[d % DAYS.length]; }
+
 function exCompletedInWeek(exId, weekIdx){
   const wk='w'+weekIdx;
-  for(let d=0;d<3;d++){
-    if(DAYS[d].includes(exId)){
-      const val=S.weekData[wk]?.['d'+d]?.[exId];
-      if(!val) return false;
-      // Yeni format objeyse ve hedefe ulaşıldıysa true dön
-      if(typeof val === 'object') {
-          return val.targetMet === true;
-      }
-      // Geriye dönük uyumluluk
-      return val === true;
-    }
+  const n=dayCount();
+  let found=false;
+  // Egzersiz birden fazla güne düşebilir (döngü); herhangi birinde hedefe ulaşıldıysa hafta tamam sayılır
+  for(let d=0;d<n;d++){
+    if(!dayIds(d).includes(exId)) continue;
+    found=true;
+    const val=S.weekData[wk]?.['d'+d]?.[exId];
+    if(!val) continue;
+    if(typeof val === 'object'){ if(val.targetMet===true) return true; }
+    else if(val===true) return true;
   }
   return false;
 }

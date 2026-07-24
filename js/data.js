@@ -39,13 +39,15 @@ const EX = {
             alts:["RKC Plank","Dead Bug","Pallof Press"], gifUrl:""},
 };
 
-const DAYS = [
+// Varsayılan program (Superhero 3 gün). Kişiye özel program üretilince DAYS bununla değiştirilir.
+const DEFAULT_DAYS = [
   ["g1_cp","g1_spm","g1_rdl","g1_lpd","g1_le","g1_cr"],
   ["g2_lp","g2_cp","g2_pu","g2_lr","g2_idc","g2_lgr"],
   ["g3_sp","g3_lp","g3_br","g3_cf","g3_cpd","g3_pl"],
 ];
+let DAYS = DEFAULT_DAYS.map(a=>a.slice());
 
-function getDayExs(d){ return DAYS[d].map(id => EX[id]); }
+function getDayExs(d){ return DAYS[d % DAYS.length].map(id => EX[id]); }
 const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
 
 const EXERCISE_GIFS = {
