@@ -157,6 +157,7 @@ function generateAndApply(cfg){
   S.customProgram = {split:cfg.split, days:gen.length, difficulty:cfg.difficulty, gender:cfg.gender, generatedDays:gen, schemes};
   DAYS = gen.map(a=>a.slice());
   S.dayCount = gen.length;
+  S.dayEdits = {}; // yeni program = temiz gün listeleri
   if(S.currentDay>=S.dayCount) S.currentDay=0;
   _restoreSchemes();
   _applySchemes(schemes);
@@ -166,6 +167,7 @@ function useDefaultProgram(){
   S.customProgram = null;
   DAYS = DEFAULT_DAYS.map(a=>a.slice());
   _restoreSchemes();
+  S.dayEdits = {}; // varsayılana dönünce gün düzenlemeleri temizlenir
   if(!S.dayCount || S.dayCount<3) S.dayCount=3;
   saveS();
 }

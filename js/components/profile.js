@@ -235,6 +235,7 @@ function importData(e){
       if(!S.theme) S.theme='dark';
       if(S.notifEnabled===undefined) S.notifEnabled=false;
       if(!S.dayCount) S.dayCount=3;
+      if(!S.dayEdits) S.dayEdits={};
       // Programı (varsayılan veya kişiye özel) içe aktarılan state'e göre uygula
       if(typeof applyProgramFromState==='function') applyProgramFromState();
       applyTheme();

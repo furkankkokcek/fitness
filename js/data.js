@@ -47,7 +47,7 @@ const DEFAULT_DAYS = [
 ];
 let DAYS = DEFAULT_DAYS.map(a=>a.slice());
 
-function getDayExs(d){ return DAYS[d % DAYS.length].map(id => EX[id]); }
+function getDayExs(d){ return dayIds(d).map(id => EX[id]); }
 const WEIGHT_EX_IDS = Object.values(EX).filter(e=>e.hasWeight).map(e=>e.id);
 
 const EXERCISE_GIFS = {
