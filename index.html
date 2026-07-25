@@ -51,6 +51,15 @@
     <div class="page active" id="page-setup">
       <div class="pt">KURULUM</div>
       <div class="ps">Her hareket için başlangıç kg, haftalık artış ve alternatif seç</div>
+      <details open style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)">Ağırlık nasıl girilir?</summary>
+        <div style="font-size:12px;color:var(--text);line-height:1.65;margin-top:8px">
+          <div style="margin-bottom:6px"><b>Plaka takılan (bar) hareketler:</b> toplam ağırlığı yaz. Örn. Bench Press'te her iki yana 20'şer kg + 20 kg bar = <b>80 kg</b>.</div>
+          <div style="margin-bottom:6px"><b>Dumbbell hareketleri:</b> tek bir dumbbell ağırlığını yaz.</div>
+          <div style="margin-bottom:8px"><b>Makine hareketleri:</b> ağırlığın takılı olduğu (seçili) değeri yaz.</div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;color:var(--muted)">Bar ağırlıkları: <b>Olimpik bar 20 kg</b> · <b>Kısa düz bar 10 kg</b> · <b>Z bar 8 kg</b></div>
+        </div>
+      </details>
       <div id="setup-list"></div>
       <button class="btn bp" onclick="saveAndStart()" style="margin-top:4px">Programı Oluştur →</button>
       <input type="file" id="import-file-setup" accept=".json" style="display:none" onchange="importData(event)"/>
