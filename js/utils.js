@@ -81,11 +81,11 @@ function getKgAt(exId, weekIdx){
 
 // ── HAFTALIK GÜN SAYISI (kullanıcı ayarlı, varsayılan 3) ──
 function dayCount(){ return Math.max(1, S.dayCount || 3); }
-// Bir gün indeksinin egzersiz listesi — varsayılan programda şablonlar döngüyle tekrarlanır.
-// Kullanıcı hareket ekleyip çıkarmışsa (S.dayEdits) o düzenlenmiş liste öncelikli.
+// Bir gün indeksinin egzersiz listesi. Kullanıcı o günü düzenlemişse (S.dayEdits[gün])
+// o liste; yoksa varsayılan/üretilen taban (varsayılanda şablonlar döngüyle: DAYS[d%len]).
 function dayIds(d){
-  const idx = d % DAYS.length;
-  return (S.dayEdits && S.dayEdits[idx]) ? S.dayEdits[idx] : DAYS[idx];
+  if(S.dayEdits && S.dayEdits[d]) return S.dayEdits[d];
+  return DAYS[d % DAYS.length];
 }
 
 function exCompletedInWeek(exId, weekIdx){
