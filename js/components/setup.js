@@ -147,15 +147,11 @@ function _repeatChip(ex, di){
 
 function buildSetup(){
   const el=document.getElementById('setup-list');
-  const isCustom=!!S.customProgram;
-  const dc=dayCount();
   const seen=new Set();
-  const daysHtml = DAYS.map((_ignored,di)=>{
+  const n=dayCount();
+  const daysHtml = Array.from({length:n},(_,di)=>{
     const ids = dayIds(di);
-    let label;
-    if(isCustom){ label=`${ids.length} hareket`; }
-    else if(dc>3){ const u=[]; for(let dd=0; dd<dc; dd++){ if(dd%DAYS.length===di) u.push(dd+1); } label=`Gün ${u.join(', ')}`; }
-    else { label=`${ids.length} hareket`; }
+    const label = `${ids.length} hareket`;
     const cards = ids.map(id=>{
       const ex=EX[id]; if(!ex) return '';
       if(seen.has(id)) return _repeatChip(ex, di);
@@ -178,12 +174,26 @@ function buildSetup(){
   el.innerHTML = _wizardHtml() + daysHtml;
 }
 
+// Açık gün gruplarını ve açık kartları koruyarak yeniden çiz (ekle/çıkar sonrası liste kapanmasın)
+function _rebuildSetupKeepState(){
+  const openDays=[...document.querySelectorAll('#setup-list .gb.open')].map(g=>g.id);
+  const openCards=[...document.querySelectorAll('#setup-list .ec')]
+    .filter(c=>{ const b=c.querySelector('.exc-body'); return b && b.style.display==='block'; })
+    .map(c=>c.dataset.exid);
+  buildSetup();
+  openDays.forEach(id=>{ const g=document.getElementById(id); if(g){ g.classList.add('open'); const ch=document.getElementById(id+'-ch'); if(ch) ch.textContent='▾'; } });
+  const openSet=new Set(openCards);
+  document.querySelectorAll('#setup-list .ec').forEach(c=>{
+    if(openSet.has(c.dataset.exid)){ const b=c.querySelector('.exc-body'), ch=c.querySelector('.exc-chevron'); if(b) b.style.display='block'; if(ch) ch.textContent='▾'; }
+  });
+}
+
 // Bir güne hareket ekleme/çıkarma (S.dayEdits[di] = düzenlenmiş liste)
 function removeExFromDay(di, exId){
   const cur = dayIds(di).slice().filter(x=>x!==exId);
   S.dayEdits[di] = cur;
   saveS();
-  buildSetup();
+  _rebuildSetupKeepState();
   if(typeof renderProgram==='function') renderProgram();
   if(typeof renderProgress==='function') renderProgress();
 }
@@ -193,7 +203,7 @@ function addExToDay(di, exId){
   S.dayEdits[di] = cur;
   saveS();
   closeAddExModal();
-  buildSetup();
+  _rebuildSetupKeepState();
   if(typeof renderProgram==='function') renderProgram();
   if(typeof renderProgress==='function') renderProgress();
 }
