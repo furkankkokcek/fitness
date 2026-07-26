@@ -78,7 +78,7 @@ function _weightCardHtml(ex, di){
     ${_exHead(ex, di)}
     <div class="exc-body" style="display:none;margin-top:10px">
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
-    <div class="esch">${ex.scheme}</div>
+    <div class="esch" id="esch-${ex.id}">${ex.scheme}</div>${_setsEditor(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
@@ -122,7 +122,7 @@ function _bwCardHtml(ex, di){
     ${_exHead(ex, di)}
     <div class="exc-body" style="display:none;margin-top:10px">
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
-    <div class="esch">${ex.scheme}</div>
+    <div class="esch" id="esch-${ex.id}">${ex.scheme}</div>${_setsEditor(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
@@ -298,6 +298,36 @@ function cardDragEnd(){
   _cdrag=null;
   _cardOrderSave(parseInt(c.id.replace('g-d','')), c);
 }
+// Set sayısı düzenleyici (yalnızca özel programlarda)
+function _setsEditor(ex){
+  if(!S.customProgram) return '';
+  return `<div class="lbl" style="margin:8px 0 5px">Set sayısı</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <button class="btn bo" type="button" onclick="changeExSets('${ex.id}',-1)" style="flex:0 0 44px;padding:8px">−</button>
+      <input type="number" id="sets-${ex.id}" class="no-spin" min="1" max="10" step="1" value="${ex.sets}" style="text-align:center;flex:1" onchange="setExSets('${ex.id}',this.value)"/>
+      <button class="btn bp" type="button" onclick="changeExSets('${ex.id}',1)" style="flex:0 0 44px;padding:8px">+</button>
+    </div>`;
+}
+function changeExSets(exId, delta){
+  const el=document.getElementById('sets-'+exId);
+  const cur=parseInt(el?.value)||EX[exId].sets||3;
+  setExSets(exId, cur+delta);
+}
+function setExSets(exId, n){
+  n=Math.max(1, Math.min(10, parseInt(n)||1));
+  if(!S.customProgram) return;
+  if(!S.customProgram.schemes) S.customProgram.schemes={};
+  const base=S.customProgram.schemes[exId] || {sets:EX[exId].sets, reps:EX[exId].reps, scheme:EX[exId].scheme, repType:EX[exId].repType};
+  const newScheme=(base.scheme||EX[exId].scheme||(n+'×')).replace(/^\d+/, n);
+  const sc={...base, sets:n, scheme:newScheme};
+  S.customProgram.schemes[exId]=sc;
+  EX[exId].sets=n; EX[exId].scheme=newScheme; EX[exId].reps=sc.reps; EX[exId].repType=sc.repType;
+  saveS();
+  const inp=document.getElementById('sets-'+exId); if(inp) inp.value=n;
+  const esch=document.getElementById('esch-'+exId); if(esch) esch.textContent=newScheme;
+  if(typeof renderProgram==='function') renderProgram();
+}
+
 // Kart başlığı (aç/kapa + özel programda sürükle/ok kontrolleri)
 function _exHead(ex, di){
   const custom=!!S.customProgram;
