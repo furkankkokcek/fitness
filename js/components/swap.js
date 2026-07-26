@@ -143,3 +143,14 @@ function getExplanation(exId, w, d){
   // Yeni format önce, yoksa eski global format (geriye dönük uyum)
   return S.explanations['w'+w+'_d'+d+'_'+exId] ?? S.explanations[exId] ?? '';
 }
+// Bir önceki haftanın aynı gün/hareket notu (varsa)
+function getPrevExplanation(exId, w, d){
+  if(!S.explanations || w<=0) return '';
+  return (S.explanations['w'+(w-1)+'_d'+d+'_'+exId] || '').trim();
+}
+// Açıklama alanı placeholder'ı: önceki hafta not varsa "Önceki hafta: NOT", yoksa varsayılan
+function exNotePlaceholder(exId, w, d){
+  const prev=getPrevExplanation(exId, w, d);
+  const txt = prev ? ('Önceki hafta: ' + prev.replace(/\s+/g,' ')) : 'Bu hareket hakkında not...';
+  return txt.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}

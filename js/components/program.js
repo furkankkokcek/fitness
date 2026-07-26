@@ -491,7 +491,7 @@ function renderProgram(){
           </button>
         </div>
         <div id="expl-content-${ex.id}" style="display:none;margin-top:8px;margin-bottom:8px">
-          <textarea id="expl-text-${ex.id}" placeholder="Bu hareket hakkında not..." style="width:100%;min-height:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:13px;padding:10px;border-radius:8px;outline:none;resize:none;-webkit-appearance:none" oninput="saveExplanation('${ex.id}',${w},${d},this.value)">${getExplanation(ex.id,w,d)}</textarea>
+          <textarea id="expl-text-${ex.id}" placeholder="${exNotePlaceholder(ex.id,w,d)}" style="width:100%;min-height:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--fb);font-size:13px;padding:10px;border-radius:8px;outline:none;resize:none;-webkit-appearance:none" oninput="saveExplanation('${ex.id}',${w},${d},this.value)">${getExplanation(ex.id,w,d)}</textarea>
         </div>
         ${warmupHtml}
         ${bottomSection}
