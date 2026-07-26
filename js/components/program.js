@@ -472,16 +472,13 @@ function renderProgram(){
         </div>
         ${isSwapped?`<div class="xorig">↳ Yerine: ${origName}</div>`:''}
         <div class="xw">${wtxt}</div>
-        ${(()=>{
-          const rpe = ex.repType === 'range' ? (['g1_lpd','g3_cf'].includes(ex.id) ? ' (RPE 8)' : ' (RPE 9)') : '';
-          if(S.customProgram){
-            return `<div class="xsch" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <input type="text" id="scheme-${ex.id}" value="${ex.scheme}" onblur="applyScheme('${ex.id}',this.value)" onkeydown="if(event.key==='Enter'){this.blur();}" title="ör. 5x10, 3x5+, 4x8-12" style="width:120px;background:var(--bg3);border:1px solid var(--border);color:var(--accent);font-family:var(--fb);font-size:15px;font-weight:600;padding:5px 8px;border-radius:6px;text-align:center"/>
-              <span style="font-size:11px;color:var(--muted)">${rpe.trim()||'düzenle'}</span>
-            </div>`;
+        <div class="xsch">
+          ${ex.scheme}${
+            ex.repType === 'range'
+              ? (['g1_lpd','g3_cf'].includes(ex.id) ? ' (RPE 8)' : ' (RPE 9)')
+              : ''
           }
-          return `<div class="xsch">${ex.scheme}${rpe}</div>`;
-        })()}
+        </div>
         <div class="xact">
           <button type="button" class="xact-btn" onclick="showGif('${ex.id}')">
             📹 Nasıl Yapılır?
