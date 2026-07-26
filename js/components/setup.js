@@ -137,12 +137,24 @@ function _bwCardHtml(ex, di){
   </div>`;
 }
 
+// Aynı hareket başka bir güne de düştüğünde: tam kart yerine kısa etiket (ağırlık hareket başına bir kez ayarlanır).
 function _repeatChip(ex, di){
-  return `<div class="ec" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:8px">
-    <div class="en" style="margin:0;font-size:14px;flex:1;min-width:0">${ex.name}</div>
-    <span style="font-size:11px;color:var(--muted);white-space:nowrap">✓ ayarlandı</span>
-    <button class="btn bo" onclick="removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="padding:4px 9px;font-size:12px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
+  return `<div class="ec" data-exid="${ex.id}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;gap:8px;cursor:pointer" onclick="jumpToExCard('${ex.id}')" title="Aynı hareket — ağırlığı yukarıdaki kartta ayarlanıyor">
+    <div class="en" style="margin:0;font-size:14px;flex:1;min-width:0">${getDisplayName(ex)}</div>
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap">aynı hareket ↑</span>
+    <button class="btn bo" onclick="event.stopPropagation();removeExFromDay(${di},'${ex.id}')" title="Bu günden çıkar" style="padding:4px 9px;font-size:12px;width:auto;color:var(--danger);border-color:rgba(248,113,113,.4)">✕</button>
   </div>`;
+}
+// Aynı hareketin tam ayar kartına git (gününü aç, kartı aç, kaydır)
+function jumpToExCard(exId){
+  const cards=[...document.querySelectorAll('#setup-list .ec[data-exid="'+exId+'"]')];
+  const full=cards.find(c=>c.querySelector('.exc-body'));
+  if(!full) return;
+  const gb=full.closest('.gb');
+  if(gb && !gb.classList.contains('open')){ gb.classList.add('open'); const ch=document.getElementById(gb.id+'-ch'); if(ch) ch.textContent='▾'; }
+  const body=full.querySelector('.exc-body'), ch=full.querySelector('.exc-chevron');
+  if(body){ body.style.display='block'; if(ch) ch.textContent='▾'; }
+  full.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 function buildSetup(){

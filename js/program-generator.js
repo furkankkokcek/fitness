@@ -45,6 +45,20 @@ const NEW_EX = {
   lib_stepup:     {name:'Step-Up with Knee Drive',     muscle:'glutes',        role:'iso',      free:true,  rmMult:0.85*0.40, sets:3, reps:10, scheme:'3×10-12', repType:'range', hasWeight:true,  alts:['Cable Pull-Through','Goblet Squat']},
   lib_cablecrunch:{name:'Cable Crunch',                muscle:'core',          role:'core',     free:false, rmMult:0,         sets:3, reps:0,  scheme:'3×max',   repType:'max',   hasWeight:false, alts:['Crunch','Decline Crunch','Ab Wheel']},
   lib_hanging:    {name:'Hanging Knee Raise',          muscle:'core',          role:'core',     free:false, rmMult:0,         sets:3, reps:0,  scheme:'3×max',   repType:'max',   hasWeight:false, alts:['Leg Raises','Reverse Crunch','Flutter Kicks']},
+  // Havuzu büyütmek için ek hareketler (hepsinin GIF'i mevcut) — üretilen programlarda tekrarı azaltır
+  lib_machlat:    {name:'Machine Lateral Raise',       muscle:'shoulders_side',role:'iso',      free:false, rmMult:0.85*0.50, sets:3, reps:14, scheme:'3×12-15', repType:'range', hasWeight:true,  alts:['Lateral Raises','Cable Lateral Raise']},
+  lib_uprightrow: {name:'Upright Row',                 muscle:'shoulders_side',role:'iso',      free:true,  rmMult:0.85*0.55, sets:3, reps:12, scheme:'3×10-12', repType:'range', hasWeight:true,  alts:['Lateral Raises','Cable Lateral Raise']},
+  lib_tke:        {name:'Terminal Knee Extension',     muscle:'quads',         role:'iso',      free:false, rmMult:0.85*0.45, sets:3, reps:14, scheme:'3×12-15', repType:'range', hasWeight:true,  alts:['Leg Extension','Sissy Squat']},
+  lib_dbrdl:      {name:'DB Romanian DL',              muscle:'hinge',         role:'compound', free:true,  rmMult:0.85*0.55, sets:3, reps:10, scheme:'3×8-12',  repType:'range', hasWeight:true,  alts:['Romanian DL','Stiff-Leg Deadlift']},
+  lib_tbar:       {name:'T-Bar Row',                   muscle:'back_h',        role:'compound', free:true,  rmMult:0.85*0.65, sets:3, reps:10, scheme:'3×8-12',  repType:'range', hasWeight:true,  alts:['Barbell Row','Dumbbell Row','Cable Seated Row']},
+  lib_dbfly:      {name:'Dumbbell Fly',                muscle:'chest',         role:'iso',      free:true,  rmMult:0.85*0.45, sets:3, reps:12, scheme:'3×10-15', repType:'range', hasWeight:true,  alts:['Chest Fly Machine','Cable Fly','Pec Deck']},
+  lib_pecdeck:    {name:'Pec Deck',                    muscle:'chest',         role:'iso',      free:false, rmMult:0.85*0.55, sets:3, reps:14, scheme:'3×12-15', repType:'range', hasWeight:true,  alts:['Chest Fly Machine','Cable Fly','Dumbbell Fly']},
+  lib_cablecurl:  {name:'Cable Curl',                  muscle:'biceps',        role:'iso',      free:false, rmMult:0.85*0.60, sets:3, reps:12, scheme:'3×10-15', repType:'range', hasWeight:true,  alts:['Barbell Curl','Incline Dumbbell Curl','Hammer Curl']},
+  lib_dbkick:     {name:'Dumbbell Kickback',           muscle:'triceps',       role:'iso',      free:true,  rmMult:0.85*0.40, sets:3, reps:14, scheme:'3×12-15', repType:'range', hasWeight:true,  alts:['Cable Pushdown','Overhead Triceps Extension','Bench Dips']},
+  lib_arnold:     {name:'Arnold Press',                muscle:'shoulders',     role:'compound', free:true,  rmMult:0.85*0.55, sets:3, reps:10, scheme:'3×8-12',  repType:'range', hasWeight:true,  alts:['Dumbbell OHP','Shoulder Press Machine','Smith Machine Shoulder']},
+  lib_landmine:   {name:'Landmine Press',              muscle:'shoulders',     role:'compound', free:true,  rmMult:0.85*0.55, sets:3, reps:10, scheme:'3×8-12',  repType:'range', hasWeight:true,  alts:['Dumbbell OHP','Arnold Press','Smith Machine Shoulder']},
+  lib_smithsquat: {name:'Smith Machine Squat',         muscle:'quads',         role:'compound', free:false, rmMult:0.85*0.70, sets:3, reps:8,  scheme:'3×6-10',  repType:'range', hasWeight:true,  alts:['Leg Press','Hack Squat','Goblet Squat']},
+  lib_cablepress: {name:'Cable Chest Press',           muscle:'chest',         role:'compound', free:false, rmMult:0.85*0.60, sets:3, reps:10, scheme:'3×8-12',  repType:'range', hasWeight:true,  alts:['Chest Press Machine','Dumbbell Bench Press','Smith Machine Bench']},
 };
 Object.entries(NEW_EX).forEach(([id,e])=>{ EX[id]={id, gifUrl:'', alts:[], ...e}; });
 
@@ -92,8 +106,9 @@ const _GEN_TPL = {
   fullbody:['quad_c','chest_c','back_h','sho_c','core','hinge'],
 };
 
-// 4) Havuzdan rotasyonla hareket seç (varyasyon + gün içi tekrar önleme)
-let _genRot = {};
+// 4) Havuzdan hareket seç — önce program genelinde hiç kullanılmamışı, sonra gün-içi
+//    kullanılmamışı, en son (havuz tükenmişse) rotasyonla tekrarı seçer.
+let _genRot = {}, _genUsed = new Set();
 function _genPick(muscle, role, usedInDay, bias){
   let pool = Object.values(EX).filter(e=> e.muscle===muscle && (role? e.role===role : true));
   if(!pool.length) return null;
@@ -101,11 +116,17 @@ function _genPick(muscle, role, usedInDay, bias){
   else if(bias==='free')    pool = pool.slice().sort((a,b)=> (b.free?1:0)-(a.free?1:0));
   const key = muscle+':'+(role||'');
   const start = _genRot[key]||0;
+  // 1. tercih: gün içinde VE program genelinde kullanılmamış (tekrarı en aza indir)
   for(let i=0;i<pool.length;i++){
-    const cand = pool[(start+i)%pool.length];
-    if(!usedInDay.has(cand.id)){ _genRot[key]=(start+i+1)%pool.length; usedInDay.add(cand.id); return cand.id; }
+    const c = pool[(start+i)%pool.length];
+    if(!usedInDay.has(c.id) && !_genUsed.has(c.id)){ _genRot[key]=(start+i+1)%pool.length; usedInDay.add(c.id); _genUsed.add(c.id); return c.id; }
   }
-  const cand = pool[start%pool.length]; _genRot[key]=(start+1)%pool.length; return cand.id;
+  // 2. tercih: gün içinde kullanılmamış (program genelinde tekrar olabilir)
+  for(let i=0;i<pool.length;i++){
+    const c = pool[(start+i)%pool.length];
+    if(!usedInDay.has(c.id)){ _genRot[key]=(start+i+1)%pool.length; usedInDay.add(c.id); _genUsed.add(c.id); return c.id; }
+  }
+  const c = pool[start%pool.length]; _genRot[key]=(start+1)%pool.length; return c.id;
 }
 
 // 5) Program üret → gün başına egzersiz-id listesi
@@ -118,7 +139,7 @@ function generateProgram(cfg){
   const typeOf = d => split==='ppl'        ? ['push','pull','legs'][d%3]
                     : split==='upperlower' ? (d%2===0?'upper':'lower')
                     : 'fullbody';
-  _genRot = {};
+  _genRot = {}; _genUsed = new Set();
   const out = [];
   for(let d=0; d<days; d++){
     const type = typeOf(d);
