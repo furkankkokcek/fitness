@@ -89,7 +89,7 @@ const EXERCISE_GIFS = {
   "Hammer Curl": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Hammer-Curl.gif",
   "Cable Curl": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/cable-curl.gif",
   "Leg Raises": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Lying-Leg-Raise.gif",
-  "Hanging Knee Raise": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Hanging-Knee-Raise.gif",
+  "Hanging Knee Raise": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Hanging-Knee-Raises.gif",
   "Reverse Crunch": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Reverse-Crunch-1.gif",
   "Flutter Kicks": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Flutter-Kicks.gif",
   "Smith Machine Shoulder": "https://raw.githubusercontent.com/furkankkokcek/fitness/main/exercises/Smith-Machine-Shoulder-Press.gif",
