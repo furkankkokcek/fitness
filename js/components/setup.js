@@ -78,7 +78,7 @@ function _weightCardHtml(ex, di){
     ${_exHead(ex, di)}
     <div class="exc-body" style="display:none;margin-top:10px">
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
-    <div class="esch" id="esch-${ex.id}">${ex.scheme}</div>${_setsEditor(ex)}
+    ${_schemeBlock(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
@@ -122,7 +122,7 @@ function _bwCardHtml(ex, di){
     ${_exHead(ex, di)}
     <div class="exc-body" style="display:none;margin-top:10px">
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
-    <div class="esch" id="esch-${ex.id}">${ex.scheme}</div>${_setsEditor(ex)}
+    ${_schemeBlock(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
     <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
@@ -298,34 +298,13 @@ function cardDragEnd(){
   _cdrag=null;
   _cardOrderSave(parseInt(c.id.replace('g-d','')), c);
 }
-// Set sayısı düzenleyici (yalnızca özel programlarda)
-function _setsEditor(ex){
-  if(!S.customProgram) return '';
-  return `<div class="lbl" style="margin:8px 0 5px">Set sayısı</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-      <button class="btn bo" type="button" onclick="changeExSets('${ex.id}',-1)" style="flex:0 0 44px;padding:8px">−</button>
-      <input type="number" id="setcnt-${ex.id}" class="no-spin" min="1" max="10" step="1" value="${ex.sets}" style="text-align:center;flex:1" onchange="setExSets('${ex.id}',this.value)"/>
-      <button class="btn bp" type="button" onclick="changeExSets('${ex.id}',1)" style="flex:0 0 44px;padding:8px">+</button>
-    </div>`;
-}
-function changeExSets(exId, delta){
-  const el=document.getElementById('setcnt-'+exId);
-  const cur=parseInt(el?.value)||EX[exId].sets||3;
-  setExSets(exId, cur+delta);
-}
-function setExSets(exId, n){
-  n=Math.max(1, Math.min(10, parseInt(n)||1));
-  if(!S.customProgram) return;
-  if(!S.customProgram.schemes) S.customProgram.schemes={};
-  const base=S.customProgram.schemes[exId] || {sets:EX[exId].sets, reps:EX[exId].reps, scheme:EX[exId].scheme, repType:EX[exId].repType};
-  const newScheme=(base.scheme||EX[exId].scheme||(n+'×')).replace(/^\d+/, n);
-  const sc={...base, sets:n, scheme:newScheme};
-  S.customProgram.schemes[exId]=sc;
-  EX[exId].sets=n; EX[exId].scheme=newScheme; EX[exId].reps=sc.reps; EX[exId].repType=sc.repType;
-  saveS();
-  const inp=document.getElementById('setcnt-'+exId); if(inp) inp.value=n;
-  const esch=document.getElementById('esch-'+exId); if(esch) esch.textContent=newScheme;
-  if(typeof renderProgram==='function') renderProgram();
+// Şema bloğu: özel programda düzenlenebilir (set × tekrar) kutu, varsayılanda salt-okunur
+function _schemeBlock(ex){
+  if(!S.customProgram){
+    return `<div class="esch">${ex.scheme}</div>`;
+  }
+  return `<div class="lbl" style="margin:8px 0 5px">Set × Tekrar</div>
+    <input type="text" id="scheme-${ex.id}" value="${ex.scheme}" onblur="applyScheme('${ex.id}',this.value)" onkeydown="if(event.key==='Enter'){this.blur();}" placeholder="ör. 3x12, 4x8-12, 3x5+" style="margin-bottom:10px;text-align:center;font-weight:700;color:var(--accent)"/>`;
 }
 
 // Şema metnini ayrıştır: "5x10", "3x5+", "4x8-12", "3xmax" -> {sets,reps,scheme,repType}
@@ -344,14 +323,14 @@ function parseScheme(str){
   if(r){ const v=parseInt(r[1]); return {sets, reps:v, repType:'fixed', scheme:`${sets}×${v}`}; }
   return null;
 }
-// Program sekmesindeki şema kutusundan tam şemayı (set × tekrar) güncelle
+// Kurulumdaki şema kutusundan tam şemayı (set × tekrar) güncelle
 function applyScheme(exId, str){
   if(!S.customProgram || !EX[exId]) return;
   const parsed=parseScheme(str);
   const inp=document.getElementById('scheme-'+exId);
   if(!parsed){
     if(inp) inp.value=EX[exId].scheme;
-    alert('Geçersiz format. Örnek: 5x10, 3x5+, 4x8-12, 3xmax');
+    alert('Geçersiz format. Örnek: 3x12, 4x8-12, 3x5+, 3xmax');
     return;
   }
   if(!S.customProgram.schemes) S.customProgram.schemes={};
@@ -359,9 +338,8 @@ function applyScheme(exId, str){
   S.customProgram.schemes[exId]={...base, sets:parsed.sets, reps:parsed.reps, scheme:parsed.scheme, repType:parsed.repType};
   EX[exId].sets=parsed.sets; EX[exId].reps=parsed.reps; EX[exId].scheme=parsed.scheme; EX[exId].repType=parsed.repType;
   saveS();
+  if(inp) inp.value=parsed.scheme;
   if(typeof renderProgram==='function') renderProgram();
-  const setcnt=document.getElementById('setcnt-'+exId); if(setcnt) setcnt.value=parsed.sets;
-  const esch=document.getElementById('esch-'+exId); if(esch) esch.textContent=parsed.scheme;
 }
 
 // Kart başlığı (aç/kapa + özel programda sürükle/ok kontrolleri)
