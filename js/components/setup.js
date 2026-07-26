@@ -80,14 +80,14 @@ function _weightCardHtml(ex, di){
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
     ${_schemeBlock(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
-    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
+    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value);updateExTitle('${ex.id}')">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
       ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
       <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
     </select>
     <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
       style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
-      value="${sv?.customName||''}"/>
+      value="${sv?.customName||''}" oninput="updateExTitle('${ex.id}')"/>
     <div class="lbl" style="margin-bottom:5px">Birim</div>
     <div id="unit-${ex.id}" data-unit="${u}" style="display:inline-flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;margin-bottom:10px">
       <button type="button" data-unit="kg" onclick="setExUnit('${ex.id}','kg')" style="border:none;cursor:pointer;font-family:var(--fb);font-size:13px;font-weight:600;padding:5px 18px;border-radius:6px;background:${u==='kg'?'var(--accent)':'transparent'};color:${u==='kg'?'#000':'var(--muted)'}">kg</button>
@@ -124,14 +124,14 @@ function _bwCardHtml(ex, di){
     <button class="btn bo" onclick="showGif('${ex.id}')" style="padding:6px 10px;font-size:12px;width:auto;white-space:nowrap;margin-bottom:8px">📹 Nasıl Yapılır?</button>
     ${_schemeBlock(ex)}
     <div class="lbl" style="margin-bottom:5px">Alternatif (opsiyonel)</div>
-    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value)">
+    <select id="alt-${ex.id}" style="margin-bottom:8px" onchange="toggleCustom('${ex.id}',this.value);updateExTitle('${ex.id}')">
       <option value="-1" ${!sv||sv.altIdx<0?'selected':''}>— Orijinal (${ex.name})</option>
       ${ex.alts.map((a,i)=>`<option value="${i}" ${sv?.altIdx===i?'selected':''}>${a}</option>`).join('')}
       <option value="custom" ${sv?.altIdx==='custom'?'selected':''}>✏️ Özel hareket gir...</option>
     </select>
     <input type="text" id="custom-${ex.id}" placeholder="Hareket adını yaz..." maxlength="60"
       style="margin-bottom:10px;display:${sv?.altIdx==='custom'?'block':'none'}"
-      value="${sv?.customName||''}"/>
+      value="${sv?.customName||''}" oninput="updateExTitle('${ex.id}')"/>
     <div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg3);border-radius:8px">Vücut ağırlığı — giriş gerekmez</div>
     </div>
   </div>`;
@@ -349,7 +349,7 @@ function _exHead(ex, di){
   const arrows = custom ? `<button type="button" onclick="event.stopPropagation();cardMove(this,-1)" title="Yukarı" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:12px;padding:0">▲</button><button type="button" onclick="event.stopPropagation();cardMove(this,1)" title="Aşağı" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:12px;padding:0">▼</button>` : '';
   return `<div class="exc-head" onclick="toggleExCard(this)" style="display:flex;align-items:center;gap:6px;cursor:pointer">
     ${dh}
-    <span class="en" style="margin:0;flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
+    <span class="en" id="exname-${ex.id}" style="margin:0;flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${getDisplayName(ex)}</span>
     ${arrows}
     <button type="button" onclick="event.stopPropagation();removeExFromDay(${di},'${ex.id}')" title="Çıkar" style="background:none;border:1px solid rgba(248,113,113,.4);color:var(--danger);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:13px;padding:0">✕</button>
     <span class="exc-chevron" style="color:var(--muted);font-size:12px;width:14px;text-align:center">▸</span>
@@ -488,6 +488,19 @@ function decrementInc(exId){
 function toggleCustom(exId, val){
   const el=document.getElementById('custom-'+exId);
   if(el) el.style.display=(val==='custom')?'block':'none';
+}
+
+// Alternatif/özel hareket seçilince kart başlığını (akordiyon kapalıyken görünen adı) güncelle
+function updateExTitle(exId){
+  const sel=document.getElementById('alt-'+exId);
+  const el=document.getElementById('exname-'+exId);
+  const ex=EX[exId];
+  if(!sel || !el || !ex) return;
+  let name=ex.name;
+  const v=sel.value;
+  if(v==='custom'){ const c=document.getElementById('custom-'+exId); name=(c && c.value.trim())||ex.name; }
+  else if(v!=='-1' && !isNaN(parseInt(v))){ name=ex.alts[parseInt(v)]||ex.name; }
+  el.textContent=name;
 }
 
 function saveAndStart(){
