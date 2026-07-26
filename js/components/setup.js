@@ -304,12 +304,12 @@ function _setsEditor(ex){
   return `<div class="lbl" style="margin:8px 0 5px">Set sayısı</div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
       <button class="btn bo" type="button" onclick="changeExSets('${ex.id}',-1)" style="flex:0 0 44px;padding:8px">−</button>
-      <input type="number" id="sets-${ex.id}" class="no-spin" min="1" max="10" step="1" value="${ex.sets}" style="text-align:center;flex:1" onchange="setExSets('${ex.id}',this.value)"/>
+      <input type="number" id="setcnt-${ex.id}" class="no-spin" min="1" max="10" step="1" value="${ex.sets}" style="text-align:center;flex:1" onchange="setExSets('${ex.id}',this.value)"/>
       <button class="btn bp" type="button" onclick="changeExSets('${ex.id}',1)" style="flex:0 0 44px;padding:8px">+</button>
     </div>`;
 }
 function changeExSets(exId, delta){
-  const el=document.getElementById('sets-'+exId);
+  const el=document.getElementById('setcnt-'+exId);
   const cur=parseInt(el?.value)||EX[exId].sets||3;
   setExSets(exId, cur+delta);
 }
@@ -323,9 +323,45 @@ function setExSets(exId, n){
   S.customProgram.schemes[exId]=sc;
   EX[exId].sets=n; EX[exId].scheme=newScheme; EX[exId].reps=sc.reps; EX[exId].repType=sc.repType;
   saveS();
-  const inp=document.getElementById('sets-'+exId); if(inp) inp.value=n;
+  const inp=document.getElementById('setcnt-'+exId); if(inp) inp.value=n;
   const esch=document.getElementById('esch-'+exId); if(esch) esch.textContent=newScheme;
   if(typeof renderProgram==='function') renderProgram();
+}
+
+// Şema metnini ayrıştır: "5x10", "3x5+", "4x8-12", "3xmax" -> {sets,reps,scheme,repType}
+function parseScheme(str){
+  str=(str||'').trim().toLowerCase().replace(/×/g,'x').replace(/\s/g,'');
+  const m=str.match(/^(\d+)x(.+)$/);
+  if(!m) return null;
+  const sets=Math.max(1, Math.min(10, parseInt(m[1])||1));
+  const rest=m[2];
+  if(rest==='max') return {sets, reps:0, repType:'max', scheme:`${sets}×max`};
+  let r=rest.match(/^(\d+)\+$/);
+  if(r){ const v=parseInt(r[1]); return {sets, reps:v, repType:'plus', scheme:`${sets}×${v}+`}; }
+  r=rest.match(/^(\d+)-(\d+)$/);
+  if(r){ const lo=parseInt(r[1]), hi=parseInt(r[2]); if(hi<lo) return null; return {sets, reps:lo, repType:'range', scheme:`${sets}×${lo}-${hi}`}; }
+  r=rest.match(/^(\d+)$/);
+  if(r){ const v=parseInt(r[1]); return {sets, reps:v, repType:'fixed', scheme:`${sets}×${v}`}; }
+  return null;
+}
+// Program sekmesindeki şema kutusundan tam şemayı (set × tekrar) güncelle
+function applyScheme(exId, str){
+  if(!S.customProgram || !EX[exId]) return;
+  const parsed=parseScheme(str);
+  const inp=document.getElementById('scheme-'+exId);
+  if(!parsed){
+    if(inp) inp.value=EX[exId].scheme;
+    alert('Geçersiz format. Örnek: 5x10, 3x5+, 4x8-12, 3xmax');
+    return;
+  }
+  if(!S.customProgram.schemes) S.customProgram.schemes={};
+  const base=S.customProgram.schemes[exId] || {};
+  S.customProgram.schemes[exId]={...base, sets:parsed.sets, reps:parsed.reps, scheme:parsed.scheme, repType:parsed.repType};
+  EX[exId].sets=parsed.sets; EX[exId].reps=parsed.reps; EX[exId].scheme=parsed.scheme; EX[exId].repType=parsed.repType;
+  saveS();
+  if(typeof renderProgram==='function') renderProgram();
+  const setcnt=document.getElementById('setcnt-'+exId); if(setcnt) setcnt.value=parsed.sets;
+  const esch=document.getElementById('esch-'+exId); if(esch) esch.textContent=parsed.scheme;
 }
 
 // Kart başlığı (aç/kapa + özel programda sürükle/ok kontrolleri)
