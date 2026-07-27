@@ -1,5 +1,6 @@
 const hasData=loadS();
 applyProgramFromState();
+if(typeof recomputeStreak==='function') recomputeStreak();
 buildSetup();
 updTimer();
 applyTheme();
