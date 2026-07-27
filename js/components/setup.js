@@ -382,7 +382,9 @@ function showGif(exId){
   let altIdx = -1;
   let customName = '';
   
-  const altSelectEl = document.getElementById('alt-' + exId);
+  // Kurulum select'ine yalnızca kurulum sayfası aktifken bak (aksi halde program swap'ı kullanılır)
+  const setupActive = document.getElementById('page-setup')?.classList.contains('active');
+  const altSelectEl = setupActive ? document.getElementById('alt-' + exId) : null;
   if(altSelectEl) {
     const altVal = altSelectEl.value;
     const customEl = document.getElementById('custom-' + exId);
@@ -394,12 +396,18 @@ function showGif(exId){
       displayName = ex.alts[altIdx] || ex.name;
     }
   } else {
-    const sv = S.maxes[exId];
-    if(sv?.altIdx !== undefined && sv.altIdx !== null) {
-      if(sv.altIdx === 'custom') {
-        displayName = sv.customName || ex.name;
-      } else if(sv.altIdx >= 0 && ex.alts) {
-        displayName = ex.alts[sv.altIdx];
+    // Program bağlamı: önce bu hafta/güne ait swap (Değiştir), yoksa kurulum (maxes) swap'ı
+    const swName = (typeof getSwapName==='function') ? getSwapName(ex, S.currentWeek, S.currentDay) : null;
+    if(swName){
+      displayName = swName;
+    } else {
+      const sv = S.maxes[exId];
+      if(sv?.altIdx !== undefined && sv.altIdx !== null) {
+        if(sv.altIdx === 'custom') {
+          displayName = sv.customName || ex.name;
+        } else if(sv.altIdx >= 0 && ex.alts) {
+          displayName = ex.alts[sv.altIdx];
+        }
       }
     }
   }
