@@ -46,7 +46,7 @@ function _seg(active,cb,label){
 }
 function _wizardHtml(){
   _initWiz();
-  const splits=[['default','Varsayılan'],['fullbody','Full Body'],['upperlower','Upper/Lower'],['ppl','Push/Pull/Legs']];
+  const splits=[['default','SuperHero 🦸‍♂️'],['fullbody','Full Body'],['upperlower','Upper/Lower'],['ppl','Push/Pull/Legs']];
   const validDays=validDaysForSplit(_wiz.split);
   const diffs=[['beginner','Başlangıç'],['intermediate','Orta'],['advanced','İleri']];
   const isDef=_wiz.split==='default';
