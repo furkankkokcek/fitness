@@ -193,4 +193,4 @@ function useDefaultProgram(){
   saveS();
 }
 // Geçerli haftalık gün sayıları (tüm bölünmeler için 3-5)
-function validDaysForSplit(split){ return [3,4,5]; }
+function validDaysForSplit(split){ return split==='default' ? [3,4,5] : [3,4,5,6,7]; }
