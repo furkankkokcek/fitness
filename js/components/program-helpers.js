@@ -12,6 +12,23 @@ function updateStreak(w, d){
   S.streak.count=(S.streak.count||0)+1;
   S.streak.lastDate=todayStr();
 }
+// Streak'i weekData'dan yeniden hesapla: bir gün ancak o günün TÜM hareketleri
+// girildiyse tamamlanmış sayılır (kısmen dolu günler seriyi şişirmesin).
+function recomputeStreak(){
+  if(!S.streak) S.streak={count:0, lastDate:'', completedSessions:[]};
+  const done=[];
+  const wd=S.weekData||{};
+  Object.keys(wd).forEach(wk=>{
+    const w=parseInt(wk.slice(1)); if(isNaN(w)) return;
+    Object.keys(wd[wk]||{}).forEach(dk=>{
+      const d=parseInt(dk.slice(1)); if(isNaN(d)) return;
+      const ids=dayIds(d), day=wd[wk][dk]||{};
+      if(ids && ids.length && ids.every(id=> day[id]!==undefined)) done.push(wk+'_'+dk);
+    });
+  });
+  S.streak.completedSessions=done;
+  S.streak.count=done.length;
+}
 
 // ── PR (KİŞİSEL REKOR) ──────────────────────────────────
 function checkAndUpdatePR(exId, w, d, totalReps){
@@ -46,7 +63,10 @@ function workoutKey(w,d){ return `w${w}_d${d}`; }
 function startWorkoutIfNeeded(w,d){
   const key=workoutKey(w,d);
   if(!S.workoutSessions) S.workoutSessions={};
-  if(!S.workoutSessions[key]?.start){
+  const s=S.workoutSessions[key];
+  const STALE=8*60*60*1000; // 8 saat
+  // Başlangıç yok VEYA bitmemiş ama 8 saatten eski (dünden/geçen haftadan kalmış) → yeni oturum başlat
+  if(!s || !s.start || (!s.end && (Date.now()-s.start)>STALE)){
     S.workoutSessions[key]={start:Date.now(), end:null};
     saveS();
   }
@@ -63,8 +83,8 @@ function workoutDuration(w,d){
   if(!s?.start) return null;
   const end=s.end||Date.now();
   const ms=end-s.start;
-  // Stale: no end set and started more than 6 hours ago → invalid session
-  if(!s.end && ms>6*60*60*1000) return null;
+  // Geçersiz/bayat oturum (negatif ya da 6 saatten uzun) → süre gösterme (ör. dünden kalmış başlangıç)
+  if(ms<0 || ms>6*60*60*1000) return null;
   const min=Math.floor(ms/60000), sec=Math.floor((ms%60000)/1000);
   return `${min}d ${sec}s`;
 }

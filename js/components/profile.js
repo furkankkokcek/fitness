@@ -238,6 +238,7 @@ function importData(e){
       if(!S.dayEdits) S.dayEdits={};
       // Programı (varsayılan veya kişiye özel) içe aktarılan state'e göre uygula
       if(typeof applyProgramFromState==='function') applyProgramFromState();
+      if(typeof recomputeStreak==='function') recomputeStreak();
       applyTheme();
       saveS();
       buildSetup();

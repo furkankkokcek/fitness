@@ -63,7 +63,7 @@ function saveDynamicDone(exId, w, d, numSets){
     saveS(); renderProgram(); renderProgress();
 
     // Günün tüm egzersizleri tamamlandı mı kontrol et
-    const dayExIds = DAYS[d];
+    const dayExIds = dayIds(d);
     const doneMap = S.weekData['w'+w]?.['d'+d] || {};
     const allDone = dayExIds.every(id => doneMap[id] !== undefined);
     if(allDone) showDayCompleteDialog(w, d);
@@ -147,7 +147,7 @@ function autoSaveSets(exId, w, d, numSets){
 
   if(isPR) showPRToast(exId);
 
-  const dayExIds = DAYS[d];
+  const dayExIds = dayIds(d);
   const doneMap = S.weekData['w'+w]?.['d'+d] || {};
   const allDone = dayExIds.every(id => doneMap[id] !== undefined);
   if(allDone){
@@ -166,7 +166,7 @@ function autoSaveSets(exId, w, d, numSets){
 function undoDone(exId,w,d){
   const wk='w'+w,dk='d'+d;
   // Geri almadan önce gün tamam mıydı kontrol et
-  const wasDayDone = DAYS[d].every(id => S.weekData[wk]?.[dk]?.[id] !== undefined);
+  const wasDayDone = dayIds(d).every(id => S.weekData[wk]?.[dk]?.[id] !== undefined);
   if(S.weekData[wk]?.[dk]) delete S.weekData[wk][dk][exId];
   // Tüm egzersizler silindiyse antrenman süresini sıfırla
   const remaining=Object.keys(S.weekData[wk]?.[dk]||{}).length;
