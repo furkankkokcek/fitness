@@ -386,9 +386,9 @@ async function doFoodSearch(){
   const res=document.getElementById('food-search-results');
   const ql=q.toLowerCase();
 
-  // Kayıtlı besinlerde ara
-  const savedMatches=Object.entries(S.nutrition?.customFoods||{})
-    .filter(([,f])=>f.name.toLowerCase().includes(ql)).slice(0,5);
+  // Kayıtlı besinlerde ara (kullanıcının kendi kayıtları + hazır presetler)
+  const savedMatches=[...Object.entries(S.nutrition?.customFoods||{}), ...((typeof PRESET_FOODS!=='undefined')?Object.entries(PRESET_FOODS):[])]
+    .filter(([,f])=>f.name.toLowerCase().includes(ql)).slice(0,6);
 
   // Önceki besinlerde ara
   const seen=new Set(), recentItems=[];
@@ -488,8 +488,8 @@ async function doFoodSearch(){
 }
 
 function selectSavedFoodForSearch(id){
-  const f=S.nutrition?.customFoods?.[id]; if(!f) return;
-  showFoodConfirm({name:f.name,amount:100,unit:'g',kcal:f.kcal100,protein:f.protein100,carb:f.carb100,fat:f.fat100},false);
+  const f=resolveSavedFood(id); if(!f) return;
+  showFoodConfirm({name:f.name,amount:f.amount||100,unit:f.unit||'g',kcal:f.kcal,protein:f.protein,carb:f.carb,fat:f.fat},false);
 }
 function selectLocalRecentForSearch(i){
   const f=window._localRecentSearchResults?.[i]; if(f) showFoodConfirm({...f},false);
@@ -501,20 +501,33 @@ function selectSearchResult(i){
 }
 
 // ── KAYITLI BESINLER SEKMESİ ──
+function _savedFoodLine(f){
+  return `${f.baseLabel||'100'+(f.unit||'g')} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g`;
+}
 function renderSavedTab(el){
   const foods=Object.entries(S.nutrition?.customFoods||{});
+  const presets=(typeof PRESET_FOODS!=='undefined')?Object.entries(PRESET_FOODS):[];
+  const userHtml=foods.map(([id,f])=>`
+    <div class="saved-food-item">
+      <div style="flex:1;cursor:pointer" onclick="selectSavedFood('${id}')">
+        <div style="font-size:13px;font-weight:600">${f.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${_savedFoodLine(f)}</div>
+      </div>
+      <button style="background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:4px 6px" onclick="openEditSavedFood('${id}')">✏️</button>
+      <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:4px 6px" onclick="deleteSavedFood('${id}')">🗑</button>
+    </div>`).join('');
+  const presetHtml=presets.map(([id,f])=>`
+    <div class="saved-food-item">
+      <div style="flex:1;cursor:pointer" onclick="selectSavedFood('${id}')">
+        <div style="font-size:13px;font-weight:600">${f.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${_savedFoodLine(f)}</div>
+      </div>
+    </div>`).join('');
   el.innerHTML=`
     <button class="btn bo" style="margin-bottom:10px;font-size:13px" onclick="openManualFoodForm()">+ Yeni Besin Kaydet</button>
-    ${foods.length===0?`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Kayıtlı besin yok</div>`:
-      foods.map(([id,f])=>`
-        <div class="saved-food-item">
-          <div style="flex:1;cursor:pointer" onclick="selectSavedFood('${id}')">
-            <div style="font-size:13px;font-weight:600">${f.name}</div>
-            <div style="font-size:11px;color:var(--muted)">${f.baseLabel||'100'+(f.unit||'g')} başına · ${f.kcal100||Math.round(f.kcal)} kcal · P:${f.protein100||f.protein}g K:${f.carb100||f.carb}g Y:${f.fat100||f.fat}g</div>
-          </div>
-          <button style="background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:4px 6px" onclick="openEditSavedFood('${id}')">✏️</button>
-          <button style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:4px 6px" onclick="deleteSavedFood('${id}')">🗑</button>
-        </div>`).join('')}`;
+    ${userHtml}
+    ${presets.length?`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin:12px 0 6px">Hazır Besinler</div>${presetHtml}`:''}
+    ${(!foods.length && !presets.length)?`<div style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">Kayıtlı besin yok</div>`:''}`;
 }
 
 function openEditSavedFood(id){
@@ -562,8 +575,12 @@ function saveEditedFood(id){
   switchFoodTab('saved');
 }
 
+// Hazır (preset) besin mi, yoksa kullanıcının kendi kaydı mı — ikisinden de çöz
+function resolveSavedFood(id){
+  return (typeof PRESET_FOODS!=='undefined' && PRESET_FOODS[id]) || S.nutrition?.customFoods?.[id] || null;
+}
 function selectSavedFood(id){
-  const f=S.nutrition?.customFoods?.[id];
+  const f=resolveSavedFood(id);
   if(f) showFoodConfirm({...f}, false);
 }
 
