@@ -376,12 +376,9 @@ function renderProgram(){
 
     let warmupHtml='';
     let altLoadingText='';
-    if(ex.hasWeight && kg>0){
-      const bar=barWeight(u);
-      const brOff=u==='lbs'?25:10;
-      if(ex.id==='g1_rdl'){ altLoadingText=` (${(kg-bar)/2} ${u})`; }
-      else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp'){ altLoadingText=` (${kg/2} ${u})`; }
-      else if(ex.id==='g3_br'){ altLoadingText=` (${(kg-brOff)/2} ${u})`; }
+    // Plakalı (barbell/smith/leg press vb.) hareketlerde tek tarafa gelen ağırlık = toplam/2
+    if(ex.hasWeight && kg>0 && isPlateLoaded(ex.id)){
+      altLoadingText=` (${wRound(kg/2, u)} ${u})`;
     }
 
     if(altLoadingText && ex.hasWeight){
@@ -400,12 +397,8 @@ function renderProgram(){
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               ${sets.map(s=>{
                 const wkg=wRound(kg*s.mult, u);
-                const bar=barWeight(u);
-                const brOff=u==='lbs'?25:10;
                 let altLoading='';
-                if(ex.id==='g1_rdl') altLoading=` (${wRound((wkg-bar)/2, u)} ${u})`;
-                else if(ex.id==='g2_lp'||ex.id==='g3_lp'||ex.id==='g3_sp') altLoading=` (${wRound(wkg/2, u)} ${u})`;
-                else if(ex.id==='g3_br') altLoading=` (${wRound((wkg-brOff)/2, u)} ${u})`;
+                if(isPlateLoaded(ex.id)) altLoading=` (${wRound(wkg/2, u)} ${u})`;
                 return `<div style="flex:1;min-width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center">
                   <div style="font-size:16px;font-weight:600;color:var(--warn)">${wkg} ${u}</div>
                   <div style="font-size:12px;color:var(--muted);font-weight:400"">${altLoading}</div>
