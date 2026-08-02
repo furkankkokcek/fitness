@@ -62,6 +62,13 @@ const NEW_EX = {
 };
 Object.entries(NEW_EX).forEach(([id,e])=>{ EX[id]={id, gifUrl:'', alts:[], ...e}; });
 
+// Plakalı (her iki yana simetrik ağırlık takılan) hareketler — programda toplamın yanında yarısı da gösterilir (ör. 80 kg (40 kg))
+const PLATE_LOADED = new Set([
+  'g1_rdl','g2_lp','g3_lp','g3_sp','g3_br',
+  'lib_smithbench','lib_bbcurl','lib_hack','lib_sldl','lib_uprightrow','lib_tbar','lib_smithsquat'
+]);
+function isPlateLoaded(exId){ return PLATE_LOADED.has(exId); }
+
 // Orijinal set/tekrar şemalarını sakla (varsayılan program bunları kullanır).
 // Üretilen programlar kendi şemalarını alır; varsayılana dönünce buradan geri yüklenir.
 const _EX_ORIG = {};
