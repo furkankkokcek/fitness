@@ -17,12 +17,19 @@ const MEAL_NAMES={sabah:'☀️ Sabah',ogle:'🌤 Öğle',aksam:'🌙 Akşam',ar
 const MEAL_ADD_LABELS={sabah:'SABAH ÖĞÜNÜ EKLE',ogle:'ÖĞLE ÖĞÜNÜ EKLE',aksam:'AKŞAM ÖĞÜNÜ EKLE',ara:'ARA ÖĞÜN EKLE'};
 
 function getMacroTargets(){
-  const weight=parseFloat(S.profile?.kg)||0;
+  const p=S.profile||{};
+  const weight=parseFloat(p.kg)||0;
   const goal=S.nutrition?.goal||2000;
   if(!weight) return null;
-  const bodyfat=parseFloat(S.profile?.bodyfat)||0;
-  // Yağ oranı girilmişse protein yağsız kütleye göre: yağsız kg × 2
-  // Girilmemişse eski varsayım: kilo × 1.8
+  // Yağ oranını profil sekmesiyle aynı kaynaktan hesapla: ölçüler varsa
+  // Navy formülü (bel/boyun/kalça), yoksa kayıtlı bodyfat değeri.
+  let bodyfat=parseFloat(p.bodyfat)||0;
+  if(typeof calcNavyFat==='function'){
+    const navy=calcNavyFat(p.gender, parseFloat(p.cm)||0, parseFloat(p.waist)||0, parseFloat(p.neck)||0, parseFloat(p.hip)||0);
+    if(navy!==null) bodyfat=navy;
+  }
+  // Yağ oranı biliniyorsa protein yağsız kütleye göre: yağsız kg × 2
+  // Bilinmiyorsa eski varsayım: kilo × 1.8
   const leanMass=bodyfat>0 ? weight*(1-bodyfat/100) : weight;
   const protein=bodyfat>0 ? Math.round(leanMass*2) : Math.round(weight*1.8);
   const fat=Math.round(weight*0.7);
