@@ -20,10 +20,14 @@ function getMacroTargets(){
   const weight=parseFloat(S.profile?.kg)||0;
   const goal=S.nutrition?.goal||2000;
   if(!weight) return null;
-  const protein=Math.round(weight*1.8);
+  const bodyfat=parseFloat(S.profile?.bodyfat)||0;
+  // Yağ oranı girilmişse protein yağsız kütleye göre: yağsız kg × 2
+  // Girilmemişse eski varsayım: kilo × 1.8
+  const leanMass=bodyfat>0 ? weight*(1-bodyfat/100) : weight;
+  const protein=bodyfat>0 ? Math.round(leanMass*2) : Math.round(weight*1.8);
   const fat=Math.round(weight*0.7);
   const carb=Math.max(0,Math.round((goal-protein*4-fat*9)/4));
-  return {weight,protein,fat,carb};
+  return {weight,protein,fat,carb,bodyfat,leanMass:Math.round(leanMass)};
 }
 
 function renderKalori(){
@@ -75,7 +79,7 @@ function renderKalori(){
         </div>`;
       }).join('');
       return `<div style="border-top:1px solid var(--border);margin-top:12px;padding-top:10px">
-        <div style="font-size:10px;color:var(--muted);letter-spacing:.6px;margin-bottom:8px;font-family:var(--fa)">KAS KORUMA HEDEFLERİ · ${t.weight}kg</div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:.6px;margin-bottom:8px;font-family:var(--fa)">KAS KORUMA HEDEFLERİ · ${t.weight}kg${t.bodyfat>0?` · yağsız ${t.leanMass}kg · protein yağsız×2`:''}</div>
         ${bars}
       </div>`;
     })()}
