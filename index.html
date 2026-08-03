@@ -218,6 +218,10 @@
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Yağsız kg</div>
             </div>
           </div>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;text-align:center">
+            <div style="font-family:var(--fd);font-size:26px;color:#60a5fa" id="lean-protein">—</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">Günlük protein hedefi · yağsız kg × 2</div>
+          </div>
         </div>
       </div>
 
@@ -239,17 +243,11 @@
               <option value="female">Kadın</option>
             </select></div>
         </div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Vücut Ölçüleri (Opsiyonel)</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bel + boyun girersen yağ oranın US Navy formülüyle hesaplanır.</div>
-        <div class="g2" style="margin-bottom:8px">
-          <div><div class="lbl">Bel çevresi (cm)</div>
-            <input type="number" id="prof-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5" oninput="calcCalories()"/></div>
-          <div><div class="lbl">Boyun çevresi (cm)</div>
-            <input type="number" id="prof-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5" oninput="calcCalories()"/></div>
-        </div>
-        <div id="hip-row" style="display:none;margin-bottom:8px">
-          <div class="lbl">Kalça çevresi (cm) — Kadınlar için</div>
-          <input type="number" id="prof-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5" oninput="calcCalories()"/>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Yağ Oranı (Opsiyonel)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Yağ oranını bir <a href="https://www.calculator.net/body-fat-calculator.html" target="_blank" rel="noopener" style="color:var(--accent)">yağ oranı hesaplama sitesinden</a> öğren, buraya gir. Protein hedefin yağsız kütlene göre hesaplanır: <b>yağsız kg × 2</b>. Böylece aynı kiloda ama farklı yağ oranındaki iki kişi farklı protein alır.</div>
+        <div style="margin-bottom:8px">
+          <div class="lbl">Yağ oranı (%)</div>
+          <input type="number" id="prof-bodyfat" class="no-spin" placeholder="ör. 18" min="2" max="70" step="0.1" oninput="calcCalories()"/>
         </div>
         <button class="btn bp" onclick="saveProfile()">Kaydet</button>
       </div>
@@ -386,21 +384,9 @@
         <option value="female">Kadın</option>
       </select>
 
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px">Vücut Ölçüleri (Opsiyonel)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div>
-          <div class="lbl">Bel çevresi (cm)</div>
-          <input type="number" id="onb-waist" class="no-spin" placeholder="ör. 85" min="0" step="0.5"/>
-        </div>
-        <div>
-          <div class="lbl">Boyun çevresi (cm)</div>
-          <input type="number" id="onb-neck" class="no-spin" placeholder="ör. 38" min="0" step="0.5"/>
-        </div>
-      </div>
-      <div id="onb-hip-row" style="display:none;margin-bottom:12px">
-        <div class="lbl">Kalça çevresi (cm)</div>
-        <input type="number" id="onb-hip" class="no-spin" placeholder="ör. 95" min="0" step="0.5"/>
-      </div>
+      <div class="lbl">Yağ oranı (%) — Opsiyonel</div>
+      <input type="number" id="onb-bodyfat" class="no-spin" placeholder="ör. 18" min="2" max="70" step="0.1" style="margin-bottom:6px"/>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Bir yağ oranı hesaplama sitesinden öğrenip girebilirsin. Protein hedefin yağsız kütlene göre hesaplanır.</div>
     </div>
     <div class="mbtns" style="margin-top:16px">
       <button class="btn bo" onclick="skipProfileSetup()">Atla</button>

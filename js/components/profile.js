@@ -71,31 +71,12 @@ function onOnbGenderChange(){
   if(hipRow) hipRow.style.display=(g==='female')?'block':'none';
 }
 
-function calcNavyFat(gender, heightCm, waistCm, neckCm, hipCm){
-  if(!heightCm||!waistCm||!neckCm) return null;
-  let fat=null;
-  if(gender==='male'){
-    const val = waistCm - neckCm;
-    if(val<=0) return null;
-    fat = 495 / (1.0324 - 0.19077*Math.log10(val) + 0.15456*Math.log10(heightCm)) - 450;
-  } else if(gender==='female'){
-    if(!hipCm) return null;
-    const val = waistCm + hipCm - neckCm;
-    if(val<=0) return null;
-    fat = 495 / (1.29579 - 0.35004*Math.log10(val) + 0.22100*Math.log10(heightCm)) - 450;
-  }
-  if(fat===null||isNaN(fat)||fat<2||fat>70) return null;
-  return Math.round(fat*10)/10;
-}
-
 function calcCalories(){
   const kg=parseFloat(document.getElementById('prof-kg')?.value)||0;
   const cm=parseFloat(document.getElementById('prof-cm')?.value)||0;
   const age=parseInt(document.getElementById('prof-age')?.value)||0;
   const gender=document.getElementById('prof-gender')?.value||'';
-  const waist=parseFloat(document.getElementById('prof-waist')?.value)||0;
-  const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
-  const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
+  const bodyfat=parseFloat(document.getElementById('prof-bodyfat')?.value)||0;
 
   if(kg>0&&cm>0&&age>0&&gender){
     let bmr=0;
@@ -113,13 +94,14 @@ function calcCalories(){
 
   const fatEl=document.getElementById('fat-display');
   if(!fatEl) return;
-  const fat=calcNavyFat(gender, cm, waist, neck, hip);
-  if(fat!==null&&kg>0){
-    const fatKg=(kg*fat/100).toFixed(1);
-    const leanKg=(kg*(1-fat/100)).toFixed(1);
-    document.getElementById('fat-pct').textContent=fat+'%';
+  if(bodyfat>0&&kg>0){
+    const leanKg=kg*(1-bodyfat/100);
+    const fatKg=(kg*bodyfat/100).toFixed(1);
+    const protein=Math.round(leanKg*2);
+    document.getElementById('fat-pct').textContent=bodyfat+'%';
     document.getElementById('fat-kg').textContent=fatKg;
-    document.getElementById('lean-kg').textContent=leanKg;
+    document.getElementById('lean-kg').textContent=leanKg.toFixed(1);
+    document.getElementById('lean-protein').textContent=protein+' g';
     fatEl.style.display='block';
   } else {
     fatEl.style.display='none';
@@ -131,10 +113,8 @@ function saveProfile(){
   const cm=parseFloat(document.getElementById('prof-cm')?.value)||0;
   const age=parseInt(document.getElementById('prof-age')?.value)||0;
   const gender=document.getElementById('prof-gender')?.value||'';
-  const waist=parseFloat(document.getElementById('prof-waist')?.value)||0;
-  const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
-  const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
-  S.profile={...S.profile,kg,cm,age,gender,waist,neck,hip};
+  const bodyfat=parseFloat(document.getElementById('prof-bodyfat')?.value)||0;
+  S.profile={...S.profile,kg,cm,age,gender,bodyfat};
   if(kg>0 && Object.keys(S.weeklyWeights).length===0){
     for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
   }
@@ -149,9 +129,7 @@ function renderProfile(){
   if(p.cm) document.getElementById('prof-cm').value=p.cm;
   if(p.age) document.getElementById('prof-age').value=p.age;
   if(p.gender) document.getElementById('prof-gender').value=p.gender;
-  if(p.waist) document.getElementById('prof-waist').value=p.waist;
-  if(p.neck) document.getElementById('prof-neck').value=p.neck;
-  if(p.hip) document.getElementById('prof-hip').value=p.hip;
+  if(p.bodyfat) document.getElementById('prof-bodyfat').value=p.bodyfat;
   const hipRow=document.getElementById('hip-row');
   if(hipRow) hipRow.style.display=(p.gender==='female')?'block':'none';
   if(p.photo){
@@ -272,12 +250,10 @@ function saveProfileSetup(){
   const cm=parseFloat(document.getElementById('onb-cm')?.value)||0;
   const age=parseInt(document.getElementById('onb-age')?.value)||0;
   const gender=document.getElementById('onb-gender')?.value||'';
-  const waist=parseFloat(document.getElementById('onb-waist')?.value)||0;
-  const neck=parseFloat(document.getElementById('onb-neck')?.value)||0;
-  const hip=parseFloat(document.getElementById('onb-hip')?.value)||0;
+  const bodyfat=parseFloat(document.getElementById('onb-bodyfat')?.value)||0;
 
   if(kg>0||cm>0||age>0||gender){
-    S.profile={kg,cm,age,gender,waist,neck,hip};
+    S.profile={kg,cm,age,gender,bodyfat};
     if(kg>0){
       for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
     }
