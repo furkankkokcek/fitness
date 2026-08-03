@@ -96,15 +96,22 @@ function calcCalories(){
   const waist=parseFloat(document.getElementById('prof-waist')?.value)||0;
   const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
   const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
+  const act=parseFloat(document.getElementById('prof-activity')?.value)||1.2;
+  const fat=calcNavyFat(gender, cm, waist, neck, hip);
 
-  if(kg>0&&cm>0&&age>0&&gender){
-    let bmr=0;
-    if(gender==='male') bmr=10*kg + 6.25*cm - 5*age + 5;
-    else bmr=10*kg + 6.25*cm - 5*age - 161;
-    const maint=Math.round(bmr*1.55);
-    const cut=Math.round(bmr*1.55*0.85);
+  // BMR: yağ oranı biliniyorsa Katch-McArdle (yağsız kütleye dayalı),
+  // yoksa Mifflin-St Jeor. TDEE = BMR × aktivite, hızlı yağ yakım = TDEE × 0.75
+  let bmr=0;
+  if(fat!==null && kg>0){
+    bmr = 370 + 21.6*(kg*(1-fat/100));
+  } else if(kg>0&&cm>0&&age>0&&gender){
+    bmr = gender==='male' ? (10*kg+6.25*cm-5*age+5) : (10*kg+6.25*cm-5*age-161);
+  }
+  if(bmr>0){
+    const tdee=Math.round(bmr*act);
+    const cut=Math.round(tdee*0.75);
     document.getElementById('cal-min').textContent=Math.round(bmr);
-    document.getElementById('cal-maint').textContent=maint;
+    document.getElementById('cal-maint').textContent=tdee;
     document.getElementById('cal-cut').textContent=cut;
     document.getElementById('calorie-display').style.display='block';
   } else {
@@ -113,7 +120,6 @@ function calcCalories(){
 
   const fatEl=document.getElementById('fat-display');
   if(!fatEl) return;
-  const fat=calcNavyFat(gender, cm, waist, neck, hip);
   if(fat!==null&&kg>0){
     const leanKg=kg*(1-fat/100);
     const fatKg=(kg*fat/100).toFixed(1);
@@ -137,7 +143,8 @@ function saveProfile(){
   const neck=parseFloat(document.getElementById('prof-neck')?.value)||0;
   const hip=parseFloat(document.getElementById('prof-hip')?.value)||0;
   const bodyfat=calcNavyFat(gender, cm, waist, neck, hip)||0;
-  S.profile={...S.profile,kg,cm,age,gender,waist,neck,hip,bodyfat};
+  const activity=parseFloat(document.getElementById('prof-activity')?.value)||1.2;
+  S.profile={...S.profile,kg,cm,age,gender,waist,neck,hip,bodyfat,activity};
   if(kg>0 && Object.keys(S.weeklyWeights).length===0){
     for(let i=0;i<13;i++) S.weeklyWeights[i]=kg;
   }
@@ -155,6 +162,7 @@ function renderProfile(){
   if(p.waist) document.getElementById('prof-waist').value=p.waist;
   if(p.neck) document.getElementById('prof-neck').value=p.neck;
   if(p.hip) document.getElementById('prof-hip').value=p.hip;
+  if(p.activity) document.getElementById('prof-activity').value=p.activity;
   const hipRow=document.getElementById('hip-row');
   if(hipRow) hipRow.style.display=(p.gender==='female')?'block':'none';
   if(p.photo){

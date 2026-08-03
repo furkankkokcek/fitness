@@ -194,12 +194,12 @@
           <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:16px 10px;text-align:center">
             <div style="font-family:var(--fd);font-size:30px;color:var(--accent);margin-bottom:4px" id="cal-maint">0</div>
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Koruma</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">Kilo koru</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">TDEE</div>
           </div>
           <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:16px 10px;text-align:center">
             <div style="font-family:var(--fd);font-size:30px;color:var(--danger);margin-bottom:4px" id="cal-cut">0</div>
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Yağ Yakım</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">−%15</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">−%25</div>
           </div>
         </div>
       </div>
@@ -243,6 +243,17 @@
               <option value="male">Erkek</option>
               <option value="female">Kadın</option>
             </select></div>
+        </div>
+        <div style="margin-bottom:8px">
+          <div class="lbl">Aktivite düzeyi</div>
+          <select id="prof-activity" onchange="calcCalories()">
+            <option value="1.2">Sedanter — sporsuz yaşam</option>
+            <option value="1.375">Hafif — masa başı iş + haftada 1-2 seans</option>
+            <option value="1.55" selected>Orta — haftada 3-5 gün antrenman</option>
+            <option value="1.725">Yüksek — haftada 4-5 gün yoğun spor</option>
+            <option value="1.9">Aşırı — beden işi / haftada 5-7 seans</option>
+          </select>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4">Hedeflediğin değil, uyguladığın aktivite seviyesini seç. Kalori değerleri buna göre değişir.</div>
         </div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin:12px 0 8px">Vücut Ölçüleri (Opsiyonel)</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bel + boyun girersen yağ oranın US Navy formülüyle hesaplanır. Protein hedefin yağsız kütlene göre belirlenir: <b>yağsız kg × 2</b>.</div>
