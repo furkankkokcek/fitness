@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="css/components/modal.css"/>
 <link rel="stylesheet" href="css/components/settings.css"/>
 <link rel="stylesheet" href="css/components/nutrition.css"/>
+<link rel="stylesheet" href="css/components/vo2max.css"/>
 </head>
 <body>
 
@@ -142,6 +143,48 @@
           </div>
           <button class="btn bo" id="notify-btn" style="margin-top:10px">🔔 Bildirimi Aç</button>
         </div>
+      </div>
+
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+        <div style="font-family:var(--fd);font-size:22px;letter-spacing:1px;margin-bottom:4px">VO₂ MAX INTERVAL</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Seviyeni seç — süreler ve intervaller ona göre değişir</div>
+        <div class="vo2-tabs" id="vo2-tabs"></div>
+        <div class="vo2-meta" id="vo2-meta"></div>
+        <div class="vo2-timer">
+          <div class="vo2-ringwrap">
+            <svg width="210" height="210" viewBox="0 0 210 210">
+              <circle cx="105" cy="105" r="92" fill="none" stroke="#1a1a1a" stroke-width="10"/>
+              <circle id="vo2-ring" cx="105" cy="105" r="92" fill="none" stroke="#e8ff47" stroke-width="10"
+                stroke-dasharray="578" stroke-dashoffset="0" stroke-linecap="round"
+                style="transform-origin:105px 105px;transform:rotate(-90deg);transition:stroke-dashoffset .25s linear,stroke .3s"/>
+            </svg>
+            <div class="vo2-center">
+              <div class="vo2-disp" id="vo2-disp">5:00</div>
+              <div class="vo2-status" id="vo2-status">HAZIR</div>
+            </div>
+          </div>
+          <div class="vo2-speed" id="vo2-speed">Isınma · 5–6 km/s</div>
+          <div class="vo2-total" id="vo2-total">0:00 / 0:00</div>
+          <div class="vo2-actions">
+            <button class="btn bp" id="vo2-btn" onclick="toggleVo2()">BAŞLAT</button>
+            <button class="btn bo" onclick="resetVo2()">SIFIRLA</button>
+          </div>
+        </div>
+        <div class="vo2-plan" id="vo2-plan"></div>
+        <details class="vo2-notes">
+          <summary>Notlar & geçiş kuralı</summary>
+          <div class="vo2-notes-body">
+            <div id="vo2-level-note" style="margin-bottom:8px"></div>
+            <div style="margin-bottom:6px">Burada amaç sadece hızı artırmak değil, <b>yüksek yoğunlukta geçirilen süreyi</b> kontrollü şekilde artırmak.</div>
+            <div style="margin-bottom:6px">Toparlanmalar intervallerin <b>arasında</b>; son intervalden sonra doğrudan soğumaya geçilir. Tüm seviyelerde eğim <b>%1</b>.</div>
+            <div class="vo2-rule">
+              <div style="margin-bottom:4px"><b>Seviye 1 → 2:</b> 4×2 dakikayı tamamla ve son intervalde hâlâ formun bozulmuyorsa.</div>
+              <div style="margin-bottom:4px"><b>Seviye 2 → 3:</b> 4×2'yi aynı hızda rahatça tamamlayıp sonrasında toparlanabiliyorsan.</div>
+              <div>Her seferinde hız artırmak zorunda değilsin. VO₂ max için önemli olan yüksek yoğunlukta <b>kaliteli süre</b>.</div>
+            </div>
+          </div>
+        </details>
+        <div style="height:8px"></div>
       </div>
     </div>
 
@@ -436,6 +479,7 @@
 <script src="js/components/swap.js"></script>
 <script src="js/components/program.js"></script>
 <script src="js/components/timer.js"></script>
+<script src="js/components/vo2max.js"></script>
 <script src="js/components/progress.js"></script>
 <script src="js/components/profile.js"></script>
 <script src="js/components/nutrition.js"></script>
