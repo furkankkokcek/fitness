@@ -1159,7 +1159,7 @@ function _renderAiMealResults(items){
 async function _callGroqMeal(messages,model){
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.groqKey},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey()},
     body:JSON.stringify({model,response_format:{type:'json_object'},messages})
   });
   if(!resp.ok){
@@ -1173,7 +1173,7 @@ async function _callGroqMeal(messages,model){
 
 async function analyzeAiMealQuery(){
   saveGroqKey();
-  if(!S.groqKey){alert('Önce Groq API anahtarı girin');return;}
+  if(!groqKey()){alert('Önce Groq API anahtarı girin');return;}
   const query=document.getElementById('ai-meal-input')?.value?.trim();
   if(!query){alert('Besin listesi girin');return;}
   const res=document.getElementById('ai-meal-results');
@@ -1182,7 +1182,7 @@ async function analyzeAiMealQuery(){
     const parsed=await _callGroqMeal([
       {role:'system',content:AI_MEAL_SYSTEM_PROMPT},
       {role:'user',content:query}
-    ],'llama-3.3-70b-versatile');
+    ],AI_MEAL_MODEL);
     if(!parsed.items?.length){
       res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Besin verisi alınamadı.</div>';
       return;
@@ -1195,7 +1195,7 @@ async function analyzeAiMealQuery(){
 
 async function analyzeAiMealPhoto(){
   saveGroqKey();
-  if(!S.groqKey){alert('Önce Groq API anahtarı girin');return;}
+  if(!groqKey()){alert('Önce Groq API anahtarı girin');return;}
   if(!_aiMealPhotoBase64){alert('Önce bir fotoğraf seçin');return;}
   const res=document.getElementById('ai-meal-results');
   res.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Fotoğraf analiz ediliyor...</div>';
@@ -1206,7 +1206,7 @@ async function analyzeAiMealPhoto(){
         {type:'text',text:AI_MEAL_PHOTO_PROMPT},
         {type:'image_url',image_url:{url:_aiMealPhotoBase64}}
       ]
-    }],'meta-llama/llama-4-scout-17b-16e-instruct');
+    }],AI_MEAL_VISION_MODEL);
     if(!parsed.items?.length){
       res.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;background:var(--bg3);border-radius:10px;margin-top:10px">Fotoğrafta besin tanınamadı.</div>';
       return;
